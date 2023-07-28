@@ -21,6 +21,9 @@ from esphome.const import (
     UNIT_WATT,
 )
 
+
+from esphome.core import CORE
+
 CONF_PHASE_A = "phase_a"
 CONF_PHASE_B = "phase_b"
 CONF_PHASE_C = "phase_c"
