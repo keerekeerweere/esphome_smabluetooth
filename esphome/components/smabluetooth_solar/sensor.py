@@ -44,8 +44,8 @@ CONF_PROTOCOL_VERSION = "protocol_version"
 CONF_SMA_BLUETOOTH_MAC = "sma_bluetooth_mac"
 CONF_SMA_PASSWORD = "sma_password"
 
-AUTO_LOAD = ["sensor"]
-DEPENDENCIES = ["api", "esp32", "sensor"]
+AUTO_LOAD = ["smabluetooth_solar"]
+DEPENDENCIES = ["esp32", "sensor"]
 CODEOWNERS = ["@keerekeerweere"]
 
 smabluetooth_solar_ns = cg.esphome_ns.namespace("smabluetooth_solar")
