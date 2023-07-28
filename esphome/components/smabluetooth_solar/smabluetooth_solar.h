@@ -26,6 +26,9 @@ class SmaBluetoothSolar : public PollingComponent {
 
   void set_protocol_version(SmaBluetoothProtocolVersion protocol_version) { this->protocol_version_ = protocol_version; }
 
+  void set_sma_bluetooth_mac(std::string sma_bluetooth_mac) { this->sma_bluetooth_mac_ = sma_bluetooth_mac; }
+  void set_sma_password(std::string sma_password) {this->sma_password_ = sma_password; }
+
   void set_inverter_status_sensor(sensor::Sensor *sensor) { this->inverter_status_ = sensor; }
 
   void set_grid_frequency_sensor(sensor::Sensor *sensor) { this->grid_frequency_sensor_ = sensor; }
@@ -81,6 +84,10 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *total_energy_production_{nullptr};
   sensor::Sensor *inverter_module_temp_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
+
+  std::string sma_bluetooth_mac_;
+  std::string sma_password_;
+
 };
 
 }  // namespace smabluetooth_solar
