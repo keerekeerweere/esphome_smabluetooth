@@ -105,7 +105,7 @@ PV_SCHEMA = cv.Schema(
 
 SmaBluetoothProtocolVersion = smabluetooth_solar_ns.enum("SmaBluetoothProtocolVersion")
 PROTOCOL_VERSIONS = {
-    "SMANET2": SmaBluetoothSolar.SMANET2
+    "SMANET2": SmaBluetoothProtocolVersion.SMANET2
 }
 
 
