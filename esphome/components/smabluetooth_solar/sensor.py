@@ -109,8 +109,8 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
-            cv.Required(CONF_SMA_BLUETOOTH_MAC, default="00:80:25:00:00:00"): cv.string,
-            cv.Required(CONF_SMA_PASSWORD, default="0000"): cv.string,
+            cv.Required(CONF_SMA_BLUETOOTH_MAC ): cv.string,
+            cv.Required(CONF_SMA_PASSWORD): cv.string,
 
             cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(
                 PROTOCOL_VERSIONS, upper=True
