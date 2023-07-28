@@ -1,10 +1,10 @@
-#include "sma_bluetooth_solar.h"
+#include "smabluetooth_solar.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
 namespace smabluetooth_solar_ns {
 
-static const char *const TAG = "growatt_solar";
+static const char *const TAG = "smabluetooth_solar";
 
 //static const uint8_t MODBUS_CMD_READ_IN_REGISTERS = 0x04;
 //static const uint8_t MODBUS_REGISTER_COUNT[] = {33, 95};  // indexed with enum GrowattProtocolVersion
