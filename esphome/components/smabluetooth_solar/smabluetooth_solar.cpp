@@ -1,8 +1,10 @@
 #include "smabluetooth_solar.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace smabluetooth_solar_ns {
+namespace smabluetooth_solar {
+
 
 static const char *const TAG = "smabluetooth_solar";
 
@@ -137,5 +139,5 @@ void SmaBluetoothSolar::dump_config() {
   //ESP_LOGCONFIG(TAG, "  Address: 0x%02X", this->address_);
 }
 
-}  // namespace growatt_solar
+}  // namespace smabluetooth_solar
 }  // namespace esphome

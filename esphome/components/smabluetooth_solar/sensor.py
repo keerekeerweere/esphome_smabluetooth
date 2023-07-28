@@ -51,6 +51,7 @@ AUTO_LOAD = ["smabluetooth_solar"]
 DEPENDENCIES = ["esp32", "sensor"]
 CODEOWNERS = ["@keerekeerweere"]
 
+
 smabluetooth_solar_ns = cg.esphome_ns.namespace("smabluetooth_solar")
 SmaBluetoothSolar = smabluetooth_solar_ns.class_(
     "SmaBluetoothSolar", cg.PollingComponent

@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace esphome {
-namespace smabluetooth_solar_ns {
+namespace smabluetooth_solar {
 
 static const float TWO_DEC_UNIT = 0.01;
 static const float ONE_DEC_UNIT = 0.1;
@@ -83,5 +83,5 @@ class SmaBluetoothSolar : public PollingComponent {
   SmaBluetoothProtocolVersion protocol_version_;
 };
 
-}  // namespace smabluetooth_solar_ns
+}  // namespace smabluetooth_solar
 }  // namespace esphome
