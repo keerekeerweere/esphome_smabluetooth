@@ -44,8 +44,8 @@ CONF_PV_ACTIVE_POWER = "pv_active_power"
 CONF_INVERTER_MODULE_TEMP = "inverter_module_temp"
 CONF_PROTOCOL_VERSION = "protocol_version"
 
-CONF_SMA_BLUETOOTH_MAC = "sma_bluetooth_mac"
-CONF_SMA_PASSWORD = "sma_password"
+CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
+CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 
 AUTO_LOAD = ["smabluetooth_solar"]
 DEPENDENCIES = ["esp32", "sensor"]
@@ -113,8 +113,8 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
-            cv.Required(CONF_SMA_BLUETOOTH_MAC ): cv.string,
-            cv.Required(CONF_SMA_PASSWORD): cv.string,
+            cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC ): cv.string,
+            cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
 
             cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(
                 PROTOCOL_VERSIONS, upper=True
@@ -172,8 +172,8 @@ async def to_code(config):
     await cg.register_component(var, config)
 #    await modbus.register_modbus_device(var, config)
 
-    cg.add(var.set_sma_bluetooth_mac(config[CONF_SMA_BLUETOOTH_MAC]))
-    cg.add(var.set_sma_password(config[CONF_SMA_PASSWORD]))
+    cg.add(var.set_sma_inverter_bluetooth_mac(config[CONF_SMA_INVERTER_BLUETOOTH_MAC]))
+    cg.add(var.set_sma_inverter_password(config[CONF_SMA_INVERTER_PASSWORD]))
 
     cg.add(var.set_protocol_version(config[CONF_PROTOCOL_VERSION]))
 
