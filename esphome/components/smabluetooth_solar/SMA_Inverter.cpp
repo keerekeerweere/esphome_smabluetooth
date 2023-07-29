@@ -1010,7 +1010,7 @@ bool ESP32_SMA_Inverter::validateChecksum() {
 void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) {
   int i, j;
   ESP_LOGD(INVTAG, "\n---%c----:", c);
-  for (i=0; i < radix; i++) ESP_LOGD(" %02X", i);
+  for (i=0; i < radix; i++) ESP_LOGD(INVTAG," %02X", i);
   for (i = 0, j = 0; i < count; i++) {
     if (j % radix == 0) {
       ESP_LOGD(INVTAG, "\n%c-%06d: ", c, j);
