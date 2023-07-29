@@ -1,9 +1,6 @@
 #pragma once
-
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
-#include "esphome/core/hal.h"
-#include "esphome/core/log.h"
 
 #include <vector>
 
@@ -20,6 +17,8 @@ enum SmaBluetoothProtocolVersion {
 class SmaBluetoothSolar : public PollingComponent {
  public:
   void loop() override;
+  void setup() override;
+
   void update() override;
   void on_inverter_data(const std::vector<uint8_t> &data) ;
   void dump_config() override;

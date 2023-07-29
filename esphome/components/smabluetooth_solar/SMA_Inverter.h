@@ -25,10 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
-
-//#include "ESP32Loggable.h"
-#include "esphome/core/log.h"
+#include "esphome/core/component.h"
 #include "BluetoothSerial.h"
 
 #define tokWh(value64)    (double)(value64)/1000
@@ -310,6 +307,19 @@ class ESP32_SMA_Inverter  {
 
     static const uint16_t appSUSyID = 125;
     static uint32_t appSerial ;
+
+    void HexDump(uint8_t *buf, int count, int radix, uint8_t c);
+    uint8_t printUnixTime(char *buf, time_t t);
+    uint16_t get_u16(uint8_t *buf);
+    uint32_t get_u32(uint8_t *buf);
+    uint64_t get_u64(uint8_t *buf);
+
+    int32_t  value32 = 0;
+    int64_t  value64 = 0;
+    uint64_t totalWh = 0;
+    uint64_t totalWh_prev = 0;
+    time_t   dateTime = 0;
+
 
 
   //from SMA_Bluetooth

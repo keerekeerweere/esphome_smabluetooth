@@ -22,19 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <Arduino.h>
 #include "SMA_Inverter.h"
-#include "SMA_Utils.h"
-#include "BluetoothSerial.h"
-//#include "esphome/core/log.h"
-//#include "ESP32_SMA_Inverter_App.h"
 
 
-int32_t  value32 = 0;
-int64_t  value64 = 0;
-uint64_t totalWh = 0;
-uint64_t totalWh_prev = 0;
-time_t   dateTime = 0;
 
 const char btPin[] = {'0','0','0','0',0}; // BT pin Always 0000. (not login passcode!)
 
@@ -68,9 +58,11 @@ bool ESP32_SMA_Inverter::disconnect() {
 bool ESP32_SMA_Inverter::isValidSender(uint8_t expAddr[6], uint8_t isAddr[6]) {
   for (int i = 0; i < 6; i++)
     if ((isAddr[i] != expAddr[i]) && (expAddr[i] != 0xFF)) {
+      
       ESP_LOGV(TAG, "\nShoud-Addr: %02X %02X %02X %02X %02X %02X\n   Is-Addr: %02X %02X %02X %02X %02X %02X\n",
         expAddr[5], expAddr[4], expAddr[3], expAddr[2], expAddr[1], expAddr[5],
          isAddr[5],  isAddr[4],  isAddr[3],  isAddr[2],  isAddr[1],  isAddr[5]);
+         
         return false;
     }
   return true;
@@ -80,7 +72,9 @@ bool ESP32_SMA_Inverter::isValidSender(uint8_t expAddr[6], uint8_t isAddr[6]) {
 //unsigned int readBtPacket(int index, unsigned int cmdcodetowait) {
 E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
   //extern BluetoothSerial serialBT;
+  ESP_LOGV(TAG, "writing");
   ESP_LOGV(TAG, "getPacket cmd=0x%04x\n", wait4Command);
+
   //extern bool readTimeout;
   int index = 0;
   bool hasL2pckt = false;
@@ -983,9 +977,101 @@ bool ESP32_SMA_Inverter::validateChecksum() {
   if (get_u16(pcktBuf+pcktBufPos-3) == fcsChecksum) {
     return true;
   } else {
-    DEBUG1_PRINTF("Invalid validateChecksum 0x%04X not 0x%04X\n", 
+    ESP_LOGE(TAG, "Invalid validateChecksum 0x%04X not 0x%04X\n", 
     fcsChecksum, get_u16(pcktBuf+pcktBufPos-3));
     return false;
   }
+}
+
+
+
+void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) {
+  int i, j;
+  ESP_LOGD(TAG, "\n---%c----:", c);
+  for (i=0; i < radix; i++) ESP_LOGD(" %02X", i);
+  for (i = 0, j = 0; i < count; i++) {
+    if (j % radix == 0) {
+      ESP_LOGD(TAG, "\n%c-%06d: ", c, j);
+    }
+    ESP_LOGD(TAG, "%02X ", buf[i]);
+    j++;
+  }
+  ESP_LOGD(TAG, "\n");
+}
+//-----------------------------------------------------
+ uint8_t ESP32_SMA_Inverter::printUnixTime(char *buf, time_t t) {
+    uint32_t a, b, c, d, e, f;
+    //Negative Unix time values are not supported
+    if(t < 1) t = 0;
+  
+    //Retrieve hours, minutes and seconds
+    uint8_t seconds = t % 60;
+    t /= 60;
+    uint8_t minutes = t % 60;
+    t /= 60;
+    uint8_t hours = t % 24;
+    t /= 24;
+  
+    //Convert Unix time to date
+    a = (uint32_t) ((4 * t + 102032) / 146097 + 15);
+    b = (uint32_t) (t + 2442113 + a - (a / 4));
+    c = (20 * b - 2442) / 7305;
+    d = b - 365 * c - (c / 4);
+    e = d * 1000 / 30601;
+    f = d - e * 30 - e * 601 / 1000;
+  
+    //January and February are counted as months 13 and 14 of the previous year
+    if(e <= 13) {
+       c -= 4716;
+       e -= 1;
+    } else {
+       c -= 4715;
+       e -= 13;
+    }
+    //Retrieve year, month and day
+    uint16_t year = c;
+    uint8_t  month = e;
+    uint8_t  day = f;
+    return snprintf(buf, 31,"%02d.%02d.%d %02d:%02d:%02d",day, month, year, hours, minutes, seconds);
+    //ESP_LOGI(" GMT: %02d.%02d.%d %02d:%02d:%02d",day, month, year, hours, minutes, seconds);
+ }
+
+//-----------------------------------------------------
+uint16_t ESP32_SMA_Inverter::get_u16(uint8_t *buf) {
+    register uint16_t shrt = 0;
+    shrt += *(buf+1);
+    shrt <<= 8;
+    shrt += *(buf);
+    return shrt;
+}
+uint32_t ESP32_SMA_Inverter::get_u32(uint8_t *buf) {
+    register uint32_t lng = 0;
+    lng += *(buf+3);
+    lng <<= 8;
+    lng += *(buf+2);
+    lng <<= 8;
+    lng += *(buf+1);
+    lng <<= 8;
+    lng += *(buf);
+    return lng;
+}
+uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
+    register uint64_t lnglng = 0;
+    lnglng += *(buf+7);
+    lnglng <<= 8;
+    lnglng += *(buf+6);
+    lnglng <<= 8;
+    lnglng += *(buf+5);
+    lnglng <<= 8;
+    lnglng += *(buf+4);
+    lnglng <<= 8;
+    lnglng += *(buf+3);
+    lnglng <<= 8;
+    lnglng += *(buf+2);
+    lnglng <<= 8;
+    lnglng += *(buf+1);
+    lnglng <<= 8;
+    lnglng += *(buf);
+    return lnglng;
 }
 

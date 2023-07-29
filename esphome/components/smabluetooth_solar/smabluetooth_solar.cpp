@@ -1,5 +1,6 @@
 #include "smabluetooth_solar.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -8,8 +9,9 @@ namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
-//static const uint8_t MODBUS_CMD_READ_IN_REGISTERS = 0x04;
-//static const uint8_t MODBUS_REGISTER_COUNT[] = {33, 95};  // indexed with enum GrowattProtocolVersion
+void SmaBluetoothSolar::setup() {
+  ESP_LOGCONFIG(TAG, "Starting setup...");
+}
 
 void SmaBluetoothSolar::loop() {
   // If update() was unable to send we retry until we can send.
@@ -25,12 +27,6 @@ void SmaBluetoothSolar::update() {
     return;
   }
 
-  // The bus might be slow, or there might be other devices, or other components might be talking to our device.
-/*  if (this->waiting_for_response()) {
-    this->waiting_to_update_ = true;
-    return;
-  }
-*/
   this->waiting_to_update_ = false;
 //  this->send(MODBUS_CMD_READ_IN_REGISTERS, 0, MODBUS_REGISTER_COUNT[this->protocol_version_]);
   this->last_send_ = millis();
@@ -39,14 +35,11 @@ void SmaBluetoothSolar::update() {
 void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
   // Other components might be sending commands to our device. But we don't get called with enough
   // context to know what is what. So if we didn't do a send, we ignore the data.
+  ESP_LOGVV(TAG, "on inverter data ");
   if (!this->last_send_)
     return;
   this->last_send_ = 0;
 
-  // Also ignore the data if the message is too short. Otherwise we will publish invalid values.
-/*  if (data.size() < MODBUS_REGISTER_COUNT[this->protocol_version_] * 2)
-    return;
-*/
   auto publish_1_reg_sensor_state = [&](sensor::Sensor *sensor, size_t i, float unit) -> void {
     if (sensor == nullptr)
       return;
@@ -136,7 +129,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
 
 void SmaBluetoothSolar::dump_config() {
   ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
-  //ESP_LOGCONFIG(TAG, "  Address: 0x%02X", this->address_);
+  ESP_LOGCONFIG(TAG, "  Address: %s", this->sma_inverter_bluetooth_mac_.c_str());
 }
 
 }  // namespace smabluetooth_solar
