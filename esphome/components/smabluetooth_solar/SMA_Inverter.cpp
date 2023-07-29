@@ -24,8 +24,28 @@ SOFTWARE.
 
 #include "SMA_Inverter.h"
 
-
 static const char *const INVTAG = "smainverter";
+
+void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
+// Convert the MAC address string to binary
+    sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx", 
+            &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2], &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]);
+    // Zero the array, all unused butes must be 0
+    for(int i = 0; i < sizeof(smaInvPass);i++)
+       smaInvPass[i] ='\0';
+    strlcpy(smaInvPass , pw.c_str(), sizeof(smaInvPass));
+
+    invData.SUSyID = 0x7d;
+    invData.Serial = 0;
+
+    // reverse inverter BT address
+    for(uint8_t i=0; i<6; i++) invData.BTAddress[i] = smaBTAddress[5-i];
+    ESP_LOGD("invData.BTAddress: %02X:%02X:%02X:%02X:%02X:%02X\n",
+                invData.BTAddress[5], invData.BTAddress[4], invData.BTAddress[3],
+                invData.BTAddress[2], invData.BTAddress[1], invData.BTAddress[0]);
+
+
+}
 
 bool ESP32_SMA_Inverter::begin(String localName, bool isMaster) {
   boolean bOk = false;
@@ -34,6 +54,9 @@ bool ESP32_SMA_Inverter::begin(String localName, bool isMaster) {
     return bOk;
 }
 
+bool ESP32_SMA_Inverter::connect() {
+  return connect(smaBTAddress);
+}
 
 bool ESP32_SMA_Inverter::connect(uint8_t remoteAddress[]) {
   bool bGotConnected = serialBT.connect(remoteAddress);
@@ -648,6 +671,10 @@ void ESP32_SMA_Inverter::logoffSMAInverter()
   writePacketLength(pcktBuf);
   BTsendPacket(pcktBuf);
   return;
+}
+
+E_RC ESP32_SMA_Inverter::logonSMAInverter() {
+  return logonSMAInverter(smaInvPass, USERGROUP);
 }
 
 // **** Logon SMA **********

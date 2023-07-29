@@ -11,6 +11,12 @@ static const char *const TAG = "smabluetooth_solar";
 
 void SmaBluetoothSolar::setup() {
   //ESP_LOGCONFIG(TAG, "Starting setup...");
+  //begin
+    smaInverter.setup(sma_inverter_bluetooth_mac_, sma_inverter_password_);
+    nextTime = millis();
+
+    // *** Start BT
+    smaInverter.begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
 }
 
 void SmaBluetoothSolar::loop() {
@@ -18,6 +24,46 @@ void SmaBluetoothSolar::loop() {
   if (!this->waiting_to_update_)
     return;
   update();
+
+  int adjustedScanRate;
+  if (nightTime)  // Scan every 15min
+    adjustedScanRate = 900000;
+  else
+    adjustedScanRate = (60 * 1000); //todo adjust, take 60s for now
+
+
+  //if not yet connected
+  if (!smaInverter.isBtConnected()) {
+    nextTime = millis() + adjustedScanRate;
+
+    //reset PcktID
+    smaInverter.initPcktID();
+
+    //connect
+    ESP_LOGW(TAG, "Connecting SMA inverter: \n");
+    if (smaInverter.connect()) {
+      // **** Initialize SMA *******
+      ESP_LOGW(TAG, "BT connected \n");
+      E_RC rc = smaInverter.initialiseSMAConnection();
+      ESP_LOGI(TAG, "SMA %d \n", rc);
+      smaInverter.getBT_SignalStrength();
+
+      ESP_LOGW(TAG, "*** logonSMAInverter\n");
+      rc = smaInverter.logonSMAInverter();
+      ESP_LOGW(TAG, "Logon return code %d\n", rc);
+
+      //reading data
+      smaInverter.ReadCurrentData();
+
+      smaInverter.disconnect(); //moved btConnected to inverter class
+
+    }
+
+  }
+
+  delay(100);
+
+
 }
 
 void SmaBluetoothSolar::update() {

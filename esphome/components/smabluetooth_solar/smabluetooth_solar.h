@@ -1,6 +1,7 @@
 #pragma once
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
+#include "SMA_Inverter.h"
 
 #include <vector>
 
@@ -61,6 +62,11 @@ class SmaBluetoothSolar : public PollingComponent {
   bool waiting_to_update_;
   uint32_t last_send_;
 
+  uint32_t nextTime = 0;
+  bool nightTime = false;
+  bool firstTime = true;
+
+
   struct SmaPhase {
     sensor::Sensor *voltage_sensor_{nullptr};
     sensor::Sensor *current_sensor_{nullptr};
@@ -87,6 +93,10 @@ class SmaBluetoothSolar : public PollingComponent {
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
 
+
+  private:
+    ESP32_SMA_Inverter& smaInverter = ESP32_SMA_Inverter::getInstance();
+    
 };
 
 }  // namespace smabluetooth_solar

@@ -236,6 +236,9 @@ class ESP32_SMA_Inverter  {
     ESP32_SMA_Inverter(const ESP32_SMA_Inverter&) = delete;
     ESP32_SMA_Inverter& operator=(const ESP32_SMA_Inverter&) = delete;
 
+    //setup the variables for the inverter
+    void setup(std::string mac, std::string pw);
+
     //Prototypes
     bool isValidSender(uint8_t expAddr[6], uint8_t isAddr[6]);
     E_RC getPacket(uint8_t expAddr[6], int wait4Command);
@@ -244,12 +247,14 @@ class ESP32_SMA_Inverter  {
     E_RC getInverterData(enum getInverterDataType type);
     bool getBT_SignalStrength();
     E_RC initialiseSMAConnection();
+    E_RC logonSMAInverter();
     E_RC logonSMAInverter(const char *password, const uint8_t user);
     void logoffSMAInverter();
 
     E_RC ArchiveDayData(time_t startTime);
     E_RC ReadCurrentData();
 
+    bool connect();
     bool connect(uint8_t remoteAddress[]);
     bool disconnect();
 
@@ -265,6 +270,10 @@ class ESP32_SMA_Inverter  {
     void writePacketTrailer(uint8_t *btbuffer);
     void writePacketLength(uint8_t *buf);
     bool validateChecksum();
+
+    void initPcktID() {
+      setPcktID(1);
+    }
 
     void setPcktID(uint8_t pPcktID) {
         pcktID = pPcktID;
@@ -298,6 +307,9 @@ class ESP32_SMA_Inverter  {
     char charBuf[CHAR_BUF_MAX];
     int  charLen = 0;
 
+
+    char smaInvPass[12];  
+    uint8_t smaBTAddress[6]; // SMA bluetooth address
 
     static const uint16_t appSUSyID = 125;
     static uint32_t appSerial ;
