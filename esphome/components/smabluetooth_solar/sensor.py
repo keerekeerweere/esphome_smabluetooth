@@ -48,7 +48,7 @@ CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 
 AUTO_LOAD = ["smabluetooth_solar"]
-DEPENDENCIES = ["esp32", "sensor"]
+DEPENDENCIES = ["esp32", "sensor", "BluetoothSerial"]
 CODEOWNERS = ["@keerekeerweere"]
 
 
