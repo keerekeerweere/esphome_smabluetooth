@@ -77,8 +77,11 @@ void SmaBluetoothSolar::loop() {
         ESP_LOGD(TAG, "*** reading EnergyProduction\n");
         if (smaInverter->getInverterData(EnergyProduction)) {
 
-        if (pv_active_power_sensor_!=nullptr) {
-          pv_active_power_sensor_->publish_state(smaInverter->dispData.Pac);
+        if (today_production_!=nullptr) {
+          today_production_->publish_state(smaInverter->dispData.EToday);
+        }
+        if (total_energy_production_!=nullptr) {
+          total_energy_production_->publish_state(smaInverter->dispData.ETotal);
         }
 
           //trigger the sensor 
