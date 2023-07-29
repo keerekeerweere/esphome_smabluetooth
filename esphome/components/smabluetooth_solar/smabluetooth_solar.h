@@ -95,7 +95,7 @@ class SmaBluetoothSolar : public PollingComponent {
 
 
   private:
-    ESP32_SMA_Inverter& smaInverter = ESP32_SMA_Inverter::getInstance();
+    ESP32_SMA_Inverter *smaInverter;
     
 };
 

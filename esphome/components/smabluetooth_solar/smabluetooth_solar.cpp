@@ -12,7 +12,8 @@ static const char *const TAG = "smabluetooth_solar";
 void SmaBluetoothSolar::setup() {
   ESP_LOGCONFIG(TAG, "Starting setup...");
   //begin
-    smaInverter.setup(sma_inverter_bluetooth_mac_, sma_inverter_password_);
+   smaInverter = ESP32_SMA_Inverter::getInstance();
+    smaInverter->setup(sma_inverter_bluetooth_mac_, sma_inverter_password_);
     nextTime = millis();
 
 }
@@ -33,33 +34,33 @@ void SmaBluetoothSolar::loop() {
     hasBegun = true;
 
     // *** Start BT
-    smaInverter.begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
+    smaInverter->begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
   }
 
   //if not yet connected
-  if (nextTime < millis() && !smaInverter.isBtConnected()) {
+  if (nextTime < millis() && !smaInverter->isBtConnected()) {
     nextTime = millis() + adjustedScanRate;
 
     //reset PcktID
-    smaInverter.initPcktID();
+    smaInverter->initPcktID();
 
     //connect
     ESP_LOGW(TAG, "Connecting SMA inverter: \n");
-    if (smaInverter.connect()) {
+    if (smaInverter->connect()) {
       // **** Initialize SMA *******
       ESP_LOGW(TAG, "BT connected \n");
-      E_RC rc = smaInverter.initialiseSMAConnection();
+      E_RC rc = smaInverter->initialiseSMAConnection();
       ESP_LOGI(TAG, "SMA %d \n", rc);
-      smaInverter.getBT_SignalStrength();
+      smaInverter->getBT_SignalStrength();
 
       ESP_LOGW(TAG, "*** logonSMAInverter\n");
-      rc = smaInverter.logonSMAInverter();
+      rc = smaInverter->logonSMAInverter();
       ESP_LOGW(TAG, "Logon return code %d\n", rc);
 
       //reading data
-      smaInverter.ReadCurrentData();
+      smaInverter->ReadCurrentData();
 
-      smaInverter.disconnect(); //moved btConnected to inverter class
+      smaInverter->disconnect(); //moved btConnected to inverter class
 
     }
 

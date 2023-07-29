@@ -226,10 +226,10 @@ class ESP32_SMA_Inverter  {
   public: 
     
     // Static method to get the instance of the class.
-    static ESP32_SMA_Inverter& getInstance() {
+    static ESP32_SMA_Inverter* getInstance() {
         // This guarantees that the instance is created only once.
         static ESP32_SMA_Inverter instance;
-        return instance;
+        return &instance;
     }
 
     // Delete the copy constructor and the assignment operator to prevent cloning.
