@@ -1,4 +1,5 @@
 #include "smabluetooth_solar.h"
+#include "esphome/core/application.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
@@ -42,6 +43,7 @@ void SmaBluetoothSolar::loop() {
     // *** Start BT
     ESP_LOGW(TAG, "start BT ");
     smaInverter->begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
+    App.feed_wdt();
   }
 
   //if not yet connected
@@ -55,20 +57,34 @@ void SmaBluetoothSolar::loop() {
     //connect
     ESP_LOGW(TAG, "Connecting SMA inverter: \n");
     if (smaInverter->connect()) {
+      App.feed_wdt();
       // **** Initialize SMA *******
       ESP_LOGW(TAG, "BT connected \n");
       E_RC rc = smaInverter->initialiseSMAConnection();
       ESP_LOGI(TAG, "SMA %d \n", rc);
 
+      App.feed_wdt();
       ESP_LOGW(TAG, "get signal strength\n");
       smaInverter->getBT_SignalStrength();
 
+      App.feed_wdt();
       ESP_LOGW(TAG, "*** logonSMAInverter\n");
       rc = smaInverter->logonSMAInverter();
       ESP_LOGW(TAG, "Logon return code %d\n", rc);
 
+      App.feed_wdt();
       //reading data
-      smaInverter->ReadCurrentData();
+
+      //smaInverter->ReadCurrentData();
+      //skip all for now and try individual
+      if (smaInverter->isBtConnected()) {
+        App.feed_wdt();
+        ESP_LOGD(TAG, "*** reading EnergyProduction\n");
+        E_RC rc = smaInverter->getInverterData(EnergyProduction);
+        if (rc!= E_OK) {
+          ESP_LOGE(TAG,"failed to read EnergyProduction");
+        }
+      }
 
       smaInverter->disconnect(); //moved btConnected to inverter class
 

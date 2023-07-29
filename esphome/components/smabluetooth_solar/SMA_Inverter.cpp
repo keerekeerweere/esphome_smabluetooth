@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+//#include "esphome/core/application.h"
 #include "SMA_Inverter.h"
 
 static const char *const INVTAG = "smainverter";
@@ -838,12 +839,15 @@ E_RC ArchiveDayData(time_t startTime) {
   return hasData;
 }
 */
+
+
 // ******* read SMA current data **********
 E_RC ESP32_SMA_Inverter::ReadCurrentData() {
   if (!btConnected) {
     charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "Bluetooth offline!\n");
     return E_NODATA;
   }
+  
   if ((getInverterData(SpotACTotalPower)) != E_OK)  {
     charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "SpotACTotalPower error!\n" ); // Pac
     return E_NODATA;
@@ -925,7 +929,7 @@ void ESP32_SMA_Inverter::BTsendPacket( uint8_t *btbuffer ) {
     #endif
     serialBT.write( *(btbuffer+i) );  // Send to SMA via ESP32 bluetooth
   }
-  HexDump(btbuffer, pcktBufPos, 10, 'T');
+  //HexDump(btbuffer, pcktBufPos, 10, 'T');
 }
 
 
