@@ -92,9 +92,8 @@ void SmaBluetoothSolar::loop() {
 
   }
 
-  delay(100);
-
-
+  App.feed_wdt();
+  //delay(100);
 }
 
 void SmaBluetoothSolar::update() {
