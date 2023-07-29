@@ -80,9 +80,9 @@ void SmaBluetoothSolar::loop() {
       if (smaInverter->isBtConnected()) {
         App.feed_wdt();
         ESP_LOGD(TAG, "*** reading EnergyProduction\n");
-        E_RC rc = smaInverter->getInverterData(EnergyProduction);
-        if (rc!= E_OK) {
-          ESP_LOGE(TAG,"failed to read EnergyProduction");
+        if (smaInverter->getInverterData(EnergyProduction)) {
+          //trigger the sensor 
+          
         }
       }
 

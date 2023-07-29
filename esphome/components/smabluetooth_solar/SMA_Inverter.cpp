@@ -25,7 +25,7 @@ SOFTWARE.
 //#include "esphome/core/application.h"
 #include "SMA_Inverter.h"
 
-static const char *const INVTAG = "smainverter";
+static const char *const INVTAG = "smabluetooth_solar";
 
 void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
 // Convert the MAC address string to binary
