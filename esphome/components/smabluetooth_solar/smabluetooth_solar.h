@@ -17,7 +17,7 @@ enum SmaBluetoothProtocolVersion {
 class SmaBluetoothSolar : public PollingComponent {
  public:
   void loop() override;
-  void setup() override;
+  //void setup() override;
 
   void update() override;
   void on_inverter_data(const std::vector<uint8_t> &data) ;

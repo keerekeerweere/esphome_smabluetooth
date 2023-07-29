@@ -9,10 +9,10 @@ namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
-void SmaBluetoothSolar::setup() {
-  ESP_LOGCONFIG(TAG, "Starting setup...");
+/*void SmaBluetoothSolar::setup() {
+  //ESP_LOGCONFIG(TAG, "Starting setup...");
 }
-
+*/
 void SmaBluetoothSolar::loop() {
   // If update() was unable to send we retry until we can send.
   if (!this->waiting_to_update_)
