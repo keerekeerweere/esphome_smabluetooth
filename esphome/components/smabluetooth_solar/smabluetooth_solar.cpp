@@ -15,8 +15,6 @@ void SmaBluetoothSolar::setup() {
     smaInverter.setup(sma_inverter_bluetooth_mac_, sma_inverter_password_);
     nextTime = millis();
 
-    // *** Start BT
-    smaInverter.begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
 }
 
 void SmaBluetoothSolar::loop() {
@@ -31,6 +29,12 @@ void SmaBluetoothSolar::loop() {
   else
     adjustedScanRate = (60 * 1000); //todo adjust, take 60s for now
 
+  if (!hasBegun){
+    hasBegun = true;
+
+    // *** Start BT
+    smaInverter.begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
+  }
 
   //if not yet connected
   if (nextTime < millis() && !smaInverter.isBtConnected()) {
