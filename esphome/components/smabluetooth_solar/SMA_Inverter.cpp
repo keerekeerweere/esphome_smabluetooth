@@ -60,9 +60,9 @@ bool ESP32_SMA_Inverter::connect() {
   return connect(smaBTAddress);
 }
 
-bool ESP32_SMA_Inverter::connect(uint8_t remoteAddress[]) {
-  ESP_LOGD(INVTAG, "connecting %d", );
-  bool bGotConnected = serialBT.connect(remoteAddress);
+bool ESP32_SMA_Inverter::connect(uint8_t ra[]) {
+  ESP_LOGD(INVTAG, "connecting %02X %02X %02X %02X %02X %02X", ra[5], ra[4], ra[3], ra[2], ra[1], ra[0]);
+  bool bGotConnected = serialBT.connect(ra);
   btConnected = bGotConnected;
   return bGotConnected; 
 }
