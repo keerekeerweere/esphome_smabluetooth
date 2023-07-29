@@ -219,6 +219,8 @@ typedef struct __attribute__ ((packed)) PacketHeader {
     uint8_t   DestinationAddr[6]; // Local BT Address
     uint16_t  command;
 } L1Hdr;
+#pragma pack(pop)
+
 
 class ESP32_SMA_Inverter  {
   public: 
@@ -233,9 +235,6 @@ class ESP32_SMA_Inverter  {
     // Delete the copy constructor and the assignment operator to prevent cloning.
     ESP32_SMA_Inverter(const ESP32_SMA_Inverter&) = delete;
     ESP32_SMA_Inverter& operator=(const ESP32_SMA_Inverter&) = delete;
-
-
-
 
     //Prototypes
     bool isValidSender(uint8_t expAddr[6], uint8_t isAddr[6]);
