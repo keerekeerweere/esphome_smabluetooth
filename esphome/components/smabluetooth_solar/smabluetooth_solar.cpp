@@ -40,6 +40,7 @@ void SmaBluetoothSolar::loop() {
     hasBegun = true;
 
     // *** Start BT
+    ESP_LOGW(TAG, "start BT ");
     smaInverter->begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
   }
 
@@ -48,6 +49,7 @@ void SmaBluetoothSolar::loop() {
     nextTime = millis() + adjustedScanRate;
 
     //reset PcktID
+    ESP_LOGW(TAG, "initPcktID ");
     smaInverter->initPcktID();
 
     //connect
@@ -57,6 +59,8 @@ void SmaBluetoothSolar::loop() {
       ESP_LOGW(TAG, "BT connected \n");
       E_RC rc = smaInverter->initialiseSMAConnection();
       ESP_LOGI(TAG, "SMA %d \n", rc);
+
+      ESP_LOGW(TAG, "get signal strength\n");
       smaInverter->getBT_SignalStrength();
 
       ESP_LOGW(TAG, "*** logonSMAInverter\n");

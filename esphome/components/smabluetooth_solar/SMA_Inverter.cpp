@@ -29,8 +29,7 @@ static const char *const INVTAG = "smainverter";
 void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
 // Convert the MAC address string to binary
     ESP_LOGW(INVTAG, "setup inverter to:  %s ", mac.c_str());
-    sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx", 
-            &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2], &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]);
+    sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx", &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2], &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]);
     // Zero the array, all unused butes must be 0
     for(int i = 0; i < sizeof(smaInvPass);i++)
        smaInvPass[i] ='\0';
@@ -40,12 +39,8 @@ void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
     invData.Serial = 0;
 
     // reverse inverter BT address
-    for(uint8_t i=0; i<6; i++) invData.BTAddress[i] = smaBTAddress[5-i];
-    ESP_LOGD("invData.BTAddress: %02X:%02X:%02X:%02X:%02X:%02X\n",
-                invData.BTAddress[5], invData.BTAddress[4], invData.BTAddress[3],
-                invData.BTAddress[2], invData.BTAddress[1], invData.BTAddress[0]);
-
-
+    for(uint8_t i=0; i<6; i++) invData.btAddress[i] = smaBTAddress[5-i];
+    ESP_LOGD("invData.btAddress: %02X:%02X:%02X:%02X:%02X:%02X\n", invData.btAddress[5], invData.btAddress[4], invData.btAddress[3], invData.btAddress[2], invData.btAddress[1], invData.btAddress[0]);
 }
 
 bool ESP32_SMA_Inverter::begin(String localName, bool isMaster) {
@@ -248,7 +243,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
     bool  validPcktID = false;
     do {
     do {
-      invData.status = getPacket(invData.BTAddress, 0x0001);
+      invData.status = getPacket(invData.btAddress, 0x0001);
    
       if (invData.status != E_OK) return invData.status;
       if (validateChecksum()) {
@@ -605,13 +600,13 @@ E_RC ESP32_SMA_Inverter::getInverterData(enum getInverterDataType type) {
 //-------------------------------------------------------------------------
 bool ESP32_SMA_Inverter::getBT_SignalStrength() {
   ESP_LOGI(INVTAG, "\n\n*** SignalStrength ***");
-  writePacketHeader(pcktBuf, 0x03, invData.BTAddress);
+  writePacketHeader(pcktBuf, 0x03, invData.btAddress);
   writeByte(pcktBuf,0x05);
   writeByte(pcktBuf,0x00);
   writePacketLength(pcktBuf);
   BTsendPacket(pcktBuf);
 
-  getPacket(invData.BTAddress, 4);
+  getPacket(invData.btAddress, 4);
   dispData.BTSigStrength = ((float)btrdBuf[22] * 100.0f / 255.0f);
   ESP_LOGI(INVTAG, "BT-Signal %9.1f %%", dispData.BTSigStrength );
   return true;
@@ -621,10 +616,10 @@ bool ESP32_SMA_Inverter::getBT_SignalStrength() {
 E_RC ESP32_SMA_Inverter::initialiseSMAConnection() {
   //extern uint8_t sixff[6];
   ESP_LOGI(INVTAG, " -> Initialize");
-  getPacket(invData.BTAddress, 2); // 1. Receive
+  getPacket(invData.btAddress, 2); // 1. Receive
   invData.NetID = pcktBuf[22];
   ESP_LOGI(INVTAG, "SMA netID=%02X\n", invData.NetID);
-  writePacketHeader(pcktBuf, 0x02, invData.BTAddress);
+  writePacketHeader(pcktBuf, 0x02, invData.btAddress);
   write32(pcktBuf, 0x00700400);
   writeByte(pcktBuf, invData.NetID);
   write32(pcktBuf, 0);
@@ -632,7 +627,7 @@ E_RC ESP32_SMA_Inverter::initialiseSMAConnection() {
   writePacketLength(pcktBuf);
 
   BTsendPacket(pcktBuf);             // 1. Reply
-  getPacket(invData.BTAddress, 5); // 2. Receive
+  getPacket(invData.btAddress, 5); // 2. Receive
 
   // Extract ESP32 BT address
   memcpy(espBTAddress, pcktBuf+26,6); 
@@ -650,7 +645,7 @@ E_RC ESP32_SMA_Inverter::initialiseSMAConnection() {
   writePacketLength(pcktBuf);
 
   BTsendPacket(pcktBuf);             // 2. Reply
-  if (getPacket(invData.BTAddress, 1) != E_OK) // 3. Receive
+  if (getPacket(invData.btAddress, 1) != E_OK) // 3. Receive
     return E_INIT;
 
   if (!validateChecksum())
@@ -757,7 +752,7 @@ E_RC ArchiveDayData(time_t startTime) {
 
   E_RC hasData = E_ARCHNODATA;
   pcktID++;
-  writePacketHeader(pcktBuf, 0x01, invData.BTAddress);
+  writePacketHeader(pcktBuf, 0x01, invData.btAddress);
   writePacket(pcktBuf, 0x09, 0xE0, 0, invData.SUSyID, invData.Serial);
   write32(pcktBuf, 0x70000200);
   write32(pcktBuf, startTime - 300);
@@ -773,7 +768,7 @@ E_RC ArchiveDayData(time_t startTime) {
     dateTime = 0;
 
     do {
-      rc = getPacket(invData.BTAddress, 1);
+      rc = getPacket(invData.btAddress, 1);
 
       if (rc != E_OK) {
          DEBUG3_PRINTF("\ngetPacket error=%d", rc);

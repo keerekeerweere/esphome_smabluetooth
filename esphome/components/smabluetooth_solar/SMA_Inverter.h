@@ -70,7 +70,7 @@ enum E_RC {
 };
 
 struct InverterData {
-    uint8_t BTAddress[6];
+    uint8_t btAddress[6];
     uint8_t SUSyID;
     uint32_t Serial;
     uint8_t NetID;
