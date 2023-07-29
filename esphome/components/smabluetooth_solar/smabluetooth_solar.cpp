@@ -10,7 +10,7 @@ namespace smabluetooth_solar {
 static const char *const TAG = "smabluetooth_solar";
 
 void SmaBluetoothSolar::setup() {
-  //ESP_LOGCONFIG(TAG, "Starting setup...");
+  ESP_LOGCONFIG(TAG, "Starting setup...");
   //begin
     smaInverter.setup(sma_inverter_bluetooth_mac_, sma_inverter_password_);
     nextTime = millis();
@@ -21,10 +21,10 @@ void SmaBluetoothSolar::setup() {
 
 void SmaBluetoothSolar::loop() {
   // If update() was unable to send we retry until we can send.
-  if (!this->waiting_to_update_)
+/*  if (!this->waiting_to_update_)
     return;
   update();
-
+*/
   int adjustedScanRate;
   if (nightTime)  // Scan every 15min
     adjustedScanRate = 900000;
@@ -33,7 +33,7 @@ void SmaBluetoothSolar::loop() {
 
 
   //if not yet connected
-  if (!smaInverter.isBtConnected()) {
+  if (nextTime < millis() && !smaInverter.isBtConnected()) {
     nextTime = millis() + adjustedScanRate;
 
     //reset PcktID
