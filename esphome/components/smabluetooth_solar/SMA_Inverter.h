@@ -311,8 +311,8 @@ class ESP32_SMA_Inverter  {
     char smaInvPass[12];  
     uint8_t smaBTAddress[6]; // SMA bluetooth address
 
-    static const uint16_t appSUSyID = 125;
-    static uint32_t appSerial ;
+    const uint16_t appSUSyID = 125;
+    uint32_t appSerial = 0 ;
 
     void HexDump(uint8_t *buf, int count, int radix, uint8_t c);
     uint8_t printUnixTime(char *buf, time_t t);
