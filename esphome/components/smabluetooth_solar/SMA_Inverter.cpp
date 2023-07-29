@@ -901,7 +901,7 @@ uint8_t ESP32_SMA_Inverter::BTgetByte() {
   while (!serialBT.available() ) {
     //delay(5);  //Wait for BT byte to arrive
     if (millis() > time) { 
-      ESP_LOGD(INVTAG,"BTgetByte Timeout");
+      ESP_LOGD(TAG, "BTgetByte Timeout");
       readTimeout = true;
       break;
     }
@@ -1015,7 +1015,7 @@ bool ESP32_SMA_Inverter::validateChecksum() {
 void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) {
   int i, j;
   ESP_LOGD(TAG, "\n---%c----:", c);
-  for (i=0; i < radix; i++) ESP_LOGD(INVTAG," %02X", i);
+  for (i=0; i < radix; i++) ESP_LOGD(TAG, " %02X", i);
   for (i = 0, j = 0; i < count; i++) {
     if (j % radix == 0) {
       ESP_LOGD(TAG, "\n%c-%06d: ", c, j);
