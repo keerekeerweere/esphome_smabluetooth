@@ -29,7 +29,8 @@ static const char *const INVTAG = "smainverter";
 void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
 // Convert the MAC address string to binary
     ESP_LOGW(INVTAG, "setup inverter to:  %s ", mac.c_str());
-    sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx", &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2], &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]);
+    sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx", 
+      &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2], &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]);
     // Zero the array, all unused butes must be 0
     for(int i = 0; i < sizeof(smaInvPass);i++)
        smaInvPass[i] ='\0';
@@ -40,7 +41,8 @@ void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
 
     // reverse inverter BT address
     for(uint8_t i=0; i<6; i++) invData.btAddress[i] = smaBTAddress[5-i];
-    ESP_LOGD("invData.btAddress: %02X:%02X:%02X:%02X:%02X:%02X\n", invData.btAddress[5], invData.btAddress[4], invData.btAddress[3], invData.btAddress[2], invData.btAddress[1], invData.btAddress[0]);
+    ESP_LOGD(INVTAG,"invData.btAddress: %02X:%02X:%02X:%02X:%02X:%02X\n", 
+      invData.btAddress[5], invData.btAddress[4], invData.btAddress[3], invData.btAddress[2], invData.btAddress[1], invData.btAddress[0]);
 }
 
 bool ESP32_SMA_Inverter::begin(String localName, bool isMaster) {
@@ -56,7 +58,8 @@ bool ESP32_SMA_Inverter::connect() {
 }
 
 bool ESP32_SMA_Inverter::connect(uint8_t ra[]) {
-  ESP_LOGD(INVTAG, "connecting %02X %02X %02X %02X %02X %02X", ra[5], ra[4], ra[3], ra[2], ra[1], ra[0]);
+  ESP_LOGD(INVTAG, "connecting %02X %02X %02X %02X %02X %02X", 
+    ra[5], ra[4], ra[3], ra[2], ra[1], ra[0]);
   bool bGotConnected = serialBT.connect(ra);
   btConnected = bGotConnected;
   return bGotConnected; 
