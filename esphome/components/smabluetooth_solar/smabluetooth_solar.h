@@ -66,6 +66,7 @@ class SmaBluetoothSolar : public PollingComponent {
   bool nightTime = false;
   bool firstTime = true;
   bool hasBegun = false;
+  bool hasSetup = false;
 
   struct SmaPhase {
     sensor::Sensor *voltage_sensor_{nullptr};

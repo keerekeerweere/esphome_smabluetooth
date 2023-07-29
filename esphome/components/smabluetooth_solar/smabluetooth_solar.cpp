@@ -10,12 +10,14 @@ namespace smabluetooth_solar {
 static const char *const TAG = "smabluetooth_solar";
 
 void SmaBluetoothSolar::setup() {
-  ESP_LOGCONFIG(TAG, "Starting setup...");
+  ESP_LOGW(TAG, "Starting setup...");
   //begin
    smaInverter = ESP32_SMA_Inverter::getInstance();
+  ESP_LOGW(TAG, "Inverter/pw to setup... %s ", sma_inverter_bluetooth_mac_.c_str());
     smaInverter->setup(sma_inverter_bluetooth_mac_, sma_inverter_password_);
     nextTime = millis();
 
+  hasSetup = true;
 }
 
 void SmaBluetoothSolar::loop() {
@@ -24,6 +26,10 @@ void SmaBluetoothSolar::loop() {
     return;
   update();
 */
+
+  if (!hasSetup) {
+    return ;
+  }
   int adjustedScanRate;
   if (nightTime)  // Scan every 15min
     adjustedScanRate = 900000;
