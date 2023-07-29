@@ -28,7 +28,7 @@ SOFTWARE.
 
 
 //#include "ESP32Loggable.h"
-//#include "esphome/core/log.h"
+#include "esphome/core/log.h"
 #include "BluetoothSerial.h"
 
 #define tokWh(value64)    (double)(value64)/1000

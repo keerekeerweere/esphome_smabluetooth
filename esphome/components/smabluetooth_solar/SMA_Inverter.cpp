@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <Arduino.h>
 #include "SMA_Inverter.h"
-#include "SMA_utils.h"
+#include "SMA_Utils.h"
 #include "BluetoothSerial.h"
 //#include "esphome/core/log.h"
 //#include "ESP32_SMA_Inverter_App.h"
