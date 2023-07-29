@@ -129,7 +129,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
 
 void SmaBluetoothSolar::dump_config() {
   ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
-  ESP_LOGCONFIG(TAG, "  Address: %s", this->sma_inverter_bluetooth_mac_.c_str());
+  //ESP_LOGCONFIG(TAG, "  Address: %s", this->sma_inverter_bluetooth_mac_.c_str());
 }
 
 }  // namespace smabluetooth_solar

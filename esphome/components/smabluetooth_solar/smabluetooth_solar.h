@@ -84,8 +84,8 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *inverter_module_temp_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
 
-  std::string sma_inverter_bluetooth_mac_;
-  std::string sma_inverter_password_;
+  std::string sma_inverter_bluetooth_mac_ ;
+  std::string sma_inverter_password_ ;
 
 };
 
