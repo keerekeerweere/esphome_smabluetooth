@@ -22,11 +22,6 @@ void SmaBluetoothSolar::setup() {
 }
 
 void SmaBluetoothSolar::loop() {
-  // If update() was unable to send we retry until we can send.
-/*  if (!this->waiting_to_update_)
-    return;
-  update();
-*/
 
   if (!hasSetup) {
     return ;
@@ -81,8 +76,12 @@ void SmaBluetoothSolar::loop() {
         App.feed_wdt();
         ESP_LOGD(TAG, "*** reading EnergyProduction\n");
         if (smaInverter->getInverterData(EnergyProduction)) {
+
+        if (pv_active_power_sensor_!=nullptr) {
+          pv_active_power_sensor_->publish_state(smaInverter->dispData.Pac);
+        }
+
           //trigger the sensor 
-          
         }
       }
 
