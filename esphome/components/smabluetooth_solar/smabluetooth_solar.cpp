@@ -101,6 +101,8 @@ void SmaBluetoothSolar::loop() {
  * generic publish method 
 */
 void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue) {
+  ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
+  App.feed_wdt(); // watch for ESP32 user task watchdog
 
   if (publishValue != 0.0) {
     if (sensor!=nullptr) sensor->publish_state(publishValue);
@@ -114,6 +116,8 @@ void SmaBluetoothSolar::update() {
   uint32_t now = millis();
 
   this->running_update_ = true;
+
+  ESP_LOGV(TAG, "update sensors ");
 
   updateSensor(today_production_, String("EToday"), smaInverter->dispData.EToday);
   updateSensor(total_energy_production_, String("ETotal"), smaInverter->dispData.ETotal);
