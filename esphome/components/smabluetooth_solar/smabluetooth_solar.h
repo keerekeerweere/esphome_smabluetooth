@@ -85,6 +85,7 @@ class SmaBluetoothSolar : public PollingComponent {
   void setup() override;
 
   void update() override;  
+  void updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue);
   void on_inverter_data(const std::vector<uint8_t> &data) ;
   void dump_config() override;
@@ -158,6 +159,7 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *today_production_{nullptr};
   sensor::Sensor *total_energy_production_{nullptr};
   sensor::Sensor *inverter_module_temp_{nullptr};
+
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;

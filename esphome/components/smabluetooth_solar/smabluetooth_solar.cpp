@@ -241,6 +241,19 @@ void SmaBluetoothSolar::loop() {
 /**
  * generic publish method 
 */
+
+void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue) {
+  ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
+  loopNotification();
+  
+
+  if (publishValue != 0.0) {
+    if (sensor!=nullptr) sensor->publish_state(publishValue);
+      else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
+  } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
+
+}
+
 void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
   loopNotification();
@@ -252,6 +265,7 @@ void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName
   } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
 
 }
+
 
 void SmaBluetoothSolar::update() {
   // If our last send has had no reply yet, and it wasn't that long ago, do nothing.
@@ -270,6 +284,8 @@ void SmaBluetoothSolar::update() {
   //todo add pvs_[1]
   updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac1);
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
+
+  updateSensor(inverter_status_, String("InverterStatus"), smaInverter->invData.GridRelay);
 
   //todo add phases_[1] and  phases_[2]
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated
