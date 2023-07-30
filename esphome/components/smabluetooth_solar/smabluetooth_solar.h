@@ -15,6 +15,21 @@ enum SmaBluetoothProtocolVersion {
   SMANET2 = 0
 };
 
+//states to cycle through
+enum class SmaInverterState {
+  Off, //when starting up ESP
+  Begin, //begin the bluetooth stack
+  Connect, //connect to the inverter
+  Initialize, //init SMA connection
+  SignalStrength,//get signal quality
+  Logon,//logon to inverter
+  ReadValues,//read values (piece by piece)
+  DoneReadingValues,
+  Disconnect,//disconnect again from the inverter
+  NightTime//nighttime, nothing to do here, wait for next sunlight
+};
+
+
 class SmaBluetoothSolar : public PollingComponent {
  public:
   void loop() override;
@@ -100,7 +115,9 @@ class SmaBluetoothSolar : public PollingComponent {
 
   private:
     ESP32_SMA_Inverter *smaInverter;
-    
+    SmaInverterState inverterState = SmaInverterState::Off;    
+    getInverterDataType invDataTypes[6] = {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACVoltage};
+    int indexOfInverterDataType = 0;
 };
 
 }  // namespace smabluetooth_solar

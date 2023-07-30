@@ -22,6 +22,8 @@ void SmaBluetoothSolar::setup() {
 }
 
 void SmaBluetoothSolar::loop() {
+  uint32_t thisTime = millis();
+  App.feed_wdt();
 
   if (!hasSetup) {
     return ;
@@ -32,12 +34,112 @@ void SmaBluetoothSolar::loop() {
   else
     adjustedScanRate = (60 * 1000); //todo adjust, take 60s for now
 
+  if (nextTime > thisTime) {
+    //sleeping
+    return ;
+  }
+
+  uint32_t waitMillis = 1000; //default wait this time before jumping to next step
+
+  ESP_LOGV(TAG, "loop inverter launching state : %d ", inverterState);
+
+  switch (inverterState) {
+    case SmaInverterState::Off: { //do off thing
+      
+        //next state
+        //simply begin here
+        inverterState = SmaInverterState::Begin;
+    }
+    break;
+
+    case SmaInverterState::Begin: {//do Begin
+        //lets dobegin
+        // "true" creates this device as a BT Master.
+        if (smaInverter->begin("ESP32toSMA", true)==E_OK) {
+        //next state
+          inverterState = SmaInverterState::Connect;
+        } else {
+          //try again in 10
+          waitMillis *= 10;
+        } 
+    }
+    break;
+
+
+    case SmaInverterState::Connect:{ // do Connect
+        //lets doconnect
+        if (!smaInverter->isBtConnected()) {
+          //reset PcktID
+          ESP_LOGW(TAG, "initPcktID ");
+          smaInverter->initPcktID();
+          ESP_LOGW(TAG, "Connecting SMA inverter");
+          if (smaInverter->connect()) {
+            inverterState = SmaInverterState::Initialize;
+          } else {
+            //add cleanup / disconnect here ?
+            inverterState = SmaInverterState::Begin;
+            waitMillis *= 10;
+          }
+        }
+    }
+    break;
+    
+    case SmaInverterState::Initialize:{ //do init
+      E_RC rc = smaInverter->initialiseSMAConnection();
+      ESP_LOGI(TAG, "SMA %d \n", rc);
+      inverterState = SmaInverterState::SignalStrength; // optional, but keep for now
+    } 
+    break;
+
+    case SmaInverterState::SignalStrength: {//do SignalStrength
+      smaInverter->getBT_SignalStrength();
+      inverterState = SmaInverterState::Logon;
+
+    } 
+    break;
+
+    case SmaInverterState::Logon:{ //do LogonSmaInverter
+      E_RC rc = smaInverter->logonSMAInverter();
+      ESP_LOGI(TAG, "SMA %d \n", rc);
+      if (rc == E_OK) {
+        inverterState = SmaInverterState::ReadValues;
+      } else {
+        //sleep and restart
+        inverterState = SmaInverterState::Connect;
+      }
+    } 
+    break;
+
+    case SmaInverterState::ReadValues: { //do ReadValues (one by one)
+      //cycle through values
+      if (indexOfInverterDataType<6) {
+        smaInverter->getInverterData(invDataTypes[indexOfInverterDataType++]);
+        waitMillis = 500;
+      } else {
+        //done for reading values, move on
+        indexOfInverterDataType = 0;
+        inverterState = SmaInverterState::DoneReadingValues;
+      }
+    }
+    break;
+
+    case SmaInverterState::DoneReadingValues: {
+      //prepare for (disconnect) and sleep and then return to connect to immediately read values again
+      smaInverter->disconnect(); //moved btConnected to inverter class
+      
+      inverterState = SmaInverterState::Connect;
+      waitMillis = 20 * 1000; //wait at least 20 seconds before next round
+    }
+    break;
+  }
+  nextTime = thisTime + waitMillis; //wait a bit after beginning
+
+/*
   if (!hasBegun){
     hasBegun = true;
 
     // *** Start BT
     ESP_LOGW(TAG, "start BT ");
-    smaInverter->begin("ESP32toSMA", true); // "true" creates this device as a BT Master.
     App.feed_wdt();
   }
 
@@ -45,9 +147,6 @@ void SmaBluetoothSolar::loop() {
   if (nextTime < millis() && !smaInverter->isBtConnected()) {
     nextTime = millis() + adjustedScanRate;
 
-    //reset PcktID
-    ESP_LOGW(TAG, "initPcktID ");
-    smaInverter->initPcktID();
 
     //connect
     ESP_LOGW(TAG, "Connecting SMA inverter");
@@ -76,9 +175,6 @@ void SmaBluetoothSolar::loop() {
         ESP_LOGD(TAG, "*** energyreadings");
         //get the inverter readings here 
         //rotate through these inverterDataTypes
-        getInverterDataType invDataTypes[] = {
-          EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACVoltage
-        };
         int sizeOfArr = sizeof(invDataTypes) / sizeof(invDataTypes[0]);
         for (int iIdt=0;iIdt<sizeOfArr;iIdt++) {
         //for (getInverterDataType iIdt : invDataTypes) {
@@ -92,7 +188,7 @@ void SmaBluetoothSolar::loop() {
     }
 
   }
-
+*/
   App.feed_wdt();
   //delay(100);
 }
