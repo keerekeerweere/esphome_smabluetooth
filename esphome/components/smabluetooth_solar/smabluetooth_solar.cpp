@@ -79,9 +79,16 @@ void SmaBluetoothSolar::loop() {
 
       //get the inverter readings here 
       if (smaInverter->getInverterData(EnergyProduction)) {
-
         //trigger the sensor 
       }
+      smaInverter->getInverterData(SpotGridFrequency);
+
+      smaInverter->getInverterData(SpotDCPower);
+      smaInverter->getInverterData(SpotDCVoltage);
+      
+      smaInverter->getInverterData(SpotACPower);
+      smaInverter->getInverterData(SpotACVoltage);
+
 
       smaInverter->disconnect(); //moved btConnected to inverter class
 
@@ -93,21 +100,35 @@ void SmaBluetoothSolar::loop() {
   //delay(100);
 }
 
+/**
+ * generic publish method 
+*/
+void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const String sensorName, const float publishValue) {
+
+  if (publishValue != 0.0) {
+    if (sensor!=nullptr) sensor->publish_state(publishValue);
+      else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
+  } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
+
+}
+
 void SmaBluetoothSolar::update() {
   // If our last send has had no reply yet, and it wasn't that long ago, do nothing.
   uint32_t now = millis();
 
   this->running_update_ = true;
 
-  if (smaInverter->dispData.EToday != 0.0) {
-    if (today_production_!=nullptr) today_production_->publish_state(smaInverter->dispData.EToday);
-      else ESP_LOGV(TAG, "No EToday sensor ");
-  } else ESP_LOGV(TAG, "No EToday value ");
-  if (smaInverter->dispData.ETotal != 0.0) {
-    if (total_energy_production_!=nullptr) total_energy_production_->publish_state(smaInverter->dispData.ETotal);
-      else ESP_LOGV(TAG, "No ETotal sensor ");
-  } else ESP_LOGV(TAG, "No ETotal value ");
-	
+  updateSensor(today_production_, "EToday", smaInverter->dispData.EToday);
+  updateSensor(total_energy_production_, "ETotal", smaInverter->dispData.ETotal);
+  updateSensor(grid_frequency_sensor_, "Freq", smaInverter->dispData.Freq);
+  updateSensor(pvs_[0].voltage_sensor_, "UdcA", smaInverter->dispData.Udc[0]);
+  updateSensor(pvs_[0].current_sensor_, "IdcA", smaInverter->dispData.Idc[0]);
+  updateSensor(pvs_[0].active_power_sensor_, "PDC", smaInverter->dispData.Wdc[0]);
+
+  updateSensor(phases_[0].voltage_sensor_, "UacA", smaInverter->dispData.Uac[0]);
+  updateSensor(phases_[0].current_sensor_, "IacA", smaInverter->dispData.Iac[0]);
+  //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated
+
 	this->running_update_ = false;
 
   this->last_send_ = millis();
