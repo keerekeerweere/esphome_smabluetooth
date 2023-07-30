@@ -247,7 +247,7 @@ void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName
   loopNotification();
   
 
-  if (publishValue != 0.0) {
+  if (publishValue != -1) {
     if (sensor!=nullptr) sensor->publish_state(publishValue);
       else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
   } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
