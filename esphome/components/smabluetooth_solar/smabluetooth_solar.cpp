@@ -75,17 +75,12 @@ void SmaBluetoothSolar::loop() {
       if (smaInverter->isBtConnected()) {
         App.feed_wdt();
         ESP_LOGD(TAG, "*** reading EnergyProduction\n");
-        if (smaInverter->getInverterData(EnergyProduction)) {
+      }
 
-        if (today_production_!=nullptr) {
-          today_production_->publish_state(smaInverter->dispData.EToday);
-        }
-        if (total_energy_production_!=nullptr) {
-          total_energy_production_->publish_state(smaInverter->dispData.ETotal);
-        }
+      //get the inverter readings here 
+      if (smaInverter->getInverterData(EnergyProduction)) {
 
-          //trigger the sensor 
-        }
+        //trigger the sensor 
       }
 
       smaInverter->disconnect(); //moved btConnected to inverter class
@@ -101,12 +96,20 @@ void SmaBluetoothSolar::loop() {
 void SmaBluetoothSolar::update() {
   // If our last send has had no reply yet, and it wasn't that long ago, do nothing.
   uint32_t now = millis();
-  if (now - this->last_send_ < this->get_update_interval() / 2) {
-    return;
-  }
 
-  this->waiting_to_update_ = false;
-//  this->send(MODBUS_CMD_READ_IN_REGISTERS, 0, MODBUS_REGISTER_COUNT[this->protocol_version_]);
+  this->running_update_ = true;
+
+  if (smaInverter->dispData.EToday != 0.0) {
+    if (today_production_!=nullptr) today_production_->publish_state(smaInverter->dispData.EToday);
+      else ESP_LOGV(TAG, "No EToday sensor ");
+  } else ESP_LOGV(TAG, "No EToday value ");
+  if (smaInverter->dispData.ETotal != 0.0) {
+    if (total_energy_production_!=nullptr) total_energy_production_->publish_state(smaInverter->dispData.ETotal);
+      else ESP_LOGV(TAG, "No ETotal sensor ");
+  } else ESP_LOGV(TAG, "No ETotal value ");
+	
+	this->running_update_ = false;
+
   this->last_send_ = millis();
 }
 

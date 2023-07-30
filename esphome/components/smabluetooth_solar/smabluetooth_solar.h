@@ -68,6 +68,8 @@ class SmaBluetoothSolar : public PollingComponent {
   bool hasBegun = false;
   bool hasSetup = false;
 
+  bool running_update_ = false;
+
   struct SmaPhase {
     sensor::Sensor *voltage_sensor_{nullptr};
     sensor::Sensor *current_sensor_{nullptr};
