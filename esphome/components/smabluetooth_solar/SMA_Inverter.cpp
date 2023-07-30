@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 #include "SMA_Inverter.h"
+#include "esphome/core/application.h"
 
 namespace esphome {
 namespace smabluetooth_solar {
@@ -63,7 +64,7 @@ bool ESP32_SMA_Inverter::connect() {
 }
 
 bool ESP32_SMA_Inverter::connect(uint8_t ra[]) {
-  ESP_LOGD(TAG, "connecting %02X %02X %02X %02X %02X %02X", 
+  ESP_LOGD(TAG, "connecting %02X:%02X:%02X:%02X:%02X:%02X", 
     ra[5], ra[4], ra[3], ra[2], ra[1], ra[0]);
   bool bGotConnected = serialBT.connect(ra);
   btConnected = bGotConnected;
@@ -107,6 +108,7 @@ E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
     // read L1Hdr
     uint8_t rdCnt=0;
     for (rdCnt=0;rdCnt<18;rdCnt++) {
+      loopNotification();
       btrdBuf[rdCnt]= BTgetByte();
       if (readTimeout)  break;
     }
@@ -982,7 +984,8 @@ uint8_t ESP32_SMA_Inverter::BTgetByte() {
 
   while (!serialBT.available() ) {
     delay(5);  //Wait for BT byte to arrive
-    //loopNotification();
+    loopNotification();
+    
     if (millis() > time) { 
       ESP_LOGD(TAG, "BTgetByte Timeout");
       readTimeout = true;
@@ -1191,6 +1194,9 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
     return lnglng;
 }
 
+void ESP32_SMA_Inverter::loopNotification() {
+  App.feed_wdt();
+}
 
 }//ns
 }//ns

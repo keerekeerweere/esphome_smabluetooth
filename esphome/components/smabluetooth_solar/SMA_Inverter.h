@@ -412,10 +412,10 @@ class ESP32_SMA_Inverter  {
     }
     // Destructor (optional, as the singleton instance will be destroyed when the program ends).
     ~ESP32_SMA_Inverter() {}
+    void loopNotification();
 
     BluetoothSerial serialBT = BluetoothSerial();
-
-
+    
     uint8_t  btrdBuf[COMMBUFSIZE];    
     uint16_t pcktBufMax = 0; // max. used size of PcktBuf
     uint8_t  espBTAddress[6]; // is retrieved from BT packet
