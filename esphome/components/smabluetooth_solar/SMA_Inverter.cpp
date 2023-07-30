@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Lupo135
 Copyright (c) 2023 darrylb123
+Copyright (c) 2023 keerekeerweere
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -466,7 +467,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   invData.EToday = value64;
                   dispData.EToday = tokWh(value64);
                   //debug_kwh("SPOT_ETODAY", value64, datetime);
-                  ESP_LOGI(TAG, "SPOT_ETOTAL %11.3f kWh", tokWh(value64));
+                  ESP_LOGI(TAG, "SPOT_ETODAY %11.3f kWh", tokWh(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
@@ -476,21 +477,21 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   invData.ETotal = value64;
                   dispData.ETotal = tokWh(value64);
                   //debug_kwh("SPOT_ETOTAL", value64, datetime);
-                  ESP_LOGI(TAG, "SPOT_ETODAY %11.3f kWh", tokWh(value64));
+                  ESP_LOGI(TAG, "SPOT_ETOTAL %11.3f kWh", tokWh(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
               case MeteringTotOpTms: //SPOT_OPERTM
                   invData.OperationTime = value64;
                   //debug_hour("SPOT_OPERTM", value64, datetime);
-                  ESP_LOGI(TAG, "OperTime  %7.3f h ", toHour(value64));
+                  ESP_LOGI(TAG, "SPOT_OPERTM  %7.3f h ", toHour(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
               case MeteringTotFeedTms: //SPOT_FEEDTM
                   invData.FeedInTime = value64;
                   //debug_hour("SPOT_FEEDTM", value64, datetime);
-                  ESP_LOGI(TAG, "FeedTime  %7.3f h  ", toHour(value64));
+                  ESP_LOGI(TAG, "SPOT_FEEDTM  %7.3f h  ", toHour(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
        

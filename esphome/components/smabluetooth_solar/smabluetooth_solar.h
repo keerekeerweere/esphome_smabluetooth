@@ -1,9 +1,52 @@
 #pragma once
+
+#ifndef SMABLUETOOTH_SOLAR_H
+#define SMABLUETOOTH_SOLAR_H
+
+/* MIT License
+
+Copyright (c) 2023 keerekeerweere
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+Disclaimer
+A user of the esphome component software acknowledges that he or she is 
+receiving this software on an "as is" basis and the user is not relying on 
+the accuracy or functionality of the software for any purpose. The user further
+acknowledges that any use of this software will be at his own risk and the 
+copyright owner accepts no responsibility whatsoever arising from the use or 
+application of the software.
+
+SMA, Speedwire are registered trademarks of SMA Solar Technology AG
+
+*/
+
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "SMA_Inverter.h"
 
 #include <vector>
+
+
+#define SIZE_INVETER_DATA_TYPE_QUERY 9
+
 
 namespace esphome {
 namespace smabluetooth_solar {
@@ -116,9 +159,17 @@ class SmaBluetoothSolar : public PollingComponent {
   private:
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;    
-    getInverterDataType invDataTypes[6] = {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACVoltage};
+    getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
+       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus };
+      /*
+          DeviceStatus        = 1 << 12,
+    GridRelayStatus     = 1 << 13,
+*/
     int indexOfInverterDataType = 0;
 };
 
 }  // namespace smabluetooth_solar
 }  // namespace esphome
+
+
+#endif

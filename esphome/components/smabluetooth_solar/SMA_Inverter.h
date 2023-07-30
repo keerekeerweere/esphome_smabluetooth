@@ -5,6 +5,7 @@
 
 Copyright (c) 2022 Lupo135
 Copyright (c) 2023 darrylb123
+Copyright (c) 2023 keerekeerweere
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -95,7 +96,7 @@ inline const bool is_NaN(const uint64_t U64)
 {
     return U64 == NaN_U64;
 }
-
+/* // for reference only 
 #define PRIu8 "hhu"
 #define PRId8 "hhd"
 #define PRIx8 "hhx"
@@ -108,7 +109,7 @@ inline const bool is_NaN(const uint64_t U64)
 #define PRIu64 "llu" // or possibly "lu"
 #define PRId64 "lld" // or possibly "ld"
 #define PRIx64 "llx" // or possibly "lx"
-
+*/
 
 
 enum SMA_DATATYPE
