@@ -72,9 +72,15 @@ enum class SmaInverterState {
   NightTime//nighttime, nothing to do here, wait for next sunlight
 };
 
+class SmaBluetoothSolar;
 
-class SmaBluetoothSolar : public PollingComponent {
+
+
+
+class SmaBluetoothSolar : public PollingComponent, LoopNotifyer {
  public:
+
+
   void loop() override;
   void setup() override;
 
@@ -117,6 +123,8 @@ class SmaBluetoothSolar : public PollingComponent {
     this->pvs_[pv].active_power_sensor_ = active_power_sensor;
   }
 
+  void loopNotification();
+
  protected:
   bool waiting_to_update_;
   uint32_t last_send_;
@@ -155,7 +163,6 @@ class SmaBluetoothSolar : public PollingComponent {
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
 
-
   private:
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;    
@@ -167,6 +174,7 @@ class SmaBluetoothSolar : public PollingComponent {
 */
     int indexOfInverterDataType = 0;
 };
+
 
 }  // namespace smabluetooth_solar
 }  // namespace esphome

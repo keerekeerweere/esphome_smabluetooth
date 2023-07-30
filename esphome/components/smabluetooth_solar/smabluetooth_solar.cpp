@@ -55,9 +55,13 @@ void SmaBluetoothSolar::setup() {
   hasSetup = true;
 }
 
+ void SmaBluetoothSolar::loopNotification() {
+  App.feed_wdt();
+ }
+
 void SmaBluetoothSolar::loop() {
   uint32_t thisTime = millis();
-  App.feed_wdt();
+  loopNotification();
 
   if (!hasSetup) {
     return ;
@@ -104,12 +108,14 @@ void SmaBluetoothSolar::loop() {
         //lets doconnect
         if (!smaInverter->isBtConnected()) {
           //reset PcktID
-          ESP_LOGW(TAG, "initPcktID ");
+          ESP_LOGD(TAG, "initPcktID ");
           smaInverter->initPcktID();
-          ESP_LOGW(TAG, "Connecting SMA inverter");
+
+          ESP_LOGI(TAG, "Connecting SMA inverter");
           if (smaInverter->connect()) {
             inverterState = SmaInverterState::Initialize;
           } else {
+            ESP_LOGE(TAG, "Connecting SMA inverter failed");
             //add cleanup / disconnect here ?
             inverterState = SmaInverterState::Begin;
             waitMillis *= 10;
@@ -120,7 +126,7 @@ void SmaBluetoothSolar::loop() {
     
     case SmaInverterState::Initialize:{ //do init
       E_RC rc = smaInverter->initialiseSMAConnection();
-      ESP_LOGI(TAG, "SMA %d \n", rc);
+      ESP_LOGI(TAG, "SMA initialise SMA connection RC %d ", rc);
       inverterState = SmaInverterState::SignalStrength; // optional, but keep for now
     } 
     break;
@@ -134,7 +140,7 @@ void SmaBluetoothSolar::loop() {
 
     case SmaInverterState::Logon:{ //do LogonSmaInverter
       E_RC rc = smaInverter->logonSMAInverter();
-      ESP_LOGI(TAG, "SMA %d \n", rc);
+      ESP_LOGI(TAG, "SMA logon RC %d ", rc);
       if (rc == E_OK) {
         inverterState = SmaInverterState::ReadValues;
       } else {
@@ -146,6 +152,8 @@ void SmaBluetoothSolar::loop() {
 
     case SmaInverterState::ReadValues: { //do ReadValues (one by one)
       //cycle through values
+      uint32_t tBeforeRead = millis();
+
       if (indexOfInverterDataType<SIZE_INVETER_DATA_TYPE_QUERY) {
         smaInverter->getInverterData(invDataTypes[indexOfInverterDataType++]);
         waitMillis = 500;
@@ -154,6 +162,9 @@ void SmaBluetoothSolar::loop() {
         indexOfInverterDataType = 0;
         inverterState = SmaInverterState::DoneReadingValues;
       }
+
+      uint32_t tAfterRead = millis();
+      ESP_LOGD(TAG, "reading took: %u ms", (tAfterRead - tBeforeRead));
     }
     break;
 
@@ -232,7 +243,8 @@ void SmaBluetoothSolar::loop() {
 */
 void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
-  App.feed_wdt(); // watch for ESP32 user task watchdog
+  loopNotification();
+  
 
   if (publishValue != 0.0) {
     if (sensor!=nullptr) sensor->publish_state(publishValue);

@@ -331,8 +331,13 @@ typedef struct __attribute__ ((packed)) PacketHeader {
 } L1Hdr;
 #pragma pack(pop)
 
+// Abstract class representing the interface
+class LoopNotifyer {
+public:
+    virtual void loopNotification() = 0; // Pure virtual function (no implementation)
+};
 
-class ESP32_SMA_Inverter  {
+class ESP32_SMA_Inverter : LoopNotifyer {
   public: 
     
     // Static method to get the instance of the class.
@@ -399,12 +404,20 @@ class ESP32_SMA_Inverter  {
     InverterData invData = InverterData();
     DisplayData dispData = DisplayData();
 
+    void loopNotification() {
+      esp_task_wdt_reset();
+    }
+
   private: 
    // Private constructor to prevent instantiation from outside the class.
     ESP32_SMA_Inverter()  {
     }
     // Destructor (optional, as the singleton instance will be destroyed when the program ends).
     ~ESP32_SMA_Inverter() {}
+
+
+    void esp_task_wdt_reset();
+
 
     BluetoothSerial serialBT = BluetoothSerial();
 
