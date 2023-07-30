@@ -50,20 +50,20 @@ void SmaBluetoothSolar::loop() {
     smaInverter->initPcktID();
 
     //connect
-    ESP_LOGW(TAG, "Connecting SMA inverter: \n");
+    ESP_LOGW(TAG, "Connecting SMA inverter");
     if (smaInverter->connect()) {
       App.feed_wdt();
       // **** Initialize SMA *******
-      ESP_LOGW(TAG, "BT connected \n");
+      ESP_LOGW(TAG, "BT connected");
       E_RC rc = smaInverter->initialiseSMAConnection();
       ESP_LOGI(TAG, "SMA %d \n", rc);
 
       App.feed_wdt();
-      ESP_LOGW(TAG, "get signal strength\n");
+      ESP_LOGW(TAG, "get signal strength");
       smaInverter->getBT_SignalStrength();
 
       App.feed_wdt();
-      ESP_LOGW(TAG, "*** logonSMAInverter\n");
+      ESP_LOGW(TAG, "*** logonSMAInverter");
       rc = smaInverter->logonSMAInverter();
       ESP_LOGW(TAG, "Logon return code %d\n", rc);
 
@@ -73,22 +73,17 @@ void SmaBluetoothSolar::loop() {
       //smaInverter->ReadCurrentData();
       //skip all for now and try individual
       if (smaInverter->isBtConnected()) {
-        App.feed_wdt();
-        ESP_LOGD(TAG, "*** reading EnergyProduction\n");
+        ESP_LOGD(TAG, "*** energyreadings");
+        //get the inverter readings here 
+        //rotate through these inverterDataTypes
+        getInverterDataType invDataTypes[] = {
+          EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACVoltage
+        };
+        for (getInverterDataType idt : invDataTypes) {
+          App.feed_wdt(); // watch for ESP32 user task watchdog
+          smaInverter->getInverterData(idt);
+        }
       }
-
-      //get the inverter readings here 
-      if (smaInverter->getInverterData(EnergyProduction)) {
-        //trigger the sensor 
-      }
-      smaInverter->getInverterData(SpotGridFrequency);
-
-      smaInverter->getInverterData(SpotDCPower);
-      smaInverter->getInverterData(SpotDCVoltage);
-      
-      smaInverter->getInverterData(SpotACPower);
-      smaInverter->getInverterData(SpotACVoltage);
-
 
       smaInverter->disconnect(); //moved btConnected to inverter class
 
