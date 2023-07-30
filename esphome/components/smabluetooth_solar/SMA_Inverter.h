@@ -96,6 +96,21 @@ inline const bool is_NaN(const uint64_t U64)
     return U64 == NaN_U64;
 }
 
+#define PRIu8 "hhu"
+#define PRId8 "hhd"
+#define PRIx8 "hhx"
+#define PRIu16 "hu"
+#define PRId16 "hd"
+#define PRIx16 "hx"
+#define PRIu32 "u"
+#define PRId32 "d"
+#define PRIx32 "x"
+#define PRIu64 "llu" // or possibly "lu"
+#define PRId64 "lld" // or possibly "ld"
+#define PRIx64 "llx" // or possibly "lx"
+
+
+
 enum SMA_DATATYPE
 {
     DT_ULONG = 0,
@@ -364,6 +379,7 @@ class ESP32_SMA_Inverter  {
     void writePacketTrailer(uint8_t *btbuffer);
     void writePacketLength(uint8_t *buf);
     bool validateChecksum();
+    bool isCrcValid(uint8_t lb, uint8_t hb);
 
     void initPcktID() {
       setPcktID(1);

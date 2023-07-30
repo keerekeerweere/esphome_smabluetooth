@@ -210,7 +210,7 @@ E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
 
 void ESP32_SMA_Inverter::writePacketHeader(uint8_t *buf, const uint16_t control, const uint8_t *destaddress) {
   //extern uint16_t fcsChecksum;
-
+    ESP_LOGV(TAG, "writePacketHeader at pcktBufPos: %hu", pcktBufPos);
 
     pcktBufPos = 0;
 
@@ -226,9 +226,27 @@ void ESP32_SMA_Inverter::writePacketHeader(uint8_t *buf, const uint16_t control,
     buf[pcktBufPos++] = (uint8_t)(control & 0xFF);
     buf[pcktBufPos++] = (uint8_t)(control >> 8);
 }
+
+bool ESP32_SMA_Inverter::isCrcValid(uint8_t lb, uint8_t hb)
+{
+  bool bRet = false;
+  
+    if (((lb == 0x7E) || (hb == 0x7E) || (lb == 0x7D) || (hb == 0x7D)))
+      bRet = false;
+    else
+      bRet = true;
+
+  ESP_LOGV(TAG, "isCrcValid at pcktBufPos: %d", bRet);
+  return bRet;
+}
+
+
 // ***********************************************
 E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, uint32_t last) {
   //extern uint8_t sixff[6];
+  ESP_LOGV(TAG, "getInverterDataCfl: command(%u) first(%u) last(%u)", command, first, last);
+
+  do {
     pcktID++;
     writePacketHeader(pcktBuf, 0x01, sixff); //addr_unknown);
     //if (invData.SUSyID == SID_SB240)
@@ -240,6 +258,8 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
     write32(pcktBuf, last);
     writePacketTrailer(pcktBuf);
     writePacketLength(pcktBuf);
+
+  } while (!isCrcValid(pcktBuf[pcktBufPos - 3], pcktBuf[pcktBufPos - 2]));
 
     BTsendPacket(pcktBuf);
     int string[3] = { 0,0,0 }; //String number count
@@ -951,11 +971,12 @@ E_RC ESP32_SMA_Inverter::ReadCurrentData() {
 uint8_t ESP32_SMA_Inverter::BTgetByte() {
   readTimeout = false;
   //Returns a single byte from the bluetooth stream (with error timeout/reset)
-  uint32_t time = 20000+millis(); // 20 sec 
+  //shouldn't we lower this value for esphome's whatchdog ? 
+  uint32_t time = 15000+millis(); // 20 sec 
   uint8_t  rec = 0;  
 
   while (!serialBT.available() ) {
-    //delay(5);  //Wait for BT byte to arrive
+    delay(5);  //Wait for BT byte to arrive
     if (millis() > time) { 
       ESP_LOGD(TAG, "BTgetByte Timeout");
       readTimeout = true;
@@ -969,7 +990,9 @@ uint8_t ESP32_SMA_Inverter::BTgetByte() {
 // **** transmit BT buffer ****
 void ESP32_SMA_Inverter::BTsendPacket( uint8_t *btbuffer ) {
   //DEBUG2_PRINTLN();
-  for(int i=0;i<pcktBufPos;i++) {
+  ESP_LOGV(TAG, "BTsendPacket: 0 - %u of max %u bufmem %d ", pcktBufPos, pcktBufMax, MAX_PCKT_BUF_SIZE);
+
+  for(int i=0;(i<pcktBufPos) && (i<MAX_PCKT_BUF_SIZE);i++) {
     #ifdef DebugBT
     if (i==0) DEBUG2_PRINT("*** sStart=");
     if (i==1) DEBUG2_PRINT(" len=");
@@ -1021,6 +1044,7 @@ void ESP32_SMA_Inverter::writeArray(uint8_t *btbuffer, const uint8_t bytes[], in
 // ********************************************************
 //  writePacket(pcktBuf, 0x0E, 0xA0, 0x0100, 0xFFFF, 0xFFFFFFFF); // anySUSyID, anySerial);
 void ESP32_SMA_Inverter::writePacket(uint8_t *buf, uint8_t longwords, uint8_t ctrl, uint16_t ctrl2, uint16_t dstSUSyID, uint32_t dstSerial) {
+  ESP_LOGV(TAG, "writePacket (longwords, ctrl/ctrl/sysid/dstSerial)");
   buf[pcktBufPos++] = 0x7E;   //Not included in checksum
   write32(buf, BTH_L2SIGNATURE);
   writeByte(buf, longwords);
@@ -1037,6 +1061,7 @@ void ESP32_SMA_Inverter::writePacket(uint8_t *buf, uint8_t longwords, uint8_t ct
 }
 //-------------------------------------------------------------------------
 void ESP32_SMA_Inverter::writePacketTrailer(uint8_t *btbuffer) {
+  ESP_LOGV(TAG, "writePacketTrailer");
   fcsChecksum ^= 0xFFFF;
   btbuffer[pcktBufPos++] = fcsChecksum & 0x00FF;
   btbuffer[pcktBufPos++] = (fcsChecksum >> 8) & 0x00FF;
@@ -1044,6 +1069,7 @@ void ESP32_SMA_Inverter::writePacketTrailer(uint8_t *btbuffer) {
 }
 //-------------------------------------------------------------------------
 void ESP32_SMA_Inverter::writePacketLength(uint8_t *buf) {
+  ESP_LOGV(TAG, "writePacketLength");
   buf[1] = pcktBufPos & 0xFF;         //Lo-Byte
   buf[2] = (pcktBufPos >> 8) & 0xFF;  //Hi-Byte
   buf[3] = buf[0] ^ buf[1] ^ buf[2];      //checksum
