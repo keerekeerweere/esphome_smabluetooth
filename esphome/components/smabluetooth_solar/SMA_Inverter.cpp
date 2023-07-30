@@ -107,7 +107,7 @@ E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
       btrdBuf[rdCnt]= BTgetByte();
       if (readTimeout)  break;
     }
-    ESP_LOGD(TAG, "L1 Rec=%d bytes pkL=0x%04x=%d Cmd=0x%04x",
+    ESP_LOGD(TAG, "L1 Rec=%d bytes pkL=0x%04x=%u Cmd=0x%04x",
         rdCnt, pL1Hdr->pkLength, pL1Hdr->pkLength, pL1Hdr->command);
 
     if (rdCnt<17) {
@@ -256,6 +256,9 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
           ESP_LOGD(TAG, "Packet status: 0x%02X", invData.status);
           return invData.status;
         }
+        u_int8_t iSPOT_PDC=0;
+        u_int8_t iSPOT_UDC=0;
+        u_int8_t iSPOT_IDC=0;
         // *** analyze received data ***
         pcktcount = get_u16(pcktBuf + 25);
         uint16_t rcvpcktID = get_u16(pcktBuf + 27) & 0x7FFF;
@@ -282,103 +285,152 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                 value64 = get_u64(recptr + 8);
                 ESP_LOGV(TAG, "value64=%d=0x%08x",value64, value64);
        
-                  //if (is_NaN(value64) || is_NaN((uint64_t)value64)) value64 = 0;
-              } else if ((dataType != 16) && (dataType != 8)) { // ((dataType != DT_STRING) && (dataType != DT_STATUS)) {
+                  if (is_NaN(value64) || is_NaN((uint64_t)value64)) value64 = 0;
+              } else if ((dataType != DT_STRING) && (dataType != DT_STATUS)) { // ((dataType != DT_STRING) && (dataType != DT_STATUS)) {
+
                 value32 = get_u32(recptr + 16);
-                if ( value32 < 0) value32 = 0;
+                if (is_NaN(value32) || is_NaN((uint32_t)value32))
+                    value32 = 0;
                 ESP_LOGV(TAG, "value32=%d=0x%08x",value32, value32);
+
               }
               switch (lri) {
               case GridMsTotW: //SPOT_PACTOT
                   //This function gives us the time when the inverter was switched off
                   invData.LastTime = datetime;
-                  invData.Pac = value32;
-                  dispData.Pac = tokW(value32);
+                  invData.TotalPac = value32;
+                  dispData.TotalPac = tokW(value32);
                   //debug_watt("SPOT_PACTOT", value32, datetime);
                   printUnixTime(timeBuf, datetime);
-                  ESP_LOGI(TAG, "Pac %15.3f kW %x  GMT:%s ", tokW(value32),value32, timeBuf);
+                  ESP_LOGI(TAG, "SPOT_PACTOT %15.3f kW %x  GMT:%s ", tokW(value32),value32, timeBuf);
                   break;
        
               case GridMsWphsA: //SPOT_PAC1
-                  invData.Pmax = value32;
-                  dispData.Pmax = tokW(value32);
+                  invData.Pac1 = value32;
+                  dispData.Pac1 = tokW(value32);
                   //debug_watt("SPOT_PAC1", value32, datetime);
-                  ESP_LOGI(TAG, "Pmax %14.2f kW ", tokW(value32));
+                  ESP_LOGI(TAG, "SPOT_PAC1 %14.2f kW ", tokW(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
-       
+
+              case GridMsWphsB: //SPOT_PAC2
+                  invData.Pac2 = value32;
+                  dispData.Pac2 = tokW(value32);
+                  //debug_watt("SPOT_PAC2", value32, datetime);
+                  ESP_LOGI(TAG, "SPOT_PAC2 %14.2f kW ", tokW(value32));
+                  //printUnixTime(timeBuf, datetime);
+                  break;
+
+              case GridMsWphsC: //SPOT_PAC3
+                  invData.Pac1 = value32;
+                  dispData.Pac1 = tokW(value32);
+                  //debug_watt("SPOT_PAC1", value32, datetime);
+                  ESP_LOGI(TAG, "SPOT_PAC3 %14.2f kW ", tokW(value32));
+                  //printUnixTime(timeBuf, datetime);
+                  break;
+
               case GridMsPhVphsA: //SPOT_UAC1
-                  invData.Uac[0] = value32;
-                  dispData.Uac[0] = toVolt(value32);
+                  invData.Uac1 = value32;
+                  dispData.Uac1 = toVolt(value32);
                   //debug_volt("SPOT_UAC1", value32, datetime);
-                  ESP_LOGI(TAG, "UacA %15.2f V  ", toVolt(value32));
+                  ESP_LOGI(TAG, "SPOT_UAC1 %15.2f V  ", toVolt(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
+
               case GridMsPhVphsB: //SPOT_UAC2
-                  invData.Uac[1] = value32;
-                  dispData.Uac[1] = toVolt(value32);
-                  //debug_volt("SPOT_UAC1", value32, datetime);
-                  ESP_LOGI(TAG, "UacB %15.2f V  ", toVolt(value32));
+                  invData.Uac2 = value32;
+                  dispData.Uac2 = toVolt(value32);
+                  //debug_volt("SPOT_UAC2", value32, datetime);
+                  ESP_LOGI(TAG, "SPOT_UAC2 %15.2f V  ", toVolt(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;     
-                case GridMsPhVphsC: //SPOT_UAC2
-                  invData.Uac[2] = value32;
-                  dispData.Uac[2] = toVolt(value32);
-                  //debug_volt("SPOT_UAC1", value32, datetime);
-                  ESP_LOGI(TAG, "UacC %15.2f V  ", toVolt(value32));
+
+                case GridMsPhVphsC: //SPOT_UAC3
+                  invData.Uac3 = value32;
+                  dispData.Uac3 = toVolt(value32);
+                  //debug_volt("SPOT_UAC3", value32, datetime);
+                  ESP_LOGI(TAG, "SPOT_UAC3 %15.2f V  ", toVolt(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;       
+
               case GridMsAphsA_1: //SPOT_IAC1
               case GridMsAphsA:
-                  invData.Iac[0] = value32;
-                  dispData.Iac[0] = toAmp(value32);
+                  invData.Iac1 = value32;
+                  dispData.Iac1 = toAmp(value32);
                   //debug_amp("SPOT_IAC1", value32, datetime);
-                  ESP_LOGI(TAG, "IacA %15.2f A  ", toAmp(value32));
+                  ESP_LOGI(TAG, "SPOT_IAC1 %15.2f A  ", toAmp(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
-              case GridMsAphsB_1: //SPOT_IAC1
+              case GridMsAphsB_1: //SPOT_IAC2
               case GridMsAphsB:
-                  invData.Iac[1] = value32;
-                  dispData.Iac[1] = toAmp(value32);
+                  invData.Iac2 = value32;
+                  dispData.Iac2 = toAmp(value32);
                   //debug_amp("SPOT_IAC1", value32, datetime);
-                  ESP_LOGI(TAG, "IacB %15.2f A  ", toAmp(value32));
+                  ESP_LOGI(TAG, "SPOT_IAC2 %15.2f A  ", toAmp(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
-              case GridMsAphsC_1: //SPOT_IAC1
+              case GridMsAphsC_1: //SPOT_IAC3
               case GridMsAphsC:
-                  invData.Iac[2] = value32;
-                  dispData.Iac[2] = toAmp(value32);
+                  invData.Iac3 = value32;
+                  dispData.Iac3 = toAmp(value32);
                   //debug_amp("SPOT_IAC1", value32, datetime);
-                  ESP_LOGI(TAG, "IacB %15.2f A  ", toAmp(value32));
+                  ESP_LOGI(TAG, "SPOT_IAC3 %15.2f A  ", toAmp(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
               case GridMsHz: //SPOT_FREQ
-                  invData.Freq = value32;
-                  dispData.Freq = toHz(value32);
+                  invData.GridFreq = value32;
+                  dispData.GridFreq = toHz(value32);
                   ESP_LOGI(TAG, "Freq %14.2f Hz ", toHz(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
               case DcMsWatt: //SPOT_PDC1 / SPOT_PDC2
-                  invData.Wdc[string[0]] = value32;
-                  dispData.Wdc[string[0]++] = tokW(value32);
-                  ESP_LOGI(TAG, "PDC %15.2f kW ", tokW(value32));
+                  if (iSPOT_PDC==0) {
+                    invData.Pdc1 = value32;
+                    dispData.Pdc1 = tokW(value32);
+                    iSPOT_PDC++;
+                  } else if (iSPOT_PDC==1) {
+                    invData.Pdc2 = value32;
+                    dispData.Pdc2 = tokW(value32);
+                    iSPOT_PDC++;
+                  } else {
+                    //strange !!!
+                  }
+                  ESP_LOGI(TAG, "SPOT_PDC%d %15.2f kW ", iSPOT_PDC, tokW(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
               case DcMsVol: //SPOT_UDC1 / SPOT_UDC2
-                  ESP_LOGI(TAG, "Udc %15.2f V (%d) ", toVolt(value32),string[1]);
-                  invData.Udc[string[1]] = value32;
-                  dispData.Udc[string[1]++] = toVolt(value32);
-                  
+                  if (iSPOT_UDC==0) {
+                    invData.Udc1 = value32;
+                    dispData.Udc1 = toVolt(value32);
+                    iSPOT_UDC++;
+                  } else if (iSPOT_UDC==1) {
+                    invData.Udc2 = value32;
+                    dispData.Udc2 = toVolt(value32);
+                    iSPOT_UDC++;
+                  } else{
+                    //strange
+                  }
+                  ESP_LOGI(TAG, "SPOT_UDC%d %15.2f V ", iSPOT_UDC, toVolt(value32));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
               case DcMsAmp: //SPOT_IDC1 / SPOT_IDC2
-                  ESP_LOGI(TAG, "Idc %15.2f A (%d)", toAmp(value32),string[2]);
-                  invData.Idc[string[2]] = value32;
-                  dispData.Idc[string[2]++] = toAmp(value32);
+                  if (iSPOT_IDC==0) {
+                    invData.Idc1 = value32;
+                    dispData.Idc1 = toAmp(value32);
+                    iSPOT_IDC++;
+                  } else if (iSPOT_IDC==1) {
+                    invData.Idc2 = value32;
+                    dispData.Idc2 = toAmp(value32);
+                    iSPOT_IDC++;
+                  } else {
+                    //strange
+                  }
+                  ESP_LOGI(TAG, "SPOT_IDC%d %15.2f A ", iSPOT_IDC, toAmp(value32));
+
 
                   //printUnixTime(timeBuf, datetime);
                   /* if ((invData.Udc[0]!=0) && (invData.Idc[0] != 0))
@@ -394,7 +446,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   invData.EToday = value64;
                   dispData.EToday = tokWh(value64);
                   //debug_kwh("SPOT_ETODAY", value64, datetime);
-                  ESP_LOGI(TAG, "E-Today %11.3f kWh", tokWh(value64));
+                  ESP_LOGI(TAG, "SPOT_ETOTAL %11.3f kWh", tokWh(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
@@ -404,7 +456,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   invData.ETotal = value64;
                   dispData.ETotal = tokWh(value64);
                   //debug_kwh("SPOT_ETOTAL", value64, datetime);
-                  ESP_LOGI(TAG, "E-Total %11.3f kWh", tokWh(value64));
+                  ESP_LOGI(TAG, "SPOT_ETODAY %11.3f kWh", tokWh(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
        
@@ -844,6 +896,8 @@ E_RC ArchiveDayData(time_t startTime) {
 
 // ******* read SMA current data **********
 E_RC ESP32_SMA_Inverter::ReadCurrentData() {
+  /*
+
   if (!btConnected) {
     charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "Bluetooth offline!");
     return E_NODATA;
@@ -881,6 +935,8 @@ E_RC ESP32_SMA_Inverter::ReadCurrentData() {
     charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "Grid Relay Status error!");
     return E_NODATA;
   }
+
+  */
 
 //case 5: if ((getInverterData(SpotDCPower)) != E_OK)   DEBUG1_PRINTLN("getSpotDCPower error!"); //pcktBuf[23]=15 error!
 //case 6: if ((getInverterData(SpotACPower)) != E_OK)   DEBUG1_PRINTLN("SpotACPower error!"   ); //pcktBuf[23]=15 error!

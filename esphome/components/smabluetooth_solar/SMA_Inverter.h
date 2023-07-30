@@ -42,18 +42,68 @@ SOFTWARE.
 #define UG_INSTALLER 0x0A
 
 #define ARCH_DAY_SIZE 288
-#define CHAR_BUF_MAX 2048
+//#define CHAR_BUF_MAX 2048
+
+#define COMMBUFSIZE 2048
+
+//was 512
+#define MAX_PCKT_BUF_SIZE COMMBUFSIZE
 
 //unsigned char espBTAddress[6] = {0xE6,0x72,0xCC,0xD1,0x08,0xF0}; // BT address ESP32 F0:08:D1:CC:72:E6
 //                        \|E6\|72\|CC\|D1\|08\|F0 };  // BT address  ESP32 F0:08:D1:CC:72:E6
 //                        \|d3\|eb\|29\|25\|80\|00 };  // //SMC 6000: 00:80:25:29:eb:d3
 
 #define BTH_L2SIGNATURE 0x656003FF
-#define MAX_PCKT_BUF_SIZE 512
 
 #define USERGROUP UG_USER
 
 
+
+#define NaN_S16 0x8000                          // "Not a Number" representation for int16_t
+#define NaN_U16 0xFFFF                          // "Not a Number" representation for uint16_t
+#define NaN_S32 (int32_t) 0x80000000            // "Not a Number" representation for int32_t
+#define NaN_U32 (uint32_t)0xFFFFFFFF            // "Not a Number" representation for uint32_t
+#define NaN_S64 (int64_t) 0x8000000000000000    // "Not a Number" representation for int64_t
+#define NaN_U64 (uint64_t)0xFFFFFFFFFFFFFFFF    // "Not a Number" representation for uint64_t
+
+inline const bool is_NaN(const int16_t S16)
+{
+    return S16 == NaN_S16;
+}
+
+inline const bool is_NaN(const uint16_t U16)
+{
+    return U16 == NaN_U16;
+}
+
+inline const bool is_NaN(const int32_t S32)
+{
+    return S32 == NaN_S32;
+}
+
+inline const bool is_NaN(const uint32_t U32)
+{
+    return U32 == NaN_U32;
+}
+
+inline const bool is_NaN(const int64_t S64)
+{
+    return S64 == NaN_S64;
+}
+
+inline const bool is_NaN(const uint64_t U64)
+{
+    return U64 == NaN_U64;
+}
+
+enum SMA_DATATYPE
+{
+    DT_ULONG = 0,
+    DT_STATUS = 8,
+    DT_STRING = 16,
+    DT_FLOAT = 32,
+    DT_SLONG = 64
+};
 
 enum E_RC {
     E_OK =            0,    // No error
@@ -75,13 +125,33 @@ struct InverterData {
     uint32_t Serial;
     uint8_t NetID;
     int32_t Pmax;
+    int32_t TotalPac;
     int32_t Pac;
+    int32_t Pac1;
+    int32_t Pac2;
+    int32_t Pac3;
+    int32_t Uac1;
+    int32_t Uac2;
+    int32_t Uac3;
+    int32_t Iac1;
+    int32_t Iac2;
+    int32_t Iac3;
+
+    int32_t Pdc1;
+    int32_t Pdc2;
+
+    int32_t Udc1;
+    int32_t Udc2;
+    int32_t Idc1;
+    int32_t Idc2;
+    /*
     int32_t Uac[3];
     int32_t Iac[3];
     int32_t Udc[2];
     int32_t Idc[2];
     int32_t Wdc[2];
-    int32_t Freq;
+    */
+    int32_t GridFreq;
     int32_t Eta;
     int32_t InvTemp;
     uint64_t EToday;
@@ -107,14 +177,38 @@ struct InverterData {
 struct DisplayData {
   float BTSigStrength;
   float Pmax;
+  float TotalPac;
   float Pac;
-  float Uac[3];
+
+  float Pac1;
+  float Pac2;
+  float Pac3;
+  float Uac1;
+  float Uac2;
+  float Uac3;
+  float Iac1;
+  float Iac2;
+  float Iac3;
+
+  /*float Uac[3];
   float Iac[3];
+  */
   float InvTemp;
+
+  float Pdc1;
+  float Pdc2;
+
+  float Udc1;
+  float Udc2;
+  float Idc1;
+  float Idc2;
+
+  /*
   float Udc[2];
   float Idc[2];
   float Wdc[2];
-  float Freq;
+  */
+  float GridFreq;
   float EToday;
   float ETotal;
   //std::string DevStatus;
@@ -213,11 +307,11 @@ enum LriDef {
 #pragma pack (push, 1)
 typedef struct __attribute__ ((packed)) PacketHeader {
     uint8_t   SOP;                // Start Of Packet (0x7E)
-    uint16_t  pkLength;
+    unsigned short  pkLength;
     uint8_t   pkChecksum;
     uint8_t   SourceAddr[6];      // SMA Inverter Address
     uint8_t   DestinationAddr[6]; // Local BT Address
-    uint16_t  command;
+    unsigned short  command;
 } L1Hdr;
 #pragma pack(pop)
 
@@ -297,14 +391,15 @@ class ESP32_SMA_Inverter  {
 
     BluetoothSerial serialBT = BluetoothSerial();
 
-    uint8_t  btrdBuf[256];    
+
+    uint8_t  btrdBuf[COMMBUFSIZE];    
     uint16_t pcktBufMax = 0; // max. used size of PcktBuf
     uint8_t  espBTAddress[6]; // is retrieved from BT packet
 
     bool btConnected = false;
 
     char timeBuf[24];
-    char charBuf[CHAR_BUF_MAX];
+    char charBuf[256];
     int  charLen = 0;
 
 
