@@ -23,9 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-//#include "esphome/core/application.h"
 #include "SMA_Inverter.h"
-#include <esp_task_wdt.h>
+
+namespace esphome {
+namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
@@ -975,13 +976,13 @@ uint8_t ESP32_SMA_Inverter::BTgetByte() {
   readTimeout = false;
   //Returns a single byte from the bluetooth stream (with error timeout/reset)
   //shouldn't we lower this value for esphome's whatchdog ? 
-  loopNotification();
+  //loopNotification();
   uint32_t time = 15000+millis(); // 20 sec 
   uint8_t  rec = 0;  
 
   while (!serialBT.available() ) {
     delay(5);  //Wait for BT byte to arrive
-    loopNotification();
+    //loopNotification();
     if (millis() > time) { 
       ESP_LOGD(TAG, "BTgetByte Timeout");
       readTimeout = true;
@@ -1013,7 +1014,7 @@ void ESP32_SMA_Inverter::BTsendPacket( uint8_t *btbuffer ) {
     DEBUG2_PRINTF("%02X,", *(btbuffer+i)); // Print out what we are sending, in hex, for inspection.
     #endif
     serialBT.write( *(btbuffer+i) );  // Send to SMA via ESP32 bluetooth
-    loopNotification();
+    //loopNotification();
   }
   //HexDump(btbuffer, pcktBufPos, 10, 'T');
 }
@@ -1191,6 +1192,5 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
 }
 
 
-void ESP32_SMA_Inverter::esp_task_wdt_reset() {
-  esp_task_wdt_reset();
-}
+}//ns
+}//ns

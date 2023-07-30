@@ -77,7 +77,7 @@ class SmaBluetoothSolar;
 
 
 
-class SmaBluetoothSolar : public PollingComponent, LoopNotifyer {
+class SmaBluetoothSolar : public PollingComponent {
  public:
 
 
@@ -162,6 +162,7 @@ class SmaBluetoothSolar : public PollingComponent, LoopNotifyer {
 
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
+
 
   private:
     ESP32_SMA_Inverter *smaInverter;

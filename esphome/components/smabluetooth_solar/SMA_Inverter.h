@@ -28,6 +28,11 @@ SOFTWARE.
 
 #include "BluetoothSerial.h"
 
+
+
+namespace esphome {
+namespace smabluetooth_solar {
+
 #define tokWh(value64)    (double)(value64)/1000
 #define tokW(value32)     (float)(value32)/1000
 #define toHour(value64)   (double)(value64)/3600
@@ -331,13 +336,8 @@ typedef struct __attribute__ ((packed)) PacketHeader {
 } L1Hdr;
 #pragma pack(pop)
 
-// Abstract class representing the interface
-class LoopNotifyer {
-public:
-    virtual void loopNotification() = 0; // Pure virtual function (no implementation)
-};
 
-class ESP32_SMA_Inverter : LoopNotifyer {
+class ESP32_SMA_Inverter  {
   public: 
     
     // Static method to get the instance of the class.
@@ -353,6 +353,7 @@ class ESP32_SMA_Inverter : LoopNotifyer {
 
     //setup the variables for the inverter
     void setup(std::string mac, std::string pw);
+
 
     //Prototypes
     bool isValidSender(uint8_t expAddr[6], uint8_t isAddr[6]);
@@ -404,9 +405,6 @@ class ESP32_SMA_Inverter : LoopNotifyer {
     InverterData invData = InverterData();
     DisplayData dispData = DisplayData();
 
-    void loopNotification() {
-      esp_task_wdt_reset();
-    }
 
   private: 
    // Private constructor to prevent instantiation from outside the class.
@@ -414,10 +412,6 @@ class ESP32_SMA_Inverter : LoopNotifyer {
     }
     // Destructor (optional, as the singleton instance will be destroyed when the program ends).
     ~ESP32_SMA_Inverter() {}
-
-
-    void esp_task_wdt_reset();
-
 
     BluetoothSerial serialBT = BluetoothSerial();
 
@@ -485,6 +479,7 @@ class ESP32_SMA_Inverter : LoopNotifyer {
 
 };
 
-
+}
+}
 
 #endif
