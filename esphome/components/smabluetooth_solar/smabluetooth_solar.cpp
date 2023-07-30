@@ -79,9 +79,11 @@ void SmaBluetoothSolar::loop() {
         getInverterDataType invDataTypes[] = {
           EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACVoltage
         };
-        for (getInverterDataType idt : invDataTypes) {
+        int sizeOfArr = sizeof(invDataTypes) / sizeof(invDataTypes[0]);
+        for (int iIdt=0;iIdt<sizeOfArr;iIdt++) {
+        //for (getInverterDataType iIdt : invDataTypes) {
           App.feed_wdt(); // watch for ESP32 user task watchdog
-          smaInverter->getInverterData(idt);
+          smaInverter->getInverterData(invDataTypes[iIdt]);
         }
       }
 
