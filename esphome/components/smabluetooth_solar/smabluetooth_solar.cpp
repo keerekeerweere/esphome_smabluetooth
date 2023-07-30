@@ -100,7 +100,7 @@ void SmaBluetoothSolar::loop() {
 /**
  * generic publish method 
 */
-void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const String sensorName, const float publishValue) {
+void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue) {
 
   if (publishValue != 0.0) {
     if (sensor!=nullptr) sensor->publish_state(publishValue);
@@ -115,15 +115,15 @@ void SmaBluetoothSolar::update() {
 
   this->running_update_ = true;
 
-  updateSensor(today_production_, "EToday", smaInverter->dispData.EToday);
-  updateSensor(total_energy_production_, "ETotal", smaInverter->dispData.ETotal);
-  updateSensor(grid_frequency_sensor_, "Freq", smaInverter->dispData.Freq);
-  updateSensor(pvs_[0].voltage_sensor_, "UdcA", smaInverter->dispData.Udc[0]);
-  updateSensor(pvs_[0].current_sensor_, "IdcA", smaInverter->dispData.Idc[0]);
-  updateSensor(pvs_[0].active_power_sensor_, "PDC", smaInverter->dispData.Wdc[0]);
+  updateSensor(today_production_, String("EToday"), smaInverter->dispData.EToday);
+  updateSensor(total_energy_production_, String("ETotal"), smaInverter->dispData.ETotal);
+  updateSensor(grid_frequency_sensor_, String("Freq"), smaInverter->dispData.Freq);
+  updateSensor(pvs_[0].voltage_sensor_, String("UdcA"), smaInverter->dispData.Udc[0]);
+  updateSensor(pvs_[0].current_sensor_, String("IdcA"), smaInverter->dispData.Idc[0]);
+  updateSensor(pvs_[0].active_power_sensor_, String("PDC"), smaInverter->dispData.Wdc[0]);
 
-  updateSensor(phases_[0].voltage_sensor_, "UacA", smaInverter->dispData.Uac[0]);
-  updateSensor(phases_[0].current_sensor_, "IacA", smaInverter->dispData.Iac[0]);
+  updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac[0]);
+  updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac[0]);
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated
 
 	this->running_update_ = false;
