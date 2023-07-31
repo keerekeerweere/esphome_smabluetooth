@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor
+from esphome.components import sensor, text_sensor
 from esphome.const import (
     CONF_ACTIVE_POWER,
     CONF_CURRENT,
@@ -129,8 +129,8 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_PV2): PV_SCHEMA,
             cv.Optional(CONF_INVERTER_STATUS_CODE): sensor.sensor_schema(),
             cv.Optional(CONF_GRID_RELAY_CODE): sensor.sensor_schema(),
-            cv.Optional(CONF_INVERTER_STATUS): cv.string,
-            cv.Optional(CONF_GRID_RELAY): cv.string,
+            cv.Optional(CONF_INVERTER_STATUS): text_sensor.text_sensor_schema(),
+            cv.Optional(CONF_GRID_RELAY): text_sensor.text_sensor_schema(),
             cv.Optional(CONF_FREQUENCY): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HERTZ,
                 icon=ICON_CURRENT_AC,
@@ -184,11 +184,11 @@ async def to_code(config):
     cg.add(var.set_protocol_version(config[CONF_PROTOCOL_VERSION]))
 
     if CONF_INVERTER_STATUS in config:
-        sens = await sensor.new_sensor(config[CONF_INVERTER_STATUS])
+        sens = await text_sensor.new_text_sensor(config[CONF_INVERTER_STATUS])
         cg.add(var.set_inverter_status_sensor(sens))
 
     if CONF_GRID_RELAY in config:
-        sens = await sensor.new_sensor(config[CONF_GRID_RELAY])
+        sens = await text_sensor.new_text_sensor(config[CONF_GRID_RELAY])
         cg.add(var.set_grid_relay_sensor(sens))
 
     if CONF_INVERTER_STATUS_CODE in config:
