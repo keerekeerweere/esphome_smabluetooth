@@ -140,7 +140,7 @@ enum E_RC {
     E_ARCHNODATA =   -10,   // no archive data
 };
 
-struct InverterData {
+struct  InverterData {
     uint8_t btAddress[6];
     uint8_t SUSyID;
     uint32_t Serial;
@@ -189,6 +189,10 @@ struct InverterData {
     int32_t DevStatus;
     int32_t GridRelay;
     E_RC     status;
+
+    uint32_t MeteringGridMsTotWOut;
+    uint32_t MeteringGridMsTotWIn;
+
 };
 
 
@@ -336,6 +340,17 @@ typedef struct __attribute__ ((packed)) PacketHeader {
 } L1Hdr;
 #pragma pack(pop)
 
+/*
+*/
+class ESP32BluetoothSerial : public BluetoothSerial {
+  public:
+    ESP32BluetoothSerial() {
+
+    };
+    ~ESP32BluetoothSerial() {
+      
+    };
+};
 
 class ESP32_SMA_Inverter  {
   public: 
@@ -370,6 +385,8 @@ class ESP32_SMA_Inverter  {
     E_RC ArchiveDayData(time_t startTime);
     E_RC ReadCurrentData();
 
+
+
     bool connect();
     bool connect(uint8_t remoteAddress[]);
     bool disconnect();
@@ -387,6 +404,8 @@ class ESP32_SMA_Inverter  {
     void writePacketLength(uint8_t *buf);
     bool validateChecksum();
     bool isCrcValid(uint8_t lb, uint8_t hb);
+
+    uint32_t getattribute(uint8_t *pcktbuf);
 
     void initPcktID() {
       setPcktID(1);
@@ -414,7 +433,7 @@ class ESP32_SMA_Inverter  {
     ~ESP32_SMA_Inverter() {}
     void loopNotification();
 
-    BluetoothSerial serialBT = BluetoothSerial();
+    BluetoothSerial serialBT = ESP32BluetoothSerial();
     
     uint8_t  btrdBuf[COMMBUFSIZE];    
     uint16_t pcktBufMax = 0; // max. used size of PcktBuf

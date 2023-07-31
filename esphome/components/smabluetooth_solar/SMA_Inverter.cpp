@@ -245,6 +245,24 @@ bool ESP32_SMA_Inverter::isCrcValid(uint8_t lb, uint8_t hb)
   return bRet;
 }
 
+uint32_t ESP32_SMA_Inverter::getattribute(uint8_t *pcktbuf)
+{
+    const int recordsize = 40;
+    uint32_t tag=0, attribute=0, prevTag=0;
+    for (int idx = 8; idx < recordsize; idx += 4)
+    {      
+        attribute = ((uint32_t)get_u32(pcktbuf + idx));
+        tag = attribute & 0x00FFFFFF;
+        if (tag == 0xFFFFFE) // count on prevTag to contain a value succeed
+            break;
+        if ((attribute >> 24) == 1)
+            prevTag = tag;
+    }
+
+    return prevTag;
+}
+
+
 
 // ***********************************************
 E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, uint32_t last) {
@@ -505,18 +523,20 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   ESP_LOGI(TAG, "Temp.     %7.3f C ", toTemp(value32));
                   break;
               case OperationHealth:
-                  invData.DevStatus = value32;
+                  value32 = getattribute(recptr);
+                  invData.DevStatus =value32 ;// value32;
                   ESP_LOGI(TAG, "Device Status:    %d  ", value32);
                   break;
               case OperationGriSwStt:
+                  value32 = getattribute(recptr);
                   invData.GridRelay = value32;
-                  ESP_LOGI(TAG, "Grid Relay:    %d  ", value32);
+                  ESP_LOGI(TAG, "Grid Relay:    %d  ", invData.GridRelay);
                   break;
               case MeteringGridMsTotWOut:
-                  //invData.MeteringGridMsTotWOut = value32;
+                  invData.MeteringGridMsTotWOut = value32;
                   break;
               case MeteringGridMsTotWIn:
-                  //invData.MeteringGridMsTotWIn = value32;
+                  invData.MeteringGridMsTotWIn = value32;
                   break;
               default:
 

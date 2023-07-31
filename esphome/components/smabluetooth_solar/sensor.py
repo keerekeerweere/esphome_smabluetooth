@@ -47,6 +47,8 @@ CONF_PROTOCOL_VERSION = "protocol_version"
 CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 
+CONF_GRID_RELAY = "grid_relay"
+
 DEPENDENCIES = ["esp32", "sensor", "network"]
 CODEOWNERS = ["@keerekeerweere"]
 
@@ -124,6 +126,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_PV1): PV_SCHEMA,
             cv.Optional(CONF_PV2): PV_SCHEMA,
             cv.Optional(CONF_INVERTER_STATUS): sensor.sensor_schema(),
+            cv.Optional(CONF_GRID_RELAY): sensor.sensor_schema(),
             cv.Optional(CONF_FREQUENCY): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HERTZ,
                 icon=ICON_CURRENT_AC,
@@ -179,6 +182,10 @@ async def to_code(config):
     if CONF_INVERTER_STATUS in config:
         sens = await sensor.new_sensor(config[CONF_INVERTER_STATUS])
         cg.add(var.set_inverter_status_sensor(sens))
+
+    if CONF_GRID_RELAY in config:
+        sens = await sensor.new_sensor(config[CONF_GRID_RELAY])
+        cg.add(var.grid_relay_(sens))
 
     if CONF_FREQUENCY in config:
         sens = await sensor.new_sensor(config[CONF_FREQUENCY])
