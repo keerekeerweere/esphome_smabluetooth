@@ -44,6 +44,8 @@ namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
+
+
 void SmaBluetoothSolar::setup() {
   ESP_LOGW(TAG, "Starting setup...");
   //begin
@@ -294,8 +296,8 @@ void SmaBluetoothSolar::update() {
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
   updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->invData.Pac1);
 
-  updateSensor(status_text_sensor_, String("InverterStatus"), SMAInverterCodes::getInverterCode(smaInverter->invData.DevStatus));
-  updateSensor(grid_relay_text_sensor_, String("GridRelay"), SMAInverterCodes::getInverterCode(smaInverter->invData.GridRelay));
+  updateSensor(status_text_sensor_, String("InverterStatus"), getInverterCode(smaInverter->invData.DevStatus));
+  updateSensor(grid_relay_text_sensor_, String("GridRelay"), getInverterCode(smaInverter->invData.GridRelay));
 
   //todo add phases_[1] and  phases_[2]
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated

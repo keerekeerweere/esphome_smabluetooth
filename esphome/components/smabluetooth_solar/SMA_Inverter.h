@@ -28,7 +28,7 @@ SOFTWARE.
 
 #include "BluetoothSerial.h"
 
-#include <map>
+
 
 namespace esphome {
 namespace smabluetooth_solar {
@@ -353,18 +353,6 @@ class ESP32BluetoothSerial : public BluetoothSerial {
     };
 };
 
-class SMAInverterCodes {
-  public:
-    static std::string getInverterCode(int invCode) {
-      auto it = codeMap.find(invCode);
-      if (it != codeMap.end())
-        return it->second;
-      return std::string(""+invCode);
-    }
-  protected:
-    static void initMap();
-    static std::map<int, std::string> codeMap;
-};
 
 class ESP32_SMA_Inverter  {
   public: 

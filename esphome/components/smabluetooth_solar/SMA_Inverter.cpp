@@ -31,27 +31,6 @@ namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
-void SMAInverterCodes::initMap() {
-
-  codeMap[50]="Status";
-  codeMap[51]="Closed";
-
-  codeMap[300]="Nat";
-  codeMap[301]="Grid failure";
-  codeMap[302]="-------";
-  codeMap[303]="Off";
-  codeMap[304]="Island mode";
-  codeMap[305]="Island mode";
-  codeMap[306]="SMA Island mode 60 Hz";
-  codeMap[307]="OK";
-  codeMap[308]="On";
-  codeMap[309]="Operation";
-  codeMap[310]="General operating mode";
-  codeMap[311]="Open";
-  codeMap[312]="Phase assignment";
-  codeMap[313]="SMA Island mode 50 Hz";
-
-}
 
 
 void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
