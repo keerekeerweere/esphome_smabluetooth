@@ -95,8 +95,8 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_sma_inverter_bluetooth_mac(std::string sma_inverter_bluetooth_mac) { this->sma_inverter_bluetooth_mac_ = sma_inverter_bluetooth_mac; }
   void set_sma_inverter_password(std::string sma_inverter_password) {this->sma_inverter_password_ = sma_inverter_password; }
 
-  void set_inverter_status(sensor::Sensor *sensor) { this->inverter_status_ = sensor; }
-  void set_grid_relay_sensor(sensor::Sensor *sensor) { this->grid_relay_ = sensor; }
+  void set_inverter_status_sensor(sensor::Sensor *sensor) { this->inverter_status_sensor_ = sensor; }
+  void set_grid_relay_sensor(sensor::Sensor *sensor) { this->grid_relay_sensor_ = sensor; }
 
   void set_grid_frequency_sensor(sensor::Sensor *sensor) { this->grid_frequency_sensor_ = sensor; }
   void set_grid_active_power_sensor(sensor::Sensor *sensor) { this->grid_active_power_sensor_ = sensor; }
@@ -150,8 +150,8 @@ class SmaBluetoothSolar : public PollingComponent {
     sensor::Sensor *active_power_sensor_{nullptr};
   } pvs_[2];
 
-  sensor::Sensor *inverter_status_{nullptr};
-  sensor::Sensor *grid_relay_{nullptr};
+  sensor::Sensor *inverter_status_sensor_{nullptr};
+  sensor::Sensor *grid_relay_sensor_{nullptr};
 
   sensor::Sensor *grid_frequency_sensor_{nullptr};
   sensor::Sensor *grid_active_power_sensor_{nullptr};

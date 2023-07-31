@@ -284,8 +284,10 @@ void SmaBluetoothSolar::update() {
   //todo add pvs_[1]
   updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac1);
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
+  updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac1);
 
-  updateSensor(inverter_status_, String("InverterStatus"), smaInverter->invData.GridRelay);
+  updateSensor(inverter_status_sensor_, String("InverterStatus"), smaInverter->invData.DevStatus);
+  updateSensor(grid_relay_sensor_, String("GridRelay"), smaInverter->invData.GridRelay);
 
   //todo add phases_[1] and  phases_[2]
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated
@@ -320,7 +322,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
 
   switch (this->protocol_version_) {
     case SMANET2: {
-      publish_1_reg_sensor_state(this->inverter_status_, 0, 1);
+      publish_1_reg_sensor_state(this->inverter_status_sensor_, 0, 1);
 
       publish_2_reg_sensor_state(this->pv_active_power_sensor_, 1, 2, ONE_DEC_UNIT);
 
@@ -354,7 +356,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
       break;
     }
     default: {
-      publish_1_reg_sensor_state(this->inverter_status_, 0, 1);
+      publish_1_reg_sensor_state(this->inverter_status_sensor_, 0, 1);
 
       publish_2_reg_sensor_state(this->pv_active_power_sensor_, 1, 2, ONE_DEC_UNIT);
 
