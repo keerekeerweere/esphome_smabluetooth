@@ -96,7 +96,7 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_sma_inverter_password(std::string sma_inverter_password) {this->sma_inverter_password_ = sma_inverter_password; }
 
   void set_inverter_status_sensor(sensor::Sensor *sensor) { this->inverter_status_ = sensor; }
-  void set_grid_relay(sensor::Sensor *sensor) { this->grid_relay_ = sensor; }
+  void set_grid_relay_sensor(sensor::Sensor *sensor) { this->grid_relay_ = sensor; }
 
   void set_grid_frequency_sensor(sensor::Sensor *sensor) { this->grid_frequency_sensor_ = sensor; }
   void set_grid_active_power_sensor(sensor::Sensor *sensor) { this->grid_active_power_sensor_ = sensor; }
