@@ -40,6 +40,7 @@ UNIT_KOHM = "kΩ"
 UNIT_MILLIAMPERE = "mA"
 
 CONF_INVERTER_STATUS = "inverter_status"
+CONF_INVERTER_STATUS_CODE = "inverter_status_code"
 CONF_PV_ACTIVE_POWER = "pv_active_power"
 CONF_INVERTER_MODULE_TEMP = "inverter_module_temp"
 CONF_PROTOCOL_VERSION = "protocol_version"
@@ -48,6 +49,7 @@ CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 
 CONF_GRID_RELAY = "grid_relay"
+CONF_GRID_RELAY_CODE = "grid_relay_code"
 
 DEPENDENCIES = ["esp32", "sensor", "network"]
 CODEOWNERS = ["@keerekeerweere"]
@@ -125,8 +127,10 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_PHASE_C): PHASE_SCHEMA,
             cv.Optional(CONF_PV1): PV_SCHEMA,
             cv.Optional(CONF_PV2): PV_SCHEMA,
-            cv.Optional(CONF_INVERTER_STATUS): sensor.sensor_schema(),
-            cv.Optional(CONF_GRID_RELAY): sensor.sensor_schema(),
+            cv.Optional(CONF_INVERTER_STATUS_CODE): sensor.sensor_schema(),
+            cv.Optional(CONF_GRID_RELAY_CODE): sensor.sensor_schema(),
+            cv.Optional(CONF_INVERTER_STATUS): cv.string,
+            cv.Optional(CONF_GRID_RELAY): cv.string,
             cv.Optional(CONF_FREQUENCY): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HERTZ,
                 icon=ICON_CURRENT_AC,
@@ -186,6 +190,14 @@ async def to_code(config):
     if CONF_GRID_RELAY in config:
         sens = await sensor.new_sensor(config[CONF_GRID_RELAY])
         cg.add(var.set_grid_relay_sensor(sens))
+
+    if CONF_INVERTER_STATUS_CODE in config:
+        sens = await sensor.new_sensor(config[CONF_INVERTER_STATUS_CODE])
+        cg.add(var.set_inverter_status_code_sensor(sens))
+
+    if CONF_GRID_RELAY_CODE in config:
+        sens = await sensor.new_sensor(config[CONF_GRID_RELAY_CODE])
+        cg.add(var.set_grid_relay_code_sensor(sens))
 
     if CONF_FREQUENCY in config:
         sens = await sensor.new_sensor(config[CONF_FREQUENCY])

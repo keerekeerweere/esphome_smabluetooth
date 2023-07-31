@@ -239,8 +239,17 @@ void SmaBluetoothSolar::loop() {
 }
 
 /**
- * generic publish method 
+ * generic publish methods
 */
+void SmaBluetoothSolar::updateSensor( text_sensor::TextSensor *sensor,  String sensorName,  std::string publishValue) {
+  ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
+  loopNotification();
+  if (!publishValue.empty()) {
+  if (sensor!=nullptr) sensor->publish_state(publishValue);
+    else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
+  } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
+}
+
 
 void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
@@ -285,8 +294,8 @@ void SmaBluetoothSolar::update() {
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
   updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->invData.Pac1);
 
-  updateSensor(inverter_status_sensor_, String("InverterStatus"), smaInverter->invData.DevStatus);
-  updateSensor(grid_relay_sensor_, String("GridRelay"), smaInverter->invData.GridRelay);
+  updateSensor(status_text_sensor_, String("InverterStatus"), SMAInverterCodes::getInverterCode(smaInverter->invData.DevStatus));
+  updateSensor(grid_relay_text_sensor_, String("GridRelay"), SMAInverterCodes::getInverterCode(smaInverter->invData.GridRelay));
 
   //todo add phases_[1] and  phases_[2]
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated
