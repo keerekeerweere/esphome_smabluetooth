@@ -31,8 +31,6 @@ namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
-
-
 void ESP32_SMA_Inverter::setup(std::string mac, std::string pw) {
 // Convert the MAC address string to binary
 

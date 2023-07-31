@@ -75,16 +75,12 @@ enum class SmaInverterState {
 
 class SmaBluetoothSolar;
 
-
-class SMAInverterCodes {
-  public:
-  protected:
-    
-};
-
-
 class SmaBluetoothSolar : public PollingComponent {
  public:
+    SmaBluetoothSolar() {
+      initMap();
+    };
+
     void initMap() {
 
       codeMap[50]="Status";
@@ -107,11 +103,13 @@ class SmaBluetoothSolar : public PollingComponent {
 
     }
 
+
     std::string getInverterCode(int invCode) {
-      auto it = codeMap.find(invCode);
+      std::map<int, std::string>::iterator it = codeMap.find(invCode);
       if (it != codeMap.end())
         return it->second;
-      return std::string(""+invCode);
+      else
+        return std::to_string(invCode);
     }
 
   void loop() override;
