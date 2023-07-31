@@ -185,7 +185,7 @@ async def to_code(config):
 
     if CONF_GRID_RELAY in config:
         sens = await sensor.new_sensor(config[CONF_GRID_RELAY])
-        cg.add(var.grid_relay_sensor(sens))
+        cg.add(var.set_grid_relay_sensor(sens))
 
     if CONF_FREQUENCY in config:
         sens = await sensor.new_sensor(config[CONF_FREQUENCY])
