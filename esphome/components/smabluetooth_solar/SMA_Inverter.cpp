@@ -253,10 +253,10 @@ uint32_t ESP32_SMA_Inverter::getattribute(uint8_t *pcktbuf)
     {      
         attribute = ((uint32_t)get_u32(pcktbuf + idx));
         tag = attribute & 0x00FFFFFF;
-        if (tag == 0xFFFFFE) // count on prevTag to contain a value succeed
+        if (tag == 0xFFFFFE) // count on prevTag to contain a value to succeed
             break;
-        if ((attribute >> 24) == 1)
-            prevTag = tag;
+        if ((attribute >> 24) == 1) //only take into account meaningfull values here 
+            if (prevTag==0) prevTag = tag; //interested in pop of vector, so only (possible) first value is interesting here if anything was added at back
     }
 
     return prevTag;
