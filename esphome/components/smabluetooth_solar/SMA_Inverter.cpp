@@ -341,7 +341,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               case GridMsTotW: //SPOT_PACTOT
                   //This function gives us the time when the inverter was switched off
                   invData.LastTime = datetime;
-                  invData.TotalPac = value32;
+                  invData.TotalPac = toW(value32);
                   dispData.TotalPac = tokW(value32);
                   //debug_watt("SPOT_PACTOT", value32, datetime);
                   printUnixTime(timeBuf, datetime);
@@ -349,7 +349,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
        
               case GridMsWphsA: //SPOT_PAC1
-                  invData.Pac1 = value32;
+                  invData.Pac1 = toW(value32);
                   dispData.Pac1 = tokW(value32);
                   //debug_watt("SPOT_PAC1", value32, datetime);
                   ESP_LOGI(TAG, "SPOT_PAC1 %14.2f kW ", tokW(value32));
@@ -357,7 +357,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case GridMsWphsB: //SPOT_PAC2
-                  invData.Pac2 = value32;
+                  invData.Pac2 = toW(value32);
                   dispData.Pac2 = tokW(value32);
                   //debug_watt("SPOT_PAC2", value32, datetime);
                   ESP_LOGI(TAG, "SPOT_PAC2 %14.2f kW ", tokW(value32));
@@ -365,7 +365,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case GridMsWphsC: //SPOT_PAC3
-                  invData.Pac1 = value32;
+                  invData.Pac1 = toW(value32);
                   dispData.Pac1 = tokW(value32);
                   //debug_watt("SPOT_PAC1", value32, datetime);
                   ESP_LOGI(TAG, "SPOT_PAC3 %14.2f kW ", tokW(value32));
@@ -430,11 +430,11 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
        
               case DcMsWatt: //SPOT_PDC1 / SPOT_PDC2
                   if (iSPOT_PDC==0) {
-                    invData.Pdc1 = value32;
+                    invData.Pdc1 = toW(value32);
                     dispData.Pdc1 = tokW(value32);
                     iSPOT_PDC++;
                   } else if (iSPOT_PDC==1) {
-                    invData.Pdc2 = value32;
+                    invData.Pdc2 = toW(value32);
                     dispData.Pdc2 = tokW(value32);
                     iSPOT_PDC++;
                   } else {

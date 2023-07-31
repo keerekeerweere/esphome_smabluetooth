@@ -280,11 +280,11 @@ void SmaBluetoothSolar::update() {
   updateSensor(grid_frequency_sensor_, String("Freq"), smaInverter->dispData.GridFreq);
   updateSensor(pvs_[0].voltage_sensor_, String("UdcA"), smaInverter->dispData.Udc1);
   updateSensor(pvs_[0].current_sensor_, String("IdcA"), smaInverter->dispData.Idc1);
-  updateSensor(pvs_[0].active_power_sensor_, String("PDC"), smaInverter->dispData.Pdc1);
+  updateSensor(pvs_[0].active_power_sensor_, String("PDC"), smaInverter->invData.Pdc1);
   //todo add pvs_[1]
   updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac1);
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
-  updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac1);
+  updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->invData.Pac1);
 
   updateSensor(inverter_status_sensor_, String("InverterStatus"), smaInverter->invData.DevStatus);
   updateSensor(grid_relay_sensor_, String("GridRelay"), smaInverter->invData.GridRelay);

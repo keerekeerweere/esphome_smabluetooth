@@ -35,6 +35,7 @@ namespace smabluetooth_solar {
 
 #define tokWh(value64)    (double)(value64)/1000
 #define tokW(value32)     (float)(value32)/1000
+#define toW(value32)      (float)(value32)/1.0
 #define toHour(value64)   (double)(value64)/3600
 #define toAmp(value32)    (float)(value32)/1000
 #define toVolt(value32)   (float)(value32)/100
