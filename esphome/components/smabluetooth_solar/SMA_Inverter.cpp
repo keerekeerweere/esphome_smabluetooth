@@ -365,8 +365,8 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case GridMsWphsC: //SPOT_PAC3
-                  invData.Pac1 = toW(value32);
-                  dispData.Pac1 = tokW(value32);
+                  invData.Pac3 = toW(value32);
+                  dispData.Pac3 = tokW(value32);
                   //debug_watt("SPOT_PAC1", value32, datetime);
                   ESP_LOGI(TAG, "SPOT_PAC3 %14.2f kW ", tokW(value32));
                   //printUnixTime(timeBuf, datetime);

@@ -266,7 +266,6 @@ void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName
 
 }
 
-
 void SmaBluetoothSolar::update() {
   // If our last send has had no reply yet, and it wasn't that long ago, do nothing.
   uint32_t now = millis();
