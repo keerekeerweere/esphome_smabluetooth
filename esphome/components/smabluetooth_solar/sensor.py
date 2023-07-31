@@ -51,6 +51,7 @@ CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 CONF_GRID_RELAY = "grid_relay"
 CONF_GRID_RELAY_CODE = "grid_relay_code"
 
+AUTO_LOAD = ["text_sensor"]
 DEPENDENCIES = ["esp32", "sensor", "network"]
 CODEOWNERS = ["@keerekeerweere"]
 
