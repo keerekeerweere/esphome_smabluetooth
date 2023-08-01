@@ -101,6 +101,8 @@ class SmaBluetoothSolar : public PollingComponent {
       codeMap[312]="Phase assignment";
       codeMap[313]="SMA Island mode 50 Hz";
 
+      codeMap[16777213]="Information not available";
+
     }
 
 
@@ -111,6 +113,8 @@ class SmaBluetoothSolar : public PollingComponent {
       else
         return std::to_string(invCode);
     }
+
+  float get_setup_priority() const override { return setup_priority::LATE; }
 
   void loop() override;
   void setup() override;
@@ -212,13 +216,10 @@ class SmaBluetoothSolar : public PollingComponent {
 
   private:
     ESP32_SMA_Inverter *smaInverter;
-    SmaInverterState inverterState = SmaInverterState::Off;    
+    SmaInverterState inverterState = SmaInverterState::Off;
     getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
        {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus };
-      /*
-          DeviceStatus        = 1 << 12,
-    GridRelayStatus     = 1 << 13,
-*/
+
     int indexOfInverterDataType = 0;
 };
 
