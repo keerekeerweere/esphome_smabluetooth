@@ -45,7 +45,6 @@ namespace smabluetooth_solar {
 static const char *const TAG = "smabluetooth_solar";
 
 
-
 void SmaBluetoothSolar::setup() {
   ESP_LOGW(TAG, "Starting setup...");
   //begin
@@ -237,6 +236,7 @@ void SmaBluetoothSolar::loop() {
   }
 */
   App.feed_wdt();
+  delay(10);
   //delay(100);
 }
 

@@ -466,9 +466,14 @@ class ESP32_SMA_Inverter  {
     uint64_t totalWh_prev = 0;
     time_t   dateTime = 0;
 
+    uint32_t btgetByteTimeout = 5000;
 
+   public:
+    uint32_t getBtgetByteTimeout() const { return btgetByteTimeout; }
+    void setBtgetByteTimeout(uint32_t btgetByteTimeout) { ESP32_SMA_Inverter::btgetByteTimeout = btgetByteTimeout; }
 
-  //from SMA_Bluetooth
+   private:
+    //from SMA_Bluetooth
         uint8_t  pcktBuf[MAX_PCKT_BUF_SIZE];
         uint16_t pcktBufPos = 0;
         uint16_t pcktID = 1;

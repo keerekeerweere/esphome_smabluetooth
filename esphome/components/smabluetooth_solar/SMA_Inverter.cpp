@@ -66,12 +66,14 @@ bool ESP32_SMA_Inverter::connect() {
 bool ESP32_SMA_Inverter::connect(uint8_t ra[]) {
   ESP_LOGD(TAG, "connecting %02X:%02X:%02X:%02X:%02X:%02X", 
     ra[5], ra[4], ra[3], ra[2], ra[1], ra[0]);
+  delay(10);
   bool bGotConnected = serialBT.connect(ra);
   btConnected = bGotConnected;
   return bGotConnected; 
 }
 
 bool ESP32_SMA_Inverter::disconnect() {
+  delay(10);
   bool bGotDisconnected = serialBT.disconnect();
   btConnected = false;
   return bGotDisconnected;
@@ -95,7 +97,7 @@ bool ESP32_SMA_Inverter::isValidSender(uint8_t expAddr[6], uint8_t isAddr[6]) {
 // ----------------------------------------------------------------------------------------------
 //unsigned int readBtPacket(int index, unsigned int cmdcodetowait) {
 E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
-  //extern BluetoothSerial serialBT;
+  delay(1);
   ESP_LOGV(TAG, "writing");
   ESP_LOGV(TAG, "getPacket cmd=0x%04x", wait4Command);
 
@@ -108,6 +110,7 @@ E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
     // read L1Hdr
     uint8_t rdCnt=0;
     for (rdCnt=0;rdCnt<18;rdCnt++) {
+      delay(1);
       loopNotification();
       btrdBuf[rdCnt]= BTgetByte();
       if (readTimeout)  break;
@@ -999,7 +1002,7 @@ uint8_t ESP32_SMA_Inverter::BTgetByte() {
   //Returns a single byte from the bluetooth stream (with error timeout/reset)
   //shouldn't we lower this value for esphome's whatchdog ? 
   //loopNotification();
-  uint32_t time = 15000+millis(); // 20 sec 
+  uint32_t time = getBtgetByteTimeout()+millis(); // 20 sec
   uint8_t  rec = 0;  
 
   while (!serialBT.available() ) {
