@@ -106,20 +106,21 @@ void SmaBluetoothSolar::loop() {
 
 
     case SmaInverterState::Connect:{ // do Connect
-        //lets doconnect
+        //lets do connect
         if (!smaInverter->isBtConnected()) {
           //reset PcktID
-          ESP_LOGD(TAG, "initPcktID ");
+          ESP_LOGD(TAG, "do connect : initPcktID ");
           smaInverter->initPcktID();
 
-          ESP_LOGI(TAG, "Connecting SMA inverter");
+          ESP_LOGI(TAG, "Connecting SMA inverter ..");
           if (smaInverter->connect()) {
+			ESP_LOGD(TAG, "connected to inverter");
             inverterState = SmaInverterState::Initialize;
           } else {
             ESP_LOGE(TAG, "Connecting SMA inverter failed");
             //add cleanup / disconnect here ?
             inverterState = SmaInverterState::Begin;
-            waitMillis *= 10;
+            waitMillis *= 50;  // was 10 bevore
           }
         }
     }
