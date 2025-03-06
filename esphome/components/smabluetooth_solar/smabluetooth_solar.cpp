@@ -147,7 +147,9 @@ void SmaBluetoothSolar::loop() {
         inverterState = SmaInverterState::ReadValues;
       } else {
         //sleep and restart
+        ESP_LOGE(TAG, "SMA logonff RC %d ", rc); // we see rc -5
         inverterState = SmaInverterState::Connect;
+        waitMillis = 500;
       }
     } 
     break;
