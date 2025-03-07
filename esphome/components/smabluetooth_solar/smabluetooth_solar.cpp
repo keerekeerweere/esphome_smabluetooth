@@ -353,7 +353,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
       publish_1_reg_sensor_state(this->phases_[0].voltage_sensor_, 14, ONE_DEC_UNIT);
       publish_1_reg_sensor_state(this->phases_[0].current_sensor_, 15, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->phases_[0].active_power_sensor_, 16, 17, ONE_DEC_UNIT);
-
+#ifdef PHASES > 1
       publish_1_reg_sensor_state(this->phases_[1].voltage_sensor_, 18, ONE_DEC_UNIT);
       publish_1_reg_sensor_state(this->phases_[1].current_sensor_, 19, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->phases_[1].active_power_sensor_, 20, 21, ONE_DEC_UNIT);
@@ -361,11 +361,12 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
       publish_1_reg_sensor_state(this->phases_[2].voltage_sensor_, 22, ONE_DEC_UNIT);
       publish_1_reg_sensor_state(this->phases_[2].current_sensor_, 23, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->phases_[2].active_power_sensor_, 24, 25, ONE_DEC_UNIT);
-
+#endif
       publish_2_reg_sensor_state(this->today_production_, 26, 27, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->total_energy_production_, 28, 29, ONE_DEC_UNIT);
-
+#ifdef HAVE_MODULE_TEMP
       publish_1_reg_sensor_state(this->inverter_module_temp_, 32, ONE_DEC_UNIT);
+#endif
       break;
     }
     default: {
@@ -387,7 +388,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
       publish_1_reg_sensor_state(this->phases_[0].voltage_sensor_, 38, ONE_DEC_UNIT);
       publish_1_reg_sensor_state(this->phases_[0].current_sensor_, 39, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->phases_[0].active_power_sensor_, 40, 41, ONE_DEC_UNIT);
-
+#ifdef PHASES > 1
       publish_1_reg_sensor_state(this->phases_[1].voltage_sensor_, 42, ONE_DEC_UNIT);
       publish_1_reg_sensor_state(this->phases_[1].current_sensor_, 43, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->phases_[1].active_power_sensor_, 44, 45, ONE_DEC_UNIT);
@@ -395,11 +396,12 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
       publish_1_reg_sensor_state(this->phases_[2].voltage_sensor_, 46, ONE_DEC_UNIT);
       publish_1_reg_sensor_state(this->phases_[2].current_sensor_, 47, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->phases_[2].active_power_sensor_, 48, 49, ONE_DEC_UNIT);
-
+#endif
       publish_2_reg_sensor_state(this->today_production_, 53, 54, ONE_DEC_UNIT);
       publish_2_reg_sensor_state(this->total_energy_production_, 55, 56, ONE_DEC_UNIT);
-
+#ifdef HAVE_MODULE_TEMP
       publish_1_reg_sensor_state(this->inverter_module_temp_, 93, ONE_DEC_UNIT);
+#endif
       break;
     }
   }
