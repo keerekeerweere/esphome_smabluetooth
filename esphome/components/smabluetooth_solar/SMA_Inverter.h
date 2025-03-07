@@ -28,7 +28,7 @@ SOFTWARE.
 
 #include "BluetoothSerial.h"
 
-
+#define DEBUG_SMA 0
 
 namespace esphome {
 namespace smabluetooth_solar {
