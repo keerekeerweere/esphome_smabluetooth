@@ -38,6 +38,9 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 
 */
 
+#define PHASES 3  // Type of inverter, one or 3 phases
+#define HAVE_MODULE_TEMP false
+
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
@@ -145,8 +148,9 @@ class SmaBluetoothSolar : public PollingComponent {
 
   void set_today_production_sensor(sensor::Sensor *sensor) { this->today_production_ = sensor; }
   void set_total_energy_production_sensor(sensor::Sensor *sensor) { this->total_energy_production_ = sensor; }
+#ifdef HAVE_MODULE_TEMP
   void set_inverter_module_temp_sensor(sensor::Sensor *sensor) { this->inverter_module_temp_ = sensor; }
-
+#endif
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
@@ -204,8 +208,9 @@ class SmaBluetoothSolar : public PollingComponent {
 
   sensor::Sensor *today_production_{nullptr};
   sensor::Sensor *total_energy_production_{nullptr};
+#ifdef HAVE_MODULE_TEMP
   sensor::Sensor *inverter_module_temp_{nullptr};
-
+#endif
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;
