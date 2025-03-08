@@ -16,8 +16,8 @@ esp32:
 external_components:
   source:
     type: git
-    #url: https://github.com/keerekeerweere/esphome_smabluetooth
-    url: https://github.com/LinuxJohannes/esphome_smabluetooth_2025
+    url: https://github.com/keerekeerweere/esphome_smabluetooth
+    #url: https://github.com/LinuxJohannes/esphome_smabluetooth_2025
   refresh: 1min
 
 # Enable logging
