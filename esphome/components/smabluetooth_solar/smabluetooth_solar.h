@@ -38,7 +38,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 
 */
 
-#define PHASES 1  // Type of inverter, one or 3 phases
+#define PHASES 3  // Type of inverter, one or 3 phases
 #define HAVE_MODULE_TEMP false
 
 #include "esphome/core/component.h"
