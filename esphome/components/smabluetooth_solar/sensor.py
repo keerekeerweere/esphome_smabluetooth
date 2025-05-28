@@ -178,7 +178,7 @@ CONFIG_SCHEMA = (
             ),
         }
     )
-    .extend(cv.polling_component_schema("10s"))
+    .extend(cv.polling_component_schema("5s"))
 #    .extend(modbus.modbus_device_schema(0x01))
 )
 
