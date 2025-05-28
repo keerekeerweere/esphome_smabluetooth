@@ -180,7 +180,7 @@ CONFIG_SCHEMA = (
             ),
         }
     )
-    .extend(cv.polling_component_schema("5s"))
+    .extend(cv.polling_component_schema("60s"))
 #    .extend(modbus.modbus_device_schema(0x01))
 )
 
