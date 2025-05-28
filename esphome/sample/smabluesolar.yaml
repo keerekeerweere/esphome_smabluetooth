@@ -109,3 +109,6 @@ sensor:
 
     inverter_module_temp:
       name: "Inverter Module Temp"
+
+    sma_inverter_bluetooth_signal_strength:
+      name: "Inverter Bluetooth Signal Strength"
