@@ -303,6 +303,7 @@ void SmaBluetoothSolar::update() {
   updateSensor(grid_relay_text_sensor_, String("GridRelay"), getInverterCode(smaInverter->invData.GridRelay));
 
   updateSensor(inverter_module_temp_, String("InvTemp"), smaInverter->dispData.InvTemp);
+  updateSensor(inverter_bluetooth_signal_strength_, String("InvSignal"), smaInverter->dispData.BTSigStrength);
 
   //todo add phases_[1] and  phases_[2]
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated

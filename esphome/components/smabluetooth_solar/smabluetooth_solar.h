@@ -151,6 +151,7 @@ class SmaBluetoothSolar : public PollingComponent {
 #ifdef HAVE_MODULE_TEMP
   void set_inverter_module_temp_sensor(sensor::Sensor *sensor) { this->inverter_module_temp_ = sensor; }
 #endif
+  void set_inverter_bluetooth_signal_strength(sensor::Sensor *sensor) { this->inverter_bluetooth_signal_strength_ = sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
@@ -211,6 +212,7 @@ class SmaBluetoothSolar : public PollingComponent {
 #ifdef HAVE_MODULE_TEMP
   sensor::Sensor *inverter_module_temp_{nullptr};
 #endif
+  sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;

@@ -11,6 +11,7 @@ from esphome.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     ICON_CURRENT_AC,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -47,6 +48,7 @@ CONF_PROTOCOL_VERSION = "protocol_version"
 
 CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
+CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_strength"
 
 CONF_GRID_RELAY = "grid_relay"
 CONF_GRID_RELAY_CODE = "grid_relay_code"
@@ -120,6 +122,12 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC ): cv.string,
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
 
+            cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
+                unit_of_measurement="dBm",
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+                state_class=STATE_CLASS_MEASUREMENT
+            ),
             cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(
                 PROTOCOL_VERSIONS, upper=True
             ),
@@ -223,6 +231,10 @@ async def to_code(config):
     if CONF_INVERTER_MODULE_TEMP in config:
         sens = await sensor.new_sensor(config[CONF_INVERTER_MODULE_TEMP])
         cg.add(var.set_inverter_module_temp_sensor(sens))
+
+    if CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH in config:
+        sens = await sensor.new_sensor(config[CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH])
+        cg.add(var.set_inverter_bluetooth_signal_strength(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
         if phase not in config:
