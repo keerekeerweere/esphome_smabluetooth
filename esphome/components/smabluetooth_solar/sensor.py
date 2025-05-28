@@ -39,6 +39,7 @@ UNIT_KILOWATT_HOURS = "kWh"
 UNIT_HOURS = "h"
 UNIT_KOHM = "kΩ"
 UNIT_MILLIAMPERE = "mA"
+UNIT_SIGNAL_STRENGTH_DECIBELS = "dBm"
 
 CONF_INVERTER_STATUS = "inverter_status"
 CONF_INVERTER_STATUS_CODE = "inverter_status_code"
@@ -123,7 +124,7 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
-                unit_of_measurement="dBm",
+                unit_of_measurement=UNIT_SIGNAL_STRENGTH_DECIBELS,
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
                 state_class=STATE_CLASS_MEASUREMENT
