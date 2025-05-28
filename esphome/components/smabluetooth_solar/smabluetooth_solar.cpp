@@ -149,7 +149,7 @@ void SmaBluetoothSolar::loop() {
         //sleep and restart
         ESP_LOGE(TAG, "SMA logonff RC %d ", rc); // we see rc -5
         inverterState = SmaInverterState::Connect;
-        waitMillis = 500;
+        waitMillis = 100;
       }
     } 
     break;
@@ -160,7 +160,7 @@ void SmaBluetoothSolar::loop() {
 
       if (indexOfInverterDataType<SIZE_INVETER_DATA_TYPE_QUERY) {
         smaInverter->getInverterData(invDataTypes[indexOfInverterDataType++]);
-        waitMillis = 500;
+        waitMillis = 100;
       } else {
         //done for reading values, move on
         indexOfInverterDataType = 0;
@@ -177,7 +177,7 @@ void SmaBluetoothSolar::loop() {
       smaInverter->disconnect(); //moved btConnected to inverter class
       
       inverterState = SmaInverterState::Connect;
-      waitMillis = 20 * 1000; //wait at least 20 seconds before next round
+      waitMillis = 2 * 1000; //wait at least 2 seconds before next round
     }
     break;
   }
