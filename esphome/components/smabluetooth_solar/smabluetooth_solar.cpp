@@ -177,7 +177,7 @@ void SmaBluetoothSolar::loop() {
       smaInverter->disconnect(); //moved btConnected to inverter class
       
       inverterState = SmaInverterState::Connect;
-      waitMillis = 2 * 1000; //wait at least 2 seconds before next round
+      waitMillis = 5 * 1000; //wait at least 5 seconds before next round
     }
     break;
   }
