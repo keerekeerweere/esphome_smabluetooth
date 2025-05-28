@@ -11,6 +11,7 @@ from esphome.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     ICON_CURRENT_AC,
     STATE_CLASS_MEASUREMENT,
@@ -174,6 +175,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_INVERTER_MODULE_TEMP): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 accuracy_decimals=1,
+                device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
         }
