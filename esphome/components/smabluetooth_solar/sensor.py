@@ -59,7 +59,7 @@ CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_str
 CONF_GRID_RELAY = "grid_relay"
 CONF_GRID_RELAY_CODE = "grid_relay_code"
 
-AUTO_LOAD = ["text_sensor"]
+AUTO_LOAD = ["text_sensor", "binary_sensor"]
 DEPENDENCIES = ["esp32", "sensor", "network"]
 CODEOWNERS = ["@keerekeerweere"]
 
