@@ -133,18 +133,11 @@ void SmaBluetoothSolar::loop() {
     } 
     break;
 
-    case SmaInverterState::SignalStrength: {//do SignalStrength
-      smaInverter->getBT_SignalStrength();
-      inverterState = SmaInverterState::Logon;
-
-    } 
-    break;
-
     case SmaInverterState::Logon:{ //do LogonSmaInverter
       E_RC rc = smaInverter->logonSMAInverter();
       ESP_LOGI(TAG, "SMA logon RC %d ", rc);
       if (rc == E_OK) {
-        inverterState = SmaInverterState::ReadValues;
+        inverterState = SmaInverterState::SignalStrength;
       } else {
         //sleep and restart
         ESP_LOGE(TAG, "SMA logonff RC %d ", rc); // we see rc -5
@@ -154,12 +147,20 @@ void SmaBluetoothSolar::loop() {
     } 
     break;
 
+    case SmaInverterState::SignalStrength: {//do SignalStrength
+      smaInverter->getBT_SignalStrength();
+      inverterState = SmaInverterState::ReadValues;
+
+    } 
+    break;
+
     case SmaInverterState::ReadValues: { //do ReadValues (one by one)
       //cycle through values
       uint32_t tBeforeRead = millis();
 
       if (indexOfInverterDataType<SIZE_INVETER_DATA_TYPE_QUERY) {
         getInverterDataType dataType = invDataTypes[indexOfInverterDataType++];
+        ESP_LOGI(TAG, "Get Data %d", rc, dataType);
         E_RC rc = smaInverter->getInverterData(dataType);
         ESP_LOGI(TAG, "Get Data RC %d (%d)", rc, dataType);
         waitMillis = 500;
@@ -183,7 +184,7 @@ void SmaBluetoothSolar::loop() {
 
     case SmaInverterState::DoneReadingValues: {
       // continuously read values
-      inverterState = SmaInverterState::ReadValues;
+      inverterState = SmaInverterState::SignalStrength;
       waitMillis = 500;
     }
     break;
