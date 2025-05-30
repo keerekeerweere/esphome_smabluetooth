@@ -528,34 +528,32 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case NameplatePkgRev: //INV_SWVER
-                  invData.SWVersion = version_tostring(get_long(recptr + 24));
-                  ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
+                  // invData.SWVersion = version_tostring(get_long(recptr + 24));
+                  // ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
               case NameplateModel: //INV_TYPE
-                  auto attr = getattribute(recptr);
-                  if (attr.size() > 0)
-                  {
-                      invData.DeviceType = tagdefs.getDesc(attr.front());
-                      if (invData.DeviceType.empty())
-                      {
-                          invData.DeviceType = "UNKNOWN TYPE";
-                          printf("Unknown Inverter Type. Report this issue at https://github.com/SBFspot/SBFspot/issues with following info:\n");
-                          printf("ID='%d' and Type=<Fill in the exact inverter model> (e.g. SB1300TL-10)\n", attr.front());
-                      }
-                      ESP_LOGI(TAG, "INV_TYPE %s", invData.DeviceType.c_str());
-                  }
+                  // auto attr = getattribute(recptr);
+                  // if (attr.size() > 0)
+                  // {
+                  //     invData.DeviceType = tagdefs.getDesc(attr.front());
+                  //     if (invData.DeviceType.empty())
+                  //     {
+                  //         invData.DeviceType = "Unknown";
+                  //     }
+                  //     ESP_LOGI(TAG, "INV_TYPE %s", invData.DeviceType.c_str());
+                  // }
                   break;
 
               case NameplateMainModel: //INV_CLASS
-                  auto attr = getattribute(recptr);
-                  if (attr.size() > 0)
-                  {
-                      invData.DevClass = (DEVICECLASS)attr.front();
-                      invData.DeviceClass = tagdefs.getDesc(invData.DevClass, "UNKNOWN CLASS");
+                  // auto attr = getattribute(recptr);
+                  // if (attr.size() > 0)
+                  // {
+                  //     invData.DevClass = (DEVICECLASS)attr.front();
+                  //     invData.DeviceClass = tagdefs.getDesc(invData.DevClass, "UNKNOWN CLASS");
 
-                      ESP_LOGI(TAG, "INV_CLASS %s", invData.DeviceClass.c_str());
-                  }
+                  //     ESP_LOGI(TAG, "INV_CLASS %s", invData.DeviceClass.c_str());
+                  // }
                   break;
 
               case CoolsysTmpNom:
