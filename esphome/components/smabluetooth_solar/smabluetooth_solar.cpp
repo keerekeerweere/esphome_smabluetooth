@@ -160,7 +160,7 @@ void SmaBluetoothSolar::loop() {
 
       if (indexOfInverterDataType<SIZE_INVETER_DATA_TYPE_QUERY) {
         getInverterDataType dataType = invDataTypes[indexOfInverterDataType++];
-        ESP_LOGI(TAG, "Get Data %d", rc, dataType);
+        ESP_LOGI(TAG, "Get Data %d", dataType);
         E_RC rc = smaInverter->getInverterData(dataType);
         ESP_LOGI(TAG, "Get Data RC %d (%d)", rc, dataType);
         waitMillis = 500;
