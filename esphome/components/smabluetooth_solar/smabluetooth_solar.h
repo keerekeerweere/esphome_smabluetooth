@@ -226,7 +226,7 @@ class SmaBluetoothSolar : public PollingComponent {
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;
     getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
-       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp };
+       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp, OperationTime};
 
     int indexOfInverterDataType = 0;
 };
