@@ -202,7 +202,7 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *grid_relay_sensor_{nullptr};
 
   text_sensor::TextSensor *status_text_sensor_{nullptr};
-  text_sensor::BinarySensor *grid_relay_binary_sensor_{nullptr};
+  binary_sensor::BinarySensor *grid_relay_binary_sensor_{nullptr};
 
   sensor::Sensor *grid_frequency_sensor_{nullptr};
   sensor::Sensor *grid_active_power_sensor_{nullptr};
