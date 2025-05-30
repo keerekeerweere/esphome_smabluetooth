@@ -16,7 +16,6 @@ from esphome.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     ICON_CURRENT_AC,
     ICON_SIGNAL_DISTANCE_VARIANT,
-    ICON_POWER,
     ICON_FLASH,
     ICON_THERMOMETER,
     STATE_CLASS_MEASUREMENT,
@@ -34,6 +33,10 @@ from esphome.const import (
 from esphome.core import CORE
 
 ICON_CURRENT_DC = "mdi:current-dc"
+ICON_SINE_WAVE = "mdi:sine-wave"
+ICON_SOLAR_POWER = "mdi:solar-power"
+ICON_LIGHTNING_BOLT = "mdi:lightning-bolt"
+ICON_TRANSMISSION_TOWER = "mdi:transmission-tower"
 
 CONF_PHASE_A = "phase_a"
 CONF_PHASE_B = "phase_b"
@@ -72,7 +75,7 @@ SmaBluetoothSolar = smabluetooth_solar_ns.class_(
 PHASE_SENSORS = {
     CONF_VOLTAGE: sensor.sensor_schema(
         unit_of_measurement=UNIT_VOLT,
-        icon=ICON_CURRENT_AC,
+        icon=ICON_SINE_WAVE,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT
@@ -86,7 +89,7 @@ PHASE_SENSORS = {
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_WATT,
-        icon=ICON_POWER,
+        icon=ICON_LIGHTNING_BOLT,
         accuracy_decimals=0,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -95,7 +98,7 @@ PHASE_SENSORS = {
 PV_SENSORS = {
     CONF_VOLTAGE: sensor.sensor_schema(
         unit_of_measurement=UNIT_VOLT,
-        icon=ICON_CURRENT_DC,
+        icon=ICON_SINE_WAVE,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT
@@ -109,7 +112,7 @@ PV_SENSORS = {
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_WATT,
-        icon=ICON_POWER,
+        icon=ICON_SOLAR_POWER,
         accuracy_decimals=0,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -154,24 +157,26 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_INVERTER_STATUS_CODE): sensor.sensor_schema(),
             cv.Optional(CONF_GRID_RELAY_CODE): sensor.sensor_schema(),
             cv.Optional(CONF_INVERTER_STATUS): text_sensor.text_sensor_schema(),
-            cv.Optional(CONF_GRID_RELAY): binary_sensor.binary_sensor_schema(),
+            cv.Optional(CONF_GRID_RELAY): binary_sensor.binary_sensor_schema(
+                icon=ICON_TRANSMISSION_TOWER,
+            ),
             cv.Optional(CONF_FREQUENCY): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HERTZ,
-                icon=ICON_CURRENT_AC,
+                icon=ICON_SINE_WAVE,
                 accuracy_decimals=2,
                 device_class=DEVICE_CLASS_FREQUENCY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_ACTIVE_POWER): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                icon=ICON_POWER,
+                icon=ICON_LIGHTNING_BOLT,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_PV_ACTIVE_POWER): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
-                icon=ICON_POWER,
+                icon=ICON_LIGHTNING_BOLT,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
