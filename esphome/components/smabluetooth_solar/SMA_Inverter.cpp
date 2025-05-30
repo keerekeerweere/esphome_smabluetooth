@@ -519,7 +519,45 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   ESP_LOGI(TAG, "SPOT_FEEDTM  %7.3f h  ", toHour(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
-       
+
+              case NameplateLocation: //INV_NAME
+                  //This function gives us the time when the inverter was switched on
+                  device->WakeupTime = datetime;
+                  device->DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, recordsize - 8)); // Fix #506
+                  debug_text("INV_NAME", device->DeviceName.c_str(), datetime);
+                  break;
+
+              case NameplatePkgRev: //INV_SWVER
+                  device->SWVersion = version_tostring(get_long(recptr + 24));
+                  debug_text("INV_SWVER", device->SWVersion.c_str(), datetime);
+                  break;
+
+              case NameplateModel: //INV_TYPE
+                  auto attr = getattribute(recptr);
+                  if (attr.size() > 0)
+                  {
+                      device->DeviceType = tagdefs.getDesc(attr.front());
+                      if (device->DeviceType.empty())
+                      {
+                          device->DeviceType = "UNKNOWN TYPE";
+                          printf("Unknown Inverter Type. Report this issue at https://github.com/SBFspot/SBFspot/issues with following info:\n");
+                          printf("ID='%d' and Type=<Fill in the exact inverter model> (e.g. SB1300TL-10)\n", attr.front());
+                      }
+                      debug_text("INV_TYPE", device->DeviceType.c_str(), datetime);
+                  }
+                  break;
+
+              case NameplateMainModel: //INV_CLASS
+                  auto attr = getattribute(recptr);
+                  if (attr.size() > 0)
+                  {
+                      device->DevClass = (DEVICECLASS)attr.front();
+                      device->DeviceClass = tagdefs.getDesc(device->DevClass, "UNKNOWN CLASS");
+
+                      debug_text("INV_CLASS", device->DeviceClass.c_str(), datetime);
+                  }
+                  break;
+
               case CoolsysTmpNom:
                   invData.InvTemp = value32;
                   dispData.InvTemp = toTemp(value32);
