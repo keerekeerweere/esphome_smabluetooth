@@ -50,8 +50,6 @@ CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
 
 CONF_INVERTER_STATUS = "inverter_status"
-CONF_INVERTER_STATUS_CODE = "inverter_status_code"
-CONF_PV_ACTIVE_POWER = "pv_active_power"
 CONF_INVERTER_MODULE_TEMP = "inverter_module_temp"
 CONF_PROTOCOL_VERSION = "protocol_version"
 
@@ -60,7 +58,6 @@ CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
 CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_strength"
 
 CONF_GRID_RELAY = "grid_relay"
-CONF_GRID_RELAY_CODE = "grid_relay_code"
 
 AUTO_LOAD = ["text_sensor", "binary_sensor"]
 DEPENDENCIES = ["esp32", "sensor", "network"]
@@ -154,8 +151,6 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_PHASE_C): PHASE_SCHEMA,
             cv.Optional(CONF_PV1): PV_SCHEMA,
             cv.Optional(CONF_PV2): PV_SCHEMA,
-            cv.Optional(CONF_INVERTER_STATUS_CODE): sensor.sensor_schema(),
-            cv.Optional(CONF_GRID_RELAY_CODE): sensor.sensor_schema(),
             cv.Optional(CONF_INVERTER_STATUS): text_sensor.text_sensor_schema(),
             cv.Optional(CONF_GRID_RELAY): binary_sensor.binary_sensor_schema(
                 icon=ICON_TRANSMISSION_TOWER,
@@ -165,20 +160,6 @@ CONFIG_SCHEMA = (
                 icon=ICON_SINE_WAVE,
                 accuracy_decimals=2,
                 device_class=DEVICE_CLASS_FREQUENCY,
-                state_class=STATE_CLASS_MEASUREMENT,
-            ),
-            cv.Optional(CONF_ACTIVE_POWER): sensor.sensor_schema(
-                unit_of_measurement=UNIT_WATT,
-                icon=ICON_LIGHTNING_BOLT,
-                accuracy_decimals=0,
-                device_class=DEVICE_CLASS_POWER,
-                state_class=STATE_CLASS_MEASUREMENT,
-            ),
-            cv.Optional(CONF_PV_ACTIVE_POWER): sensor.sensor_schema(
-                unit_of_measurement=UNIT_WATT,
-                icon=ICON_LIGHTNING_BOLT,
-                accuracy_decimals=0,
-                device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_ENERGY_PRODUCTION_DAY): sensor.sensor_schema(
@@ -227,25 +208,9 @@ async def to_code(config):
         sens = await binary_sensor.new_binary_sensor(config[CONF_GRID_RELAY])
         cg.add(var.set_grid_relay_sensor(sens))
 
-    if CONF_INVERTER_STATUS_CODE in config:
-        sens = await sensor.new_sensor(config[CONF_INVERTER_STATUS_CODE])
-        cg.add(var.set_inverter_status_code_sensor(sens))
-
-    if CONF_GRID_RELAY_CODE in config:
-        sens = await sensor.new_sensor(config[CONF_GRID_RELAY_CODE])
-        cg.add(var.set_grid_relay_code_sensor(sens))
-
     if CONF_FREQUENCY in config:
         sens = await sensor.new_sensor(config[CONF_FREQUENCY])
         cg.add(var.set_grid_frequency_sensor(sens))
-
-    if CONF_ACTIVE_POWER in config:
-        sens = await sensor.new_sensor(config[CONF_ACTIVE_POWER])
-        cg.add(var.set_grid_active_power_sensor(sens))
-
-    if CONF_PV_ACTIVE_POWER in config:
-        sens = await sensor.new_sensor(config[CONF_PV_ACTIVE_POWER])
-        cg.add(var.set_pv_active_power_sensor(sens))
 
     if CONF_ENERGY_PRODUCTION_DAY in config:
         sens = await sensor.new_sensor(config[CONF_ENERGY_PRODUCTION_DAY])
