@@ -14,10 +14,12 @@ from esphome.const import (
     DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_DURATION,
     ICON_CURRENT_AC,
     ICON_SIGNAL_DISTANCE_VARIANT,
     ICON_FLASH,
     ICON_THERMOMETER,
+    ICON_TIMER,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     UNIT_AMPERE,
@@ -26,7 +28,8 @@ from esphome.const import (
     UNIT_VOLT,
     UNIT_WATT,
     UNIT_PERCENT,
-    UNIT_KILOWATT_HOURS
+    UNIT_KILOWATT_HOURS,
+    UNIT_SECOND
 )
 
 
@@ -183,6 +186,21 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_TODAY_GENERATION_TIME): sensor.sensor_schema(
+                unit_of_measurement=UNIT_SECOND,
+                icon=ICON_TIMER,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_DURATION,
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+            ),
+            cv.Optional(CONF_TOTAL_GENERATION_TIME): sensor.sensor_schema(
+                unit_of_measurement=UNIT_SECOND,
+                icon=ICON_TIMER,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_DURATION,
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+            ),
+
         }
     )
     .extend(cv.polling_component_schema("60s"))
@@ -227,6 +245,14 @@ async def to_code(config):
     if CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH in config:
         sens = await sensor.new_sensor(config[CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH])
         cg.add(var.set_inverter_bluetooth_signal_strength(sens))
+
+    if CONF_TODAY_GENERATION_TIME in config:
+        sens = await sensor.new_sensor(config[CONF_TODAY_GENERATION_TIME])
+        cg.add(var.set_today_generation_time(sens))
+
+    if CONF_TOTAL_GENERATION_TIME in config:
+        sens = await sensor.new_sensor(config[CONF_TOTAL_GENERATION_TIME])
+        cg.add(var.set_total_generation_time(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
         if phase not in config:

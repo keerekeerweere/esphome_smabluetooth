@@ -126,6 +126,7 @@ class SmaBluetoothSolar : public PollingComponent {
   void update() override;
   void updateSensor( text_sensor::TextSensor *sensor,  String sensorName,  std::string publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue);
+  void updateSensor( sensor::Sensor *sensor,  String sensorName,  uint64_t publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue);
   void updateSensor( binary_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue);
   void on_inverter_data(const std::vector<uint8_t> &data) ;
@@ -152,6 +153,8 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_inverter_module_temp_sensor(sensor::Sensor *sensor) { this->inverter_module_temp_ = sensor; }
 #endif
   void set_inverter_bluetooth_signal_strength(sensor::Sensor *sensor) { this->inverter_bluetooth_signal_strength_ = sensor; }
+  void set_today_generation_time(sensor::Sensor *sensor) { this->today_generation_time_ = sensor; }
+  void set_total_generation_time(sensor::Sensor *sensor) { this->set_total_generation_time_ = sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
@@ -209,6 +212,8 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *inverter_module_temp_{nullptr};
 #endif
   sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
+  sensor::Sensor *today_generation_time_{nullptr};
+  sensor::Sensor *total_generation_time_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;
