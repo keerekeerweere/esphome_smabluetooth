@@ -189,14 +189,14 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_TODAY_GENERATION_TIME): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HOUR,
                 icon=ICON_TIMER,
-                accuracy_decimals=0,
+                accuracy_decimals=3,
                 device_class=DEVICE_CLASS_DURATION,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
             cv.Optional(CONF_TOTAL_GENERATION_TIME): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HOUR,
                 icon=ICON_TIMER,
-                accuracy_decimals=0,
+                accuracy_decimals=3,
                 device_class=DEVICE_CLASS_DURATION,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
