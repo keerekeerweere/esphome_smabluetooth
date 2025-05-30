@@ -291,10 +291,8 @@ void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName
 void SmaBluetoothSolar::updateSensor( binary_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
   loopNotification();
-  if (!publishValue.empty()) {
-    if (sensor!=nullptr) sensor->publish_state(publishValue);
-      else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
-  } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
+  if (sensor!=nullptr) sensor->publish_state(publishValue);
+    else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
 }
 
 void SmaBluetoothSolar::update() {
@@ -317,7 +315,7 @@ void SmaBluetoothSolar::update() {
   updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->invData.Pac1);
 
   updateSensor(status_text_sensor_, String("InverterStatus"), getInverterCode(smaInverter->invData.DevStatus));
-  updateSensor(grid_relay_binary_sensor_, String("GridRelay"), getInverterCode(smaInverter->invData.GridRelay));
+  updateSensor(grid_relay_binary_sensor_, String("GridRelay"), smaInverter->invData.GridRelay);
 
   updateSensor(inverter_module_temp_, String("InvTemp"), smaInverter->dispData.InvTemp);
   updateSensor(inverter_bluetooth_signal_strength_, String("InvSignal"), smaInverter->dispData.BTSigStrength);
