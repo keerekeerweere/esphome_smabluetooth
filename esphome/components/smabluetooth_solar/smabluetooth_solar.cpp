@@ -288,6 +288,15 @@ void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName
 
 }
 
+void SmaBluetoothSolar::updateSensor( text_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue) {
+  ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
+  loopNotification();
+  if (!publishValue.empty()) {
+    if (sensor!=nullptr) sensor->publish_state(publishValue);
+      else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
+  } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
+}
+
 void SmaBluetoothSolar::update() {
   // If our last send has had no reply yet, and it wasn't that long ago, do nothing.
   uint32_t now = millis();
