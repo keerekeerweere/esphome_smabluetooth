@@ -674,7 +674,7 @@ E_RC ESP32_SMA_Inverter::getInverterData(enum getInverterDataType type) {
 
   case SoftwareVersion:
       ESP_LOGD(TAG, "*** SoftwareVersion ***");
-      // INV_SWVERSION
+      // INV_SWVER
       command = 0x58000200;
       first = 0x00823400;
       last = 0x008234FF;
