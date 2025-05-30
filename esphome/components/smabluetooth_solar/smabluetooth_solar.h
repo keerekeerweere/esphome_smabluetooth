@@ -44,6 +44,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "SMA_Inverter.h"
 
 #include <vector>
@@ -126,6 +127,7 @@ class SmaBluetoothSolar : public PollingComponent {
   void updateSensor( text_sensor::TextSensor *sensor,  String sensorName,  std::string publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue);
+  void updateSensor( sensor::BinarySensor *sensor,  String sensorName,  bool publishValue);
   void on_inverter_data(const std::vector<uint8_t> &data) ;
   void dump_config() override;
 
