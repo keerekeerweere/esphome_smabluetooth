@@ -188,7 +188,7 @@ struct  InverterData {
     uint64_t OperationTime;
     uint64_t FeedInTime;
     int32_t DevStatus;
-    bool GridRelay;
+    int32_t GridRelay;
     E_RC     status;
 
     uint32_t MeteringGridMsTotWOut;
