@@ -267,25 +267,19 @@ void SmaBluetoothSolar::updateSensor( text_sensor::TextSensor *sensor,  String s
 void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
   loopNotification();
-  
-
-  if (publishValue != -1) {
+  if (publishValue >= 0) {
     if (sensor!=nullptr) sensor->publish_state(publishValue);
       else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
   } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
-
 }
 
 void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
   loopNotification();
-  
-
-  if (publishValue != 0.0) {
+  if (publishValue >= 0.0) {
     if (sensor!=nullptr) sensor->publish_state(publishValue);
       else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
   } else ESP_LOGV(TAG, "No %s value ", sensorName.c_str());
-
 }
 
 void SmaBluetoothSolar::updateSensor( binary_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue) {
