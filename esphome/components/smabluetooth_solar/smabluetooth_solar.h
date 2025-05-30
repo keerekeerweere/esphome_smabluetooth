@@ -139,7 +139,7 @@ class SmaBluetoothSolar : public PollingComponent {
 
   // TEXT_SENSORS
   void set_inverter_status_sensor(text_sensor::TextSensor *text_sensor) { status_text_sensor_ = text_sensor; }
-  void set_grid_relay_sensor(binary_sensor::BinarySensor *binary_sensor) { grid_relay_text_sensor_ = binary_sensor; }
+  void set_grid_relay_sensor(binary_sensor::BinarySensor *binary_sensor) { grid_relay_binary_sensor_ = binary_sensor; }
   // END_TEXT_SENSORS
 
   void set_grid_frequency_sensor(sensor::Sensor *sensor) { this->grid_frequency_sensor_ = sensor; }
@@ -200,7 +200,7 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *grid_relay_sensor_{nullptr};
 
   text_sensor::TextSensor *status_text_sensor_{nullptr};
-  text_sensor::BinarySensor *grid_relay_text_sensor_{nullptr};
+  text_sensor::BinarySensor *grid_relay_binary_sensor_{nullptr};
 
   sensor::Sensor *grid_frequency_sensor_{nullptr};
   sensor::Sensor *grid_active_power_sensor_{nullptr};
