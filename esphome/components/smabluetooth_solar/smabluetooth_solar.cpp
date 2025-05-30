@@ -288,7 +288,7 @@ void SmaBluetoothSolar::updateSensor( sensor::Sensor *sensor,  String sensorName
 
 }
 
-void SmaBluetoothSolar::updateSensor( text_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue) {
+void SmaBluetoothSolar::updateSensor( binary_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue) {
   ESP_LOGV(TAG, "update sensor %s ", sensorName.c_str());
   loopNotification();
   if (!publishValue.empty()) {

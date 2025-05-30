@@ -532,7 +532,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
               case OperationGriSwStt:
                   value32 = getattribute(recptr);
-                  invData.GridRelay = value32;
+                  invData.GridRelay = value32 > 0;
                   ESP_LOGI(TAG, "Grid Relay:    %d  ", invData.GridRelay);
                   break;
               case MeteringGridMsTotWOut:
