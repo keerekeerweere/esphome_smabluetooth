@@ -11,9 +11,14 @@ from esphome.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     ICON_CURRENT_AC,
+    ICON_PERCENT,
+    ICON_POWER,
+    ICON_FLASH,
+    ICON_THERMOMETER,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     UNIT_AMPERE,
@@ -21,10 +26,14 @@ from esphome.const import (
     UNIT_HERTZ,
     UNIT_VOLT,
     UNIT_WATT,
+    UNIT_PERCENT,
+    UNIT_KILOWATT_HOURS
 )
 
 
 from esphome.core import CORE
+
+ICON_CURRENT_DC = "mdi:current-dc"
 
 CONF_PHASE_A = "phase_a"
 CONF_PHASE_B = "phase_b"
@@ -36,11 +45,6 @@ CONF_TOTAL_GENERATION_TIME = "total_generation_time"
 CONF_TODAY_GENERATION_TIME = "today_generation_time"
 CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
-UNIT_KILOWATT_HOURS = "kWh"
-UNIT_HOURS = "h"
-UNIT_KOHM = "kΩ"
-UNIT_MILLIAMPERE = "mA"
-UNIT_SIGNAL_STRENGTH_DECIBELS = "dBm"
 
 CONF_INVERTER_STATUS = "inverter_status"
 CONF_INVERTER_STATUS_CODE = "inverter_status_code"
@@ -68,17 +72,21 @@ SmaBluetoothSolar = smabluetooth_solar_ns.class_(
 PHASE_SENSORS = {
     CONF_VOLTAGE: sensor.sensor_schema(
         unit_of_measurement=UNIT_VOLT,
+        icon=ICON_CURRENT_AC,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT
     ),
     CONF_CURRENT: sensor.sensor_schema(
         unit_of_measurement=UNIT_AMPERE,
+        icon=ICON_CURRENT_AC,
         accuracy_decimals=2,
         device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_MEASUREMENT
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_WATT,
+        icon=ICON_POWER,
         accuracy_decimals=0,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -87,17 +95,21 @@ PHASE_SENSORS = {
 PV_SENSORS = {
     CONF_VOLTAGE: sensor.sensor_schema(
         unit_of_measurement=UNIT_VOLT,
+        icon=ICON_CURRENT_DC,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT
     ),
     CONF_CURRENT: sensor.sensor_schema(
         unit_of_measurement=UNIT_AMPERE,
+        icon=ICON_CURRENT_DC,
         accuracy_decimals=2,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_WATT,
+        icon=ICON_POWER,
         accuracy_decimals=0,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -125,7 +137,8 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
-                unit_of_measurement=UNIT_SIGNAL_STRENGTH_DECIBELS,
+                unit_of_measurement=UNIT_PERCENT,
+                icon=ICON_PERCENT,
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
                 state_class=STATE_CLASS_MEASUREMENT
@@ -146,34 +159,40 @@ CONFIG_SCHEMA = (
                 unit_of_measurement=UNIT_HERTZ,
                 icon=ICON_CURRENT_AC,
                 accuracy_decimals=2,
+                device_class=DEVICE_CLASS_FREQUENCY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_ACTIVE_POWER): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
+                icon=ICON_POWER,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_PV_ACTIVE_POWER): sensor.sensor_schema(
                 unit_of_measurement=UNIT_WATT,
+                icon=ICON_POWER,
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_ENERGY_PRODUCTION_DAY): sensor.sensor_schema(
                 unit_of_measurement=UNIT_KILOWATT_HOURS,
+                icon=ICON_FLASH,
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_ENERGY,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
             cv.Optional(CONF_TOTAL_ENERGY_PRODUCTION): sensor.sensor_schema(
                 unit_of_measurement=UNIT_KILOWATT_HOURS,
+                icon=ICON_FLASH,
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_ENERGY,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
             cv.Optional(CONF_INVERTER_MODULE_TEMP): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
+                icon=ICON_THERMOMETER,
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
