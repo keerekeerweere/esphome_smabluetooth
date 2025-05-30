@@ -194,6 +194,11 @@ struct  InverterData {
     uint32_t MeteringGridMsTotWOut;
     uint32_t MeteringGridMsTotWIn;
 
+    time_t WakeupTime;
+    std::string DeviceName;
+    std::string SWVersion;
+    std::string DeviceType;
+    std::string DeviceClass;
 };
 
 
