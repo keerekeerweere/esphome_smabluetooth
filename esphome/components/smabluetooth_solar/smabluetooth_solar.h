@@ -50,7 +50,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include <vector>
 #include <map>
 
-#define SIZE_INVETER_DATA_TYPE_QUERY 11
+#define SIZE_INVETER_DATA_TYPE_QUERY 12
 
 
 namespace esphome {
@@ -226,7 +226,7 @@ class SmaBluetoothSolar : public PollingComponent {
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;
     getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
-       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp, OperationTime};
+       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp, OperationTime, TypeLabel};
 
     int indexOfInverterDataType = 0;
 };
