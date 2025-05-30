@@ -154,7 +154,7 @@ class SmaBluetoothSolar : public PollingComponent {
 #endif
   void set_inverter_bluetooth_signal_strength(sensor::Sensor *sensor) { this->inverter_bluetooth_signal_strength_ = sensor; }
   void set_today_generation_time(sensor::Sensor *sensor) { this->today_generation_time_ = sensor; }
-  void set_total_generation_time(sensor::Sensor *sensor) { this->set_total_generation_time_ = sensor; }
+  void set_total_generation_time(sensor::Sensor *sensor) { this->total_generation_time_ = sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
