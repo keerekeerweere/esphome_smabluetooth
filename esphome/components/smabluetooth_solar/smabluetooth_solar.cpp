@@ -129,7 +129,7 @@ void SmaBluetoothSolar::loop() {
     case SmaInverterState::Initialize:{ //do init
       E_RC rc = smaInverter->initialiseSMAConnection();
       ESP_LOGI(TAG, "SMA initialise SMA connection RC %d ", rc);
-      inverterState = SmaInverterState::SignalStrength; // optional, but keep for now
+      inverterState = SmaInverterState::Logon; // optional, but keep for now
     } 
     break;
 
