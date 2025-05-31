@@ -155,6 +155,7 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_inverter_bluetooth_signal_strength(sensor::Sensor *sensor) { this->inverter_bluetooth_signal_strength_ = sensor; }
   void set_today_generation_time(sensor::Sensor *sensor) { this->today_generation_time_ = sensor; }
   void set_total_generation_time(sensor::Sensor *sensor) { this->total_generation_time_ = sensor; }
+  void set_wakeup_time(sensor::Sensor *sensor) { this->wakeup_time_ = sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
@@ -214,6 +215,7 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
   sensor::Sensor *today_generation_time_{nullptr};
   sensor::Sensor *total_generation_time_{nullptr};
+  sensor::Sensor *wakeup_time_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;

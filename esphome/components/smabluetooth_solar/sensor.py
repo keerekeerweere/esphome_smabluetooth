@@ -15,6 +15,7 @@ from esphome.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_DURATION,
+    DEVICE_CLASS_TIMESTAMP,
     ICON_CURRENT_AC,
     ICON_SIGNAL_DISTANCE_VARIANT,
     ICON_FLASH,
@@ -40,6 +41,7 @@ ICON_SINE_WAVE = "mdi:sine-wave"
 ICON_SOLAR_POWER = "mdi:solar-power"
 ICON_LIGHTNING_BOLT = "mdi:lightning-bolt"
 ICON_TRANSMISSION_TOWER = "mdi:transmission-tower"
+ICON_CLOCK = "mdi:clock"
 
 CONF_PHASE_A = "phase_a"
 CONF_PHASE_B = "phase_b"
@@ -49,6 +51,7 @@ CONF_ENERGY_PRODUCTION_DAY = "energy_production_day"
 CONF_TOTAL_ENERGY_PRODUCTION = "total_energy_production"
 CONF_TOTAL_GENERATION_TIME = "total_generation_time"
 CONF_TODAY_GENERATION_TIME = "today_generation_time"
+CONF_WAKEUP_TIME = "wakeup_time"
 CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
 
@@ -200,7 +203,10 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_DURATION,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
-
+            cv.Optional(CONF_WAKEUP_TIME): sensor.sensor_schema(
+                icon=ICON_CLOCK,
+                device_class=DEVICE_CLASS_TIMESTAMP,
+            ),
         }
     )
     .extend(cv.polling_component_schema("60s"))
@@ -253,6 +259,10 @@ async def to_code(config):
     if CONF_TOTAL_GENERATION_TIME in config:
         sens = await sensor.new_sensor(config[CONF_TOTAL_GENERATION_TIME])
         cg.add(var.set_total_generation_time(sens))
+
+    if CONF_WAKEUP_TIME in config:
+        sens = await sensor.new_sensor(config[CONF_WAKEUP_TIME])
+        cg.add(var.set_wakeup_time(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
         if phase not in config:
