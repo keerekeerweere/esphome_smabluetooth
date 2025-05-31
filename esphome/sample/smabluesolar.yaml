@@ -116,6 +116,9 @@ sensor:
     wakeup_time:
       name: "Wakeup Time"
 
+    serial_number:
+      name: "Serial Number"
+
     software_version:
       name: "Software Version"
 
