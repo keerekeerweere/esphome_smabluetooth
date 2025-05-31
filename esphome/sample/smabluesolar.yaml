@@ -122,7 +122,7 @@ sensor:
     software_version:
       name: "Software Version"
 
-    device_type::
+    device_type:
       name: "Device Type"
 
     device_class:
