@@ -107,6 +107,15 @@ sensor:
     total_energy_production:
       name: "Total Energy Production"
 
+    today_generation_time:
+      name: "Today's Generation Time"
+
+    total_generation_time:
+      name: "Total Generation Time"
+
+    wakeup_time:
+      name: "Wakeup Time"
+
     inverter_module_temp:
       name: "Inverter Module Temp"
 
