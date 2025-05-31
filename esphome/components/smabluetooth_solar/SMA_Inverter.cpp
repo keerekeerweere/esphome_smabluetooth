@@ -1168,16 +1168,16 @@ bool ESP32_SMA_Inverter::validateChecksum() {
 
 void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) {
   int i, j;
-  ESP_LOGD(TAG, "---%c----:", c);
-  for (i=0; i < radix; i++) ESP_LOGD(TAG, " %02X", i);
+  char line[radix * 3];
+  for (i=0; i < radix * 3; i+=3) sprintf(line + i, " %02X", i);
+  ESP_LOGD(TAG, "---%c----:%s", c, line);
   for (i = 0, j = 0; i < count; i++) {
-    if (j % radix == 0) {
-      ESP_LOGD(TAG, "%c-%06d: ", c, j);
+    sprintf(line + (i * 3), " %02X", buf[i]);
+    if (j % radix == radix - 1) {
+      ESP_LOGD(TAG, "%c-%06d:%s", c, j, line);
     }
-    ESP_LOGD(TAG, "%02X ", buf[i]);
     j++;
   }
-  ESP_LOGD(TAG, "");
 }
 //-----------------------------------------------------
  uint8_t ESP32_SMA_Inverter::printUnixTime(char *buf, time_t t) {
