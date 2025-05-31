@@ -529,7 +529,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
 
               case NameplatePkgRev: //INV_SWVER
                   //HexDump(recptr, recordsize, 16, 'V');
-                  invData.SWVersion = get_version(value32);
+                  invData.SWVersion = get_version(get_u32(recptr + 24));
                   ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
