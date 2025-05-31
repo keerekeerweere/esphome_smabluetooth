@@ -197,8 +197,8 @@ struct  InverterData {
     time_t WakeupTime;
     std::string DeviceName;
     std::string SWVersion;
-    std::string DeviceType;
-    std::string DeviceClass;
+    uint32_t DeviceType;
+    uint32_t DeviceClass;
 };
 
 

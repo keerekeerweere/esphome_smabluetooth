@@ -534,18 +534,13 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
 
               case NameplateModel: //INV_TYPE
                   value32 = getattribute(recptr);
-                  //     invData.DeviceType = tagdefs.getDesc(attr.front());
-                  //     if (invData.DeviceType.empty())
-                  //     {
-                  //         invData.DeviceType = "Unknown";
-                  //     }
+                  invData.DeviceType = value32;
                   ESP_LOGI(TAG, "INV_TYPE %d", value32); //invData.DeviceType.c_str());
                   break;
 
               case NameplateMainModel: //INV_CLASS
                   value32 = getattribute(recptr);
-                  //     invData.DevClass = (DEVICECLASS)attr.front();
-                  //     invData.DeviceClass = tagdefs.getDesc(invData.DevClass, "UNKNOWN CLASS");
+                  invData.DeviceClass = value32;
                   ESP_LOGI(TAG, "INV_CLASS %d", value32); //invData.DeviceClass.c_str());
                   break;
 

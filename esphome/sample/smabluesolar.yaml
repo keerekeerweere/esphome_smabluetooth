@@ -122,6 +122,12 @@ sensor:
     software_version:
       name: "Software Version"
 
+    device_type::
+      name: "Device Type"
+
+    device_class:
+      name: "Device Class"
+
     inverter_module_temp:
       name: "Inverter Module Temp"
 

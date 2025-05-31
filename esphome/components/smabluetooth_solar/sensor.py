@@ -54,6 +54,8 @@ CONF_TODAY_GENERATION_TIME = "today_generation_time"
 CONF_WAKEUP_TIME = "wakeup_time"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_SOFTWARE_VERSION = "software_version"
+CONF_DEVICE_TYPE = "device_type"
+CONF_DEVICE_CLASS = "device_class"
 CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
 
@@ -211,6 +213,8 @@ CONFIG_SCHEMA = (
             ),
             cv.Optional(CONF_SERIAL_NUMBER): text_sensor.text_sensor_schema(),
             cv.Optional(CONF_SOFTWARE_VERSION): text_sensor.text_sensor_schema(),
+            cv.Optional(CONF_DEVICE_TYPE): text_sensor.text_sensor_schema(),
+            cv.Optional(CONF_DEVICE_CLASS): text_sensor.text_sensor_schema(),
         }
     )
     .extend(cv.polling_component_schema("60s"))
@@ -275,6 +279,14 @@ async def to_code(config):
     if CONF_SOFTWARE_VERSION in config:
         sens = await text_sensor.new_text_sensor(config[CONF_SOFTWARE_VERSION])
         cg.add(var.set_software_version(sens))
+
+    if CONF_DEVICE_TYPE in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_DEVICE_TYPE])
+        cg.add(var.set_device_type(sens))
+
+    if CONF_DEVICE_CLASS in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_DEVICE_CLASS])
+        cg.add(var.set_device_class(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
         if phase not in config:

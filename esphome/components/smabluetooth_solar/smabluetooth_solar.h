@@ -105,6 +105,11 @@ class SmaBluetoothSolar : public PollingComponent {
       codeMap[312]="Phase assignment";
       codeMap[313]="SMA Island mode 50 Hz";
 
+      codeMap[358]="SB 4000TL-20";
+      codeMap[359]="SB 5000TL-20";
+
+      codeMap[8001]="Solar Inverters";
+
       codeMap[16777213]="Information not available";
 
     }
@@ -158,6 +163,8 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_wakeup_time(sensor::Sensor *sensor) { this->wakeup_time_ = sensor; }
   void set_serial_number(text_sensor::TextSensor *text_sensor) { this->serial_number_ = text_sensor; }
   void set_software_version(text_sensor::TextSensor *text_sensor) { this->software_version_ = text_sensor; }
+  void set_device_type(text_sensor::TextSensor *text_sensor) { this->device_type_ = text_sensor; }
+  void set_device_class(text_sensor::TextSensor *text_sensor) { this->device_class_ = text_sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
@@ -220,6 +227,8 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *wakeup_time_{nullptr};
   text_sensor::TextSensor *serial_number_{nullptr};
   text_sensor::TextSensor *software_version_{nullptr};
+  text_sensor::TextSensor *device_type_{nullptr};
+  text_sensor::TextSensor *device_class_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;
