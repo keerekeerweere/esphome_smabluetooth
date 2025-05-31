@@ -464,6 +464,7 @@ class ESP32_SMA_Inverter  {
     uint16_t get_u16(uint8_t *buf);
     uint32_t get_u32(uint8_t *buf);
     uint64_t get_u64(uint8_t *buf);
+    std:string get_version(in32_t);
 
     int32_t  value32 = 0;
     int64_t  value64 = 0;

@@ -528,9 +528,9 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case NameplatePkgRev: //INV_SWVER
-                  HexDump(recptr, recordsize, 16, 'V');
-                  // invData.SWVersion = version_tostring(get_long(recptr + 24));
-                  // ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
+                  //HexDump(recptr, recordsize, 16, 'V');
+                  invData.SWVersion = get_version(value32);
+                  ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
               case NameplateModel: //INV_TYPE
@@ -1164,8 +1164,6 @@ bool ESP32_SMA_Inverter::validateChecksum() {
   }
 }
 
-
-
 void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) {
   int i, j;
   char line[(radix * 3) + 10];
@@ -1263,6 +1261,22 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
     lnglng <<= 8;
     lnglng += *(buf);
     return lnglng;
+}
+
+std::string ESP32_SMA_Inverter::get_version(int32_t version)
+{
+    char ver[16];
+
+    uint8_t Vtype = version & 0xFF;
+    Vtype = Vtype > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
+    uint8_t Vbuild = (version >> 8) & 0xFF;
+    uint8_t Vminor = (version >> 16) & 0xFF;
+    uint8_t Vmajor = (version >> 24) & 0xFF;
+
+    //Vmajor and Vminor = 0x12 should be printed as '12' and not '18' (BCD)
+    snprintf(ver, sizeof(ver), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
+
+    return std::string(ver);
 }
 
 void ESP32_SMA_Inverter::loopNotification() {
