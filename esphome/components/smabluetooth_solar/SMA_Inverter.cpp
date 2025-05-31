@@ -1170,7 +1170,7 @@ void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) 
   int i, j;
   char line[(radix * 3) + 10];
   char* linepos = line;
-  for (i=0; i < radix * 3; i+=3) linespos += sprintf(linepos, " %02X", i);
+  for (i=0; i < radix * 3; i+=3) linepos += sprintf(linepos, " %02X", i);
   ESP_LOGD(TAG, "---%c----:%s", c, line);
   linepos = line;
   for (i = 0, j = 0; i < count; i++, j = i % radix) {
