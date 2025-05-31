@@ -1263,7 +1263,7 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
     return lnglng;
 }
 
-std::string ESP32_SMA_Inverter::get_version(int32_t version)
+std::string ESP32_SMA_Inverter::get_version(uint32_t version)
 {
     char ver[16];
 
