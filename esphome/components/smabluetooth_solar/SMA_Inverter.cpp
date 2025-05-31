@@ -533,29 +533,20 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case NameplateModel: //INV_TYPE
-                  HexDump(recptr, recordsize, 16, 'T');
-                  // auto attr = getattribute(recptr);
-                  // if (attr.size() > 0)
-                  // {
+                  value32 = getattribute(recptr);
                   //     invData.DeviceType = tagdefs.getDesc(attr.front());
                   //     if (invData.DeviceType.empty())
                   //     {
                   //         invData.DeviceType = "Unknown";
                   //     }
-                  //     ESP_LOGI(TAG, "INV_TYPE %s", invData.DeviceType.c_str());
-                  // }
+                  ESP_LOGI(TAG, "INV_TYPE %d", value32); //invData.DeviceType.c_str());
                   break;
 
               case NameplateMainModel: //INV_CLASS
-                  HexDump(recptr, recordsize, 16, 'C');
-                  // auto attr = getattribute(recptr);
-                  // if (attr.size() > 0)
-                  // {
+                  value32 = getattribute(recptr);
                   //     invData.DevClass = (DEVICECLASS)attr.front();
                   //     invData.DeviceClass = tagdefs.getDesc(invData.DevClass, "UNKNOWN CLASS");
-
-                  //     ESP_LOGI(TAG, "INV_CLASS %s", invData.DeviceClass.c_str());
-                  // }
+                  ESP_LOGI(TAG, "INV_CLASS %d", value32); //invData.DeviceClass.c_str());
                   break;
 
               case CoolsysTmpNom:
