@@ -267,7 +267,7 @@ async def to_code(config):
         cg.add(var.set_wakeup_time(sens))
 
     if CONF_SOFTWARE_VERSION in config:
-        sens = await sensor.new_sensor(config[CONF_SOFTWARE_VERSION])
+        sens = await text_sensor.new_text_sensor(config[CONF_SOFTWARE_VERSION])
         cg.add(var.set_software_version(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
