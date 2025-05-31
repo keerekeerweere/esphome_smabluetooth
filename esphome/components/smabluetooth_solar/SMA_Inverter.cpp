@@ -523,16 +523,18 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               case NameplateLocation: //INV_NAME
                   //This function gives us the time when the inverter was switched on
                   invData.WakeupTime = datetime;
-                  invData.DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, recordsize - 8)); // Fix #506
+                  invData.DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, recordsize - 8));
                   ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName.c_str());
                   break;
 
               case NameplatePkgRev: //INV_SWVER
+                  HexDump(recptr, recordsize, 10, 'P');
                   // invData.SWVersion = version_tostring(get_long(recptr + 24));
                   // ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
               case NameplateModel: //INV_TYPE
+                  HexDump(recptr, recordsize, 10, 'P');
                   // auto attr = getattribute(recptr);
                   // if (attr.size() > 0)
                   // {
@@ -546,6 +548,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case NameplateMainModel: //INV_CLASS
+                  HexDump(recptr, recordsize, 10, 'P');
                   // auto attr = getattribute(recptr);
                   // if (attr.size() > 0)
                   // {
