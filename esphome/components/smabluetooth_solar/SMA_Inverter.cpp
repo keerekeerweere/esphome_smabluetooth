@@ -528,13 +528,13 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case NameplatePkgRev: //INV_SWVER
-                  HexDump(recptr, recordsize, 10, 'P');
+                  HexDump(recptr, recordsize, 16, 'V');
                   // invData.SWVersion = version_tostring(get_long(recptr + 24));
                   // ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
               case NameplateModel: //INV_TYPE
-                  HexDump(recptr, recordsize, 10, 'P');
+                  HexDump(recptr, recordsize, 16, 'T');
                   // auto attr = getattribute(recptr);
                   // if (attr.size() > 0)
                   // {
@@ -548,7 +548,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   break;
 
               case NameplateMainModel: //INV_CLASS
-                  HexDump(recptr, recordsize, 10, 'P');
+                  HexDump(recptr, recordsize, 16, 'C');
                   // auto attr = getattribute(recptr);
                   // if (attr.size() > 0)
                   // {
@@ -1179,7 +1179,7 @@ void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) 
         ESP_LOGD(TAG, "%s", line);
         linepos = line;
       }
-      linepos += sprintf(linepos, "%c-%06d:", c, j * radix);
+      linepos += sprintf(linepos, "%c-%06d:", c, i);
     }
     linepos += sprintf(linepos, " %02X", buf[i]);
   }
