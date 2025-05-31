@@ -325,6 +325,7 @@ void SmaBluetoothSolar::update() {
   updateSensor(today_generation_time_, String("TToday"), (float)smaInverter->invData.OperationTime / 3600);
   updateSensor(total_generation_time_, String("TTotal"), (float)smaInverter->invData.FeedInTime / 3600);
   updateSensor(wakeup_time_, String("TWakeup"), (uint64_t)smaInverter->invData.WakeupTime);
+  updateSensor(software_version_, String("SoftwareVersion"), smaInverter->invData.SWVersion);
 
   //todo add phases_[1] and  phases_[2]
   //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated

@@ -52,6 +52,7 @@ CONF_TOTAL_ENERGY_PRODUCTION = "total_energy_production"
 CONF_TOTAL_GENERATION_TIME = "total_generation_time"
 CONF_TODAY_GENERATION_TIME = "today_generation_time"
 CONF_WAKEUP_TIME = "wakeup_time"
+CONF_SOFTWARE_VERSION = "software_version"
 CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
 
@@ -207,6 +208,7 @@ CONFIG_SCHEMA = (
                 icon=ICON_CLOCK,
                 device_class=DEVICE_CLASS_TIMESTAMP,
             ),
+            cv.Optional(CONF_SOFTWARE_VERSION): text_sensor.text_sensor_schema(),
         }
     )
     .extend(cv.polling_component_schema("60s"))
@@ -263,6 +265,10 @@ async def to_code(config):
     if CONF_WAKEUP_TIME in config:
         sens = await sensor.new_sensor(config[CONF_WAKEUP_TIME])
         cg.add(var.set_wakeup_time(sens))
+
+    if CONF_SOFTWARE_VERSION in config:
+        sens = await sensor.new_sensor(config[CONF_SOFTWARE_VERSION])
+        cg.add(var.set_software_version(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
         if phase not in config:

@@ -116,6 +116,9 @@ sensor:
     wakeup_time:
       name: "Wakeup Time"
 
+    software_version:
+      name: "Software Version"
+
     inverter_module_temp:
       name: "Inverter Module Temp"
 
