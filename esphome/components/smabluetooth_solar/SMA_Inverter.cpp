@@ -519,7 +519,31 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   ESP_LOGI(TAG, "SPOT_FEEDTM  %7.3f h  ", toHour(value64));
                   //printUnixTime(timeBuf, datetime);
                   break;
-       
+
+              case NameplateLocation: //INV_NAME
+                  //This function gives us the time when the inverter was switched on
+                  invData.WakeupTime = datetime;
+                  invData.DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, recordsize - 8));
+                  ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName.c_str());
+                  break;
+
+              case NameplatePkgRev: //INV_SWVER
+                  invData.SWVersion = get_version(get_u32(recptr + 24));
+                  ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
+                  break;
+
+              case NameplateModel: //INV_TYPE
+                  value32 = getattribute(recptr);
+                  invData.DeviceType = value32;
+                  ESP_LOGI(TAG, "INV_TYPE %d", value32); //invData.DeviceType.c_str());
+                  break;
+
+              case NameplateMainModel: //INV_CLASS
+                  value32 = getattribute(recptr);
+                  invData.DeviceClass = value32;
+                  ESP_LOGI(TAG, "INV_CLASS %d", value32); //invData.DeviceClass.c_str());
+                  break;
+
               case CoolsysTmpNom:
                   invData.InvTemp = value32;
                   dispData.InvTemp = toTemp(value32);
@@ -638,7 +662,7 @@ E_RC ESP32_SMA_Inverter::getInverterData(enum getInverterDataType type) {
 
   case SoftwareVersion:
       ESP_LOGD(TAG, "*** SoftwareVersion ***");
-      // INV_SWVERSION
+      // INV_SWVER
       command = 0x58000200;
       first = 0x00823400;
       last = 0x008234FF;
@@ -1125,20 +1149,27 @@ bool ESP32_SMA_Inverter::validateChecksum() {
   }
 }
 
-
-
 void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) {
   int i, j;
-  ESP_LOGD(TAG, "---%c----:", c);
-  for (i=0; i < radix; i++) ESP_LOGD(TAG, " %02X", i);
-  for (i = 0, j = 0; i < count; i++) {
-    if (j % radix == 0) {
-      ESP_LOGD(TAG, "%c-%06d: ", c, j);
+  char line[(radix * 3) + 10];
+  char* linepos = line;
+  for (i=0; i < radix; i++) linepos += sprintf(linepos, " %02X", i);
+  ESP_LOGD(TAG, "---%c----:%s", c, line);
+  linepos = line;
+  for (i = 0, j = 0; i < count; i++, j = i % radix) {
+    if (j == 0) {
+      if (linepos != line) {
+        ESP_LOGD(TAG, "%s", line);
+        linepos = line;
+      }
+      linepos += sprintf(linepos, "%c-%06X:", c, i);
     }
-    ESP_LOGD(TAG, "%02X ", buf[i]);
-    j++;
+    linepos += sprintf(linepos, " %02X", buf[i]);
   }
-  ESP_LOGD(TAG, "");
+  if (linepos != line) {
+    ESP_LOGD(TAG, "%s", line);
+    linepos = line;
+  }
 }
 //-----------------------------------------------------
  uint8_t ESP32_SMA_Inverter::printUnixTime(char *buf, time_t t) {
@@ -1215,6 +1246,22 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
     lnglng <<= 8;
     lnglng += *(buf);
     return lnglng;
+}
+
+std::string ESP32_SMA_Inverter::get_version(uint32_t version)
+{
+    char ver[16];
+
+    uint8_t Vtype = version & 0xFF;
+    Vtype = Vtype > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
+    uint8_t Vbuild = (version >> 8) & 0xFF;
+    uint8_t Vminor = (version >> 16) & 0xFF;
+    uint8_t Vmajor = (version >> 24) & 0xFF;
+
+    //Vmajor and Vminor = 0x12 should be printed as '12' and not '18' (BCD)
+    snprintf(ver, sizeof(ver), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
+
+    return std::string(ver);
 }
 
 void ESP32_SMA_Inverter::loopNotification() {
