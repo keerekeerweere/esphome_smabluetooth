@@ -312,10 +312,22 @@ void SmaBluetoothSolar::update() {
   updateSensor(pvs_[0].voltage_sensor_, String("UdcA"), smaInverter->dispData.Udc1);
   updateSensor(pvs_[0].current_sensor_, String("IdcA"), smaInverter->dispData.Idc1);
   updateSensor(pvs_[0].active_power_sensor_, String("PDC"), smaInverter->invData.Pdc1);
-  //todo add pvs_[1]
+
+  updateSensor(pvs_[1].voltage_sensor_, String("UdcA"), smaInverter->dispData.Udc2);
+  updateSensor(pvs_[1].current_sensor_, String("IdcA"), smaInverter->dispData.Idc2);
+  updateSensor(pvs_[1].active_power_sensor_, String("PDC"), smaInverter->invData.Pdc2);
+
   updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac1);
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
   updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->invData.Pac1);
+
+  updateSensor(phases_[1].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac2);
+  updateSensor(phases_[1].current_sensor_, String("IacA"), smaInverter->dispData.Iac2);
+  updateSensor(phases_[1].active_power_sensor_, String("IacA"), smaInverter->invData.Pac2);
+
+  updateSensor(phases_[2].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac3);
+  updateSensor(phases_[2].current_sensor_, String("IacA"), smaInverter->dispData.Iac3);
+  updateSensor(phases_[2].active_power_sensor_, String("IacA"), smaInverter->invData.Pac3);
 
   updateSensor(status_text_sensor_, String("InverterStatus"), getInverterCode(smaInverter->invData.DevStatus));
   updateSensor(grid_relay_binary_sensor_, String("GridRelay"), smaInverter->invData.GridRelay == 51); // 51 is "Closed"
