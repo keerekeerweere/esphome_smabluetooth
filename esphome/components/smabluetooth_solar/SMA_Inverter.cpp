@@ -135,7 +135,7 @@ E_RC ESP32_SMA_Inverter::getPacket(uint8_t expAddr[6], int wait4Command) {
         btrdBuf[rdCnt]= BTgetByte();
         if (readTimeout) break;
       }
-      ESP_LOGW(TAG, "L2 Rec=%d bytes", rdCnt-18);
+      ESP_LOGD(TAG, "L2 Rec=%d bytes", rdCnt-18);
       #if (DEBUG_SMA > 2)
       HexDump(BTrdBuf, rdCnt, 10, 'R');
       #endif
