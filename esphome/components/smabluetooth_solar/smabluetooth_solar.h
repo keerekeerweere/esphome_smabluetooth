@@ -105,6 +105,7 @@ class SmaBluetoothSolar : public PollingComponent {
       codeMap[312]="Phase assignment";
       codeMap[313]="SMA Island mode 50 Hz";
 
+      codeMap[558]="SB 3000TL-20";
       codeMap[358]="SB 4000TL-20";
       codeMap[359]="SB 5000TL-20";
 
