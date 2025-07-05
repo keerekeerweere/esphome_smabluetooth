@@ -107,5 +107,29 @@ sensor:
     total_energy_production:
       name: "Total Energy Production"
 
+    today_generation_time:
+      name: "Today's Generation Time"
+
+    total_generation_time:
+      name: "Total Generation Time"
+
+    wakeup_time:
+      name: "Wakeup Time"
+
+    serial_number:
+      name: "Serial Number"
+
+    software_version:
+      name: "Software Version"
+
+    device_type:
+      name: "Device Type"
+
+    device_class:
+      name: "Device Class"
+
     inverter_module_temp:
       name: "Inverter Module Temp"
+
+    sma_inverter_bluetooth_signal_strength:
+      name: "Inverter Bluetooth Signal Strength"

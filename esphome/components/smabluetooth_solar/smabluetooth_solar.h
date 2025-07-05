@@ -39,17 +39,18 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 */
 
 #define PHASES 3  // Type of inverter, one or 3 phases
-#define HAVE_MODULE_TEMP false
+#define HAVE_MODULE_TEMP true
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "SMA_Inverter.h"
 
 #include <vector>
 #include <map>
 
-#define SIZE_INVETER_DATA_TYPE_QUERY 9
+#define SIZE_INVETER_DATA_TYPE_QUERY 13
 
 
 namespace esphome {
@@ -104,6 +105,12 @@ class SmaBluetoothSolar : public PollingComponent {
       codeMap[312]="Phase assignment";
       codeMap[313]="SMA Island mode 50 Hz";
 
+      codeMap[558]="SB 3000TL-20";
+      codeMap[358]="SB 4000TL-20";
+      codeMap[359]="SB 5000TL-20";
+
+      codeMap[8001]="Solar Inverters";
+
       codeMap[16777213]="Information not available";
 
     }
@@ -125,7 +132,9 @@ class SmaBluetoothSolar : public PollingComponent {
   void update() override;
   void updateSensor( text_sensor::TextSensor *sensor,  String sensorName,  std::string publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  int32_t publishValue);
+  void updateSensor( sensor::Sensor *sensor,  String sensorName,  uint64_t publishValue);
   void updateSensor( sensor::Sensor *sensor,  String sensorName,  float publishValue);
+  void updateSensor( binary_sensor::BinarySensor *sensor,  String sensorName,  bool publishValue);
   void on_inverter_data(const std::vector<uint8_t> &data) ;
   void dump_config() override;
 
@@ -139,18 +148,24 @@ class SmaBluetoothSolar : public PollingComponent {
 
   // TEXT_SENSORS
   void set_inverter_status_sensor(text_sensor::TextSensor *text_sensor) { status_text_sensor_ = text_sensor; }
-  void set_grid_relay_sensor(text_sensor::TextSensor *text_sensor) { grid_relay_text_sensor_ = text_sensor; }
+  void set_grid_relay_sensor(binary_sensor::BinarySensor *binary_sensor) { grid_relay_binary_sensor_ = binary_sensor; }
   // END_TEXT_SENSORS
 
   void set_grid_frequency_sensor(sensor::Sensor *sensor) { this->grid_frequency_sensor_ = sensor; }
-  void set_grid_active_power_sensor(sensor::Sensor *sensor) { this->grid_active_power_sensor_ = sensor; }
-  void set_pv_active_power_sensor(sensor::Sensor *sensor) { this->pv_active_power_sensor_ = sensor; }
 
   void set_today_production_sensor(sensor::Sensor *sensor) { this->today_production_ = sensor; }
   void set_total_energy_production_sensor(sensor::Sensor *sensor) { this->total_energy_production_ = sensor; }
 #ifdef HAVE_MODULE_TEMP
   void set_inverter_module_temp_sensor(sensor::Sensor *sensor) { this->inverter_module_temp_ = sensor; }
 #endif
+  void set_inverter_bluetooth_signal_strength(sensor::Sensor *sensor) { this->inverter_bluetooth_signal_strength_ = sensor; }
+  void set_today_generation_time(sensor::Sensor *sensor) { this->today_generation_time_ = sensor; }
+  void set_total_generation_time(sensor::Sensor *sensor) { this->total_generation_time_ = sensor; }
+  void set_wakeup_time(sensor::Sensor *sensor) { this->wakeup_time_ = sensor; }
+  void set_serial_number(text_sensor::TextSensor *text_sensor) { this->serial_number_ = text_sensor; }
+  void set_software_version(text_sensor::TextSensor *text_sensor) { this->software_version_ = text_sensor; }
+  void set_device_type(text_sensor::TextSensor *text_sensor) { this->device_type_ = text_sensor; }
+  void set_device_class(text_sensor::TextSensor *text_sensor) { this->device_class_ = text_sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
     this->phases_[phase].voltage_sensor_ = voltage_sensor;
   }
@@ -199,18 +214,22 @@ class SmaBluetoothSolar : public PollingComponent {
   sensor::Sensor *grid_relay_sensor_{nullptr};
 
   text_sensor::TextSensor *status_text_sensor_{nullptr};
-  text_sensor::TextSensor *grid_relay_text_sensor_{nullptr};
+  binary_sensor::BinarySensor *grid_relay_binary_sensor_{nullptr};
 
   sensor::Sensor *grid_frequency_sensor_{nullptr};
-  sensor::Sensor *grid_active_power_sensor_{nullptr};
-
-  sensor::Sensor *pv_active_power_sensor_{nullptr};
-
   sensor::Sensor *today_production_{nullptr};
   sensor::Sensor *total_energy_production_{nullptr};
 #ifdef HAVE_MODULE_TEMP
   sensor::Sensor *inverter_module_temp_{nullptr};
 #endif
+  sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
+  sensor::Sensor *today_generation_time_{nullptr};
+  sensor::Sensor *total_generation_time_{nullptr};
+  sensor::Sensor *wakeup_time_{nullptr};
+  text_sensor::TextSensor *serial_number_{nullptr};
+  text_sensor::TextSensor *software_version_{nullptr};
+  text_sensor::TextSensor *device_type_{nullptr};
+  text_sensor::TextSensor *device_class_{nullptr};
   SmaBluetoothProtocolVersion protocol_version_;
 
   std::string sma_inverter_bluetooth_mac_ ;
@@ -223,7 +242,7 @@ class SmaBluetoothSolar : public PollingComponent {
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;
     getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
-       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus };
+       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
 
     int indexOfInverterDataType = 0;
 };
