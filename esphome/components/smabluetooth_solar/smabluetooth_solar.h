@@ -51,7 +51,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include <map>
 
 #define SIZE_INVETER_DATA_TYPE_QUERY 13
-
+#define SB "SB"
 
 namespace esphome {
 namespace smabluetooth_solar {
@@ -105,13 +105,30 @@ class SmaBluetoothSolar : public PollingComponent {
       codeMap[312]="Phase assignment";
       codeMap[313]="SMA Island mode 50 Hz";
 
-      codeMap[558]="SB 3000TL-20";
-      codeMap[358]="SB 4000TL-20";
-      codeMap[359]="SB 5000TL-20";
+      codeMap[358]=  SB " " "4000TL-20";
+      codeMap[359]=  SB " " "5000TL-20";
+      codeMap[558]=  SB " " "3000TL-20";
+      codeMap[6109]= SB " " "1600TL-10";
 
       codeMap[8001]="Solar Inverters";
 
       codeMap[16777213]="Information not available";
+
+      codeMap[71]="Interference device";
+      codeMap[73]="Diffuse insolation";
+      codeMap[74]="Direct insolation";
+      codeMap[76]="Fault correction measure";
+      codeMap[77]="Check AC circuit breaker";
+      codeMap[78]="Check generator";
+      codeMap[79]="Disconnect generator";
+      codeMap[80]="Check parameter";
+      codeMap[84]="Overcurrent grid hw";
+      codeMap[85]="Overcurrent grid sw";
+
+      codeMap[87]="Grid frequency disturbance";
+      codeMap[88]="Grid frequency not permitted";
+      codeMap[89]="Grid disconnection point";
+
 
     }
 
