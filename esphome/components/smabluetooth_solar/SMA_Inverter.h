@@ -26,7 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "BluetoothSerial.h"
+#include "AsyncBluetoothSerial.h"
 
 #define DEBUG_SMA 0
 
@@ -346,18 +346,6 @@ typedef struct __attribute__ ((packed)) PacketHeader {
 } L1Hdr;
 #pragma pack(pop)
 
-/*
-*/
-class ESP32BluetoothSerial : public BluetoothSerial {
-  public:
-    ESP32BluetoothSerial() {
-
-    };
-    ~ESP32BluetoothSerial() {
-      
-    };
-};
-
 
 class ESP32_SMA_Inverter  {
   public: 
@@ -440,7 +428,7 @@ class ESP32_SMA_Inverter  {
     ~ESP32_SMA_Inverter() {}
     void loopNotification();
 
-    BluetoothSerial serialBT = ESP32BluetoothSerial();
+    AsyncBluetoothSerial serialBT = AsyncBluetoothSerial();
     
     uint8_t  btrdBuf[COMMBUFSIZE];    
     uint16_t pcktBufMax = 0; // max. used size of PcktBuf

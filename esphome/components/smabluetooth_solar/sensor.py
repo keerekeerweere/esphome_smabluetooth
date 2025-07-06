@@ -312,5 +312,5 @@ async def to_code(config):
     if CORE.using_arduino:
         if CORE.is_esp32 | CORE.is_esp8266:
 #            cg.add_library("BluetoothSerial", None)
-            cg.add_library("AsyncBluetoothSerial", "https://github.com/keerekeerweere/esp32-blueserial")
+            cg.add_library(None, "https://github.com/keerekeerweere/esp32-blueserial")
 
