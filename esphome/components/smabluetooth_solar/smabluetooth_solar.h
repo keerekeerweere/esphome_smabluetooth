@@ -109,6 +109,7 @@ class SmaBluetoothSolar : public PollingComponent {
       codeMap[359]=  SB " " "5000TL-20";
       codeMap[558]=  SB " " "3000TL-20";
       codeMap[6109]= SB " " "1600TL-10";
+      codeMap[9109]= SB " " "1600TL-10";
 
       codeMap[8001]="Solar Inverters";
 
