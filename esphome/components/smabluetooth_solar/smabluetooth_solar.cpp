@@ -298,6 +298,41 @@ void SmaBluetoothSolar::updateSensor( binary_sensor::BinarySensor *sensor,  Stri
     else ESP_LOGV(TAG, "No %s sensor ", sensorName.c_str());
 }
 
+
+/*
+* some (older) inverters with retrofitted bluetoothmodules don't handle all values, especially pdc and pac 
+*/
+void SmaBluetoothSolar::handleMissingValues(){
+  //DC (mptt)
+  if (smaInverter->dispData.Pdc1 == 0.0) {
+    if (smaInverter->dispData.Udc1 != 0.0 && smaInverter->dispData.Idc1 != 0.0){
+      smaInverter->dispData.Pdc1 = smaInverter->dispData.Udc1 * smaInverter->dispData.Idc1;
+    }
+  }
+  if (smaInverter->dispData.Pdc2 == 0.0) {
+    if (smaInverter->dispData.Udc2 != 0.0 && smaInverter->dispData.Idc2 != 0.0){
+      smaInverter->dispData.Pdc2 = smaInverter->dispData.Udc2 * smaInverter->dispData.Idc2;
+    }
+  }
+  //AC (3 fases)
+  if (smaInverter->invData.Pac1 ==0.0) {
+    if (smaInverter->dispData.Uac1 != 0.0 && smaInverter->dispData.Iac1 != 0.0){
+      smaInverter->invData.Pac1 = smaInverter->dispData.Uac1 * smaInverter->dispData.Iac1;
+    }
+  }
+  if (smaInverter->invData.Pac2 ==0.0) {
+    if (smaInverter->dispData.Uac2 != 0.0 && smaInverter->dispData.Iac2 != 0.0){
+      smaInverter->invData.Pac2 = smaInverter->dispData.Uac2 * smaInverter->dispData.Iac2;
+    }
+  }
+  if (smaInverter->invData.Pac3 ==0.0) {
+    if (smaInverter->dispData.Uac3 != 0.0 && smaInverter->dispData.Iac3 != 0.0){
+      smaInverter->invData.Pac3 = smaInverter->dispData.Uac3 * smaInverter->dispData.Iac3;
+    }
+  }
+}
+
+
 void SmaBluetoothSolar::update() {
   // If our last send has had no reply yet, and it wasn't that long ago, do nothing.
   uint32_t now = millis();
@@ -305,6 +340,8 @@ void SmaBluetoothSolar::update() {
   this->running_update_ = true;
 
   ESP_LOGV(TAG, "update sensors ");
+
+  handleMissingValues();
 
   updateSensor(today_production_, String("EToday"), smaInverter->dispData.EToday);
   updateSensor(total_energy_production_, String("ETotal"), smaInverter->dispData.ETotal);
