@@ -75,6 +75,8 @@ void SmaBluetoothSolar::loop() {
 
   if (nextTime > thisTime) {
     //sleeping
+    App.feed_wdt();
+    delay(10);
     return ;
   }
 
@@ -104,7 +106,6 @@ void SmaBluetoothSolar::loop() {
     }
     break;
 
-
     case SmaInverterState::Connect:{ // do Connect
         //lets do connect
         if (!smaInverter->isBtConnected()) {
@@ -114,7 +115,7 @@ void SmaBluetoothSolar::loop() {
 
           ESP_LOGI(TAG, "Connecting SMA inverter ..");
           if (smaInverter->connect()) {
-			ESP_LOGD(TAG, "connected to inverter");
+			      ESP_LOGD(TAG, "connected to inverter");
             inverterState = SmaInverterState::Initialize;
           } else {
             ESP_LOGE(TAG, "Connecting SMA inverter failed");
@@ -166,11 +167,17 @@ void SmaBluetoothSolar::loop() {
         ESP_LOGI(TAG, "Get Data RC %d (%d)", rc, dataType);
         waitMillis = 500;
         if (rc != E_OK) {
-          // disconnect and try again
-          ESP_LOGE(TAG, "Get Data RC %d ", rc);
-          smaInverter->disconnect(); //moved btConnected to inverter class
-          inverterState = SmaInverterState::Connect;
-          waitMillis = 2 * 1000; //wait at least 2 seconds before next round
+          //we shouldn't need to disconnect here, some values cannot be read on specific inverters, e.g. SB1600TL-10
+          if (dataType == SpotDCPower || dataType == SpotACPower) {
+            ESP_LOGI(TAG, "Get Data RC %d (ignored) for %d", rc, dataType);
+            //ignore
+          } else {
+            ESP_LOGE(TAG, "Get Data RC %d (failed) for %d ", rc, dataType);
+            // disconnect and try again
+            smaInverter->disconnect(); //moved btConnected to inverter class
+            inverterState = SmaInverterState::Connect;
+            waitMillis = 2 * 1000; //wait at least 2 seconds before next round
+          }
         }
       } else {
         //done for reading values, move on
@@ -190,6 +197,10 @@ void SmaBluetoothSolar::loop() {
     }
     break;
   }
+
+  //don't wait too long
+  waitMillis =  (waitMillis > 1800 * 1000) ? 1000*1000 : waitMillis;
+
   nextTime = thisTime + waitMillis; //wait a bit after beginning
 
 /*
