@@ -28,6 +28,7 @@ from esphome.const import (
     UNIT_HERTZ,
     UNIT_VOLT,
     UNIT_WATT,
+    UNIT_KILOWATT,
     UNIT_PERCENT,
     UNIT_KILOWATT_HOURS,
     UNIT_HOUR
@@ -97,9 +98,9 @@ PHASE_SENSORS = {
         state_class=STATE_CLASS_MEASUREMENT
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
-        unit_of_measurement=UNIT_WATT,
+        unit_of_measurement=UNIT_KILOWATT,
         icon=ICON_LIGHTNING_BOLT,
-        accuracy_decimals=0,
+        accuracy_decimals=3,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -120,9 +121,9 @@ PV_SENSORS = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
-        unit_of_measurement=UNIT_WATT,
+        unit_of_measurement=UNIT_KILOWATT,
         icon=ICON_SOLAR_POWER,
-        accuracy_decimals=0,
+        accuracy_decimals=3,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),

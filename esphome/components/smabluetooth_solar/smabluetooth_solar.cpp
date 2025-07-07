@@ -270,14 +270,14 @@ void SmaBluetoothSolar::handleMissingValues(){
   //there should be a better way for this
   if (smaInverter->dispData.Pdc1 == 0.0 || smaInverter->dispData.needsMissingValues) {
     if (smaInverter->dispData.Udc1 != 0.0 && smaInverter->dispData.Idc1 != 0.0){
-      smaInverter->dispData.Pdc1 = smaInverter->dispData.Udc1 * smaInverter->dispData.Idc1;
+      smaInverter->dispData.Pdc1 = smaInverter->dispData.Udc1 * smaInverter->dispData.Idc1 / 1000.0;
       ESP_LOGD(TAG, "updated Pdc1 %15.2f ", smaInverter->dispData.Pdc1);
       smaInverter->dispData.needsMissingValues = true;
     }
   }
   if (smaInverter->dispData.Pdc2 == 0.0 || smaInverter->dispData.needsMissingValues) {
     if (smaInverter->dispData.Udc2 != 0.0 && smaInverter->dispData.Idc2 != 0.0){
-      smaInverter->dispData.Pdc2 = smaInverter->dispData.Udc2 * smaInverter->dispData.Idc2;
+      smaInverter->dispData.Pdc2 = smaInverter->dispData.Udc2 * smaInverter->dispData.Idc2 / 1000.0;
       ESP_LOGD(TAG, "updated Pdc2 %15.2f ", smaInverter->dispData.Pdc2);
       smaInverter->dispData.needsMissingValues = true;
     }
@@ -285,21 +285,21 @@ void SmaBluetoothSolar::handleMissingValues(){
   //AC (3 fases)
   if (smaInverter->dispData.Pac1 == 0.0 || smaInverter->dispData.needsMissingValues) {
     if (smaInverter->dispData.Uac1 != 0.0 && smaInverter->dispData.Iac1 != 0.0){
-      smaInverter->dispData.Pac1 = smaInverter->dispData.Uac1 * smaInverter->dispData.Iac1;
+      smaInverter->dispData.Pac1 = smaInverter->dispData.Uac1 * smaInverter->dispData.Iac1 / 1000.0;
       ESP_LOGD(TAG, "updated Pac1 %15.2f ", smaInverter->dispData.Pac1);
       smaInverter->dispData.needsMissingValues = true;
     }
   }
   if (smaInverter->dispData.Pac2 ==0.0 || smaInverter->dispData.needsMissingValues) {
     if (smaInverter->dispData.Uac2 != 0.0 && smaInverter->dispData.Iac2 != 0.0){
-      smaInverter->dispData.Pac2 = smaInverter->dispData.Uac2 * smaInverter->dispData.Iac2;
+      smaInverter->dispData.Pac2 = smaInverter->dispData.Uac2 * smaInverter->dispData.Iac2 / 1000.0;
       ESP_LOGD(TAG, "updated Pac2 %15.2f ", smaInverter->dispData.Pac2);
       smaInverter->dispData.needsMissingValues = true;
     }
   }
   if (smaInverter->dispData.Pac3 ==0.0 || smaInverter->dispData.needsMissingValues) {
     if (smaInverter->dispData.Uac3 != 0.0 && smaInverter->dispData.Iac3 != 0.0){
-      smaInverter->dispData.Pac3 = smaInverter->dispData.Uac3 * smaInverter->dispData.Iac3;
+      smaInverter->dispData.Pac3 = smaInverter->dispData.Uac3 * smaInverter->dispData.Iac3 / 1000.0;
       ESP_LOGD(TAG, "updated Pac3 %15.2f ", smaInverter->dispData.Pac3);
       smaInverter->dispData.needsMissingValues = true;
     }
