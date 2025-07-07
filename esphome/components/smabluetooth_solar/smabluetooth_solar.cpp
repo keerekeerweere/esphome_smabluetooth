@@ -39,7 +39,6 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
-#include <cmath> 
 
 namespace esphome {
 namespace smabluetooth_solar {
@@ -280,21 +279,21 @@ void SmaBluetoothSolar::handleMissingValues(){
     }
   }
   //AC (3 fases)
-  if (smaInverter->invData.Pac1 ==0.0) {
+  if (smaInverter->dispData.Pac1 ==0.0) {
     if (smaInverter->dispData.Uac1 != 0.0 && smaInverter->dispData.Iac1 != 0.0){
-      smaInverter->invData.Pac1 = smaInverter->dispData.Uac1 * smaInverter->dispData.Iac1;
+      smaInverter->dispData.Pac1 = smaInverter->dispData.Uac1 * smaInverter->dispData.Iac1;
       ESP_LOGD(TAG, "updated Pac1 %15.2f ", smaInverter->dispData.Pac1);
     }
   }
-  if (smaInverter->invData.Pac2 ==0.0) {
+  if (smaInverter->dispData.Pac2 ==0.0) {
     if (smaInverter->dispData.Uac2 != 0.0 && smaInverter->dispData.Iac2 != 0.0){
-      smaInverter->invData.Pac2 = smaInverter->dispData.Uac2 * smaInverter->dispData.Iac2;
+      smaInverter->dispData.Pac2 = smaInverter->dispData.Uac2 * smaInverter->dispData.Iac2;
       ESP_LOGD(TAG, "updated Pac2 %15.2f ", smaInverter->dispData.Pac2);
     }
   }
-  if (smaInverter->invData.Pac3 ==0.0) {
+  if (smaInverter->dispData.Pac3 ==0.0) {
     if (smaInverter->dispData.Uac3 != 0.0 && smaInverter->dispData.Iac3 != 0.0){
-      smaInverter->invData.Pac3 = smaInverter->dispData.Uac3 * smaInverter->dispData.Iac3;
+      smaInverter->dispData.Pac3 = smaInverter->dispData.Uac3 * smaInverter->dispData.Iac3;
       ESP_LOGD(TAG, "updated Pac3 %15.2f ", smaInverter->dispData.Pac3);
     }
   }
