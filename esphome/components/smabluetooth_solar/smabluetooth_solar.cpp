@@ -468,7 +468,8 @@ const std::unordered_set<getInverterDataType> SmaBluetoothSolar::ignoreQueryErro
   DeviceStatus,
   GridRelayStatus,
   InverterTemp,
-  SpotDCPower
+  SpotDCPower,
+  SpotACPower
 };
 
 
