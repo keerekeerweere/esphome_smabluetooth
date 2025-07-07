@@ -100,7 +100,7 @@ PHASE_SENSORS = {
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_KILOWATT,
         icon=ICON_LIGHTNING_BOLT,
-        accuracy_decimals=3,
+        accuracy_decimals=0,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -123,7 +123,7 @@ PV_SENSORS = {
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_KILOWATT,
         icon=ICON_SOLAR_POWER,
-        accuracy_decimals=3,
+        accuracy_decimals=0,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
