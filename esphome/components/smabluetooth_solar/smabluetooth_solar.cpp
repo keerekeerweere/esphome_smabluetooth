@@ -264,27 +264,32 @@ void SmaBluetoothSolar::handleMissingValues(){
   if (smaInverter->dispData.Pdc1 == 0.0) {
     if (smaInverter->dispData.Udc1 != 0.0 && smaInverter->dispData.Idc1 != 0.0){
       smaInverter->dispData.Pdc1 = smaInverter->dispData.Udc1 * smaInverter->dispData.Idc1;
+      ESP_LOGD(TAG, "updated Pdc1 %d ", smaInverter->dispData.Pdc1);
     }
   }
   if (smaInverter->dispData.Pdc2 == 0.0) {
     if (smaInverter->dispData.Udc2 != 0.0 && smaInverter->dispData.Idc2 != 0.0){
       smaInverter->dispData.Pdc2 = smaInverter->dispData.Udc2 * smaInverter->dispData.Idc2;
+      ESP_LOGD(TAG, "updated Pdc2 %d ", smaInverter->dispData.Pdc2);
     }
   }
   //AC (3 fases)
   if (smaInverter->invData.Pac1 ==0.0) {
     if (smaInverter->dispData.Uac1 != 0.0 && smaInverter->dispData.Iac1 != 0.0){
       smaInverter->invData.Pac1 = smaInverter->dispData.Uac1 * smaInverter->dispData.Iac1;
+      ESP_LOGD(TAG, "updated Pac1 %d ", smaInverter->dispData.Pac1);
     }
   }
   if (smaInverter->invData.Pac2 ==0.0) {
     if (smaInverter->dispData.Uac2 != 0.0 && smaInverter->dispData.Iac2 != 0.0){
       smaInverter->invData.Pac2 = smaInverter->dispData.Uac2 * smaInverter->dispData.Iac2;
+      ESP_LOGD(TAG, "updated Pac2 %d ", smaInverter->dispData.Pac2);
     }
   }
   if (smaInverter->invData.Pac3 ==0.0) {
     if (smaInverter->dispData.Uac3 != 0.0 && smaInverter->dispData.Iac3 != 0.0){
       smaInverter->invData.Pac3 = smaInverter->dispData.Uac3 * smaInverter->dispData.Iac3;
+      ESP_LOGD(TAG, "updated Pac3 %d ", smaInverter->dispData.Pac3);
     }
   }
 }
