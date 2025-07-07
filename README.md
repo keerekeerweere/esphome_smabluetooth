@@ -7,5 +7,5 @@ esphome component to read sma inverter via bluetooth
   - or has a built in function to yield or App wdt() enough to avoid the watchdog to be triggered
  
 - please note that only the the ESP32 variants support the Bluetooth Serial (classical bluetooth) protocol.
--   that **includes** ESP32-S, ESP32-U, ESP32-D, WROVER, WROOM variants
--   but **excludes** the ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 variants
+  - that **includes** ESP32-S, ESP32-U, ESP32-D, WROVER, WROOM variants
+  - but **excludes** the ESP32-S2, ESP32-S3, ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61 variants
