@@ -203,61 +203,6 @@ void SmaBluetoothSolar::loop() {
 
   nextTime = thisTime + waitMillis; //wait a bit after beginning
 
-/*
-  if (!hasBegun){
-    hasBegun = true;
-
-    // *** Start BT
-    ESP_LOGW(TAG, "start BT ");
-    App.feed_wdt();
-  }
-
-  //if not yet connected
-  if (nextTime < millis() && !smaInverter->isBtConnected()) {
-    nextTime = millis() + adjustedScanRate;
-
-
-    //connect
-    ESP_LOGW(TAG, "Connecting SMA inverter");
-    if (smaInverter->connect()) {
-      App.feed_wdt();
-      // **** Initialize SMA *******
-      ESP_LOGW(TAG, "BT connected");
-      E_RC rc = smaInverter->initialiseSMAConnection();
-      ESP_LOGI(TAG, "SMA %d \n", rc);
-
-      App.feed_wdt();
-      ESP_LOGW(TAG, "get signal strength");
-      smaInverter->getBT_SignalStrength();
-
-      App.feed_wdt();
-      ESP_LOGW(TAG, "*** logonSMAInverter");
-      rc = smaInverter->logonSMAInverter();
-      ESP_LOGW(TAG, "Logon return code %d\n", rc);
-
-      App.feed_wdt();
-      //reading data
-
-      //smaInverter->ReadCurrentData();
-      //skip all for now and try individual
-      if (smaInverter->isBtConnected()) {
-        ESP_LOGD(TAG, "*** energyreadings");
-        //get the inverter readings here 
-        //rotate through these inverterDataTypes
-        int sizeOfArr = sizeof(invDataTypes) / sizeof(invDataTypes[0]);
-        for (int iIdt=0;iIdt<sizeOfArr;iIdt++) {
-        //for (getInverterDataType iIdt : invDataTypes) {
-          App.feed_wdt(); // watch for ESP32 user task watchdog
-          smaInverter->getInverterData(invDataTypes[iIdt]);
-        }
-      }
-
-      smaInverter->disconnect(); //moved btConnected to inverter class
-
-    }
-
-  }
-*/
   App.feed_wdt();
   delay(10);
   //delay(100);
