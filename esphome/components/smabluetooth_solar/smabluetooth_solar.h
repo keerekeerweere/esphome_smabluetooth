@@ -259,7 +259,7 @@ class SmaBluetoothSolar : public PollingComponent {
 
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
-  std::int sma_inverter_delay_values_ = 500; //ms
+  uint32_t sma_inverter_delay_values_ = 500; //ms
 
   std::map<int, std::string> codeMap;
 
