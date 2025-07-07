@@ -234,7 +234,7 @@ async def to_code(config):
     cg.add(var.set_sma_inverter_password(config[CONF_SMA_INVERTER_PASSWORD]))
 
     if CONF_SMA_INVERTER_DELAY_VALUES in config:
-        cg.add(var.set_sma_inverter_delay_values(config[CONF_SMA_INVERTER_DELAY_VALUES]))
+        cg.add(var.set_sma_inverter_delay_values(config[CONF_SMA_INVERTER_DELAY_VALUES].total_milliseconds))
 
     cg.add(var.set_protocol_version(config[CONF_PROTOCOL_VERSION]))
 
