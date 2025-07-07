@@ -168,8 +168,9 @@ void SmaBluetoothSolar::loop() {
         waitMillis = 500;
         if (rc != E_OK) {
           //we shouldn't need to disconnect here, some values cannot be read on specific inverters, e.g. SB1600TL-10
-          if (dataType == SpotDCPower || dataType == SpotACPower) {
-            ESP_LOGI(TAG, "Get Data RC %d (ignored) for %d", rc, dataType);
+          //if (dataType == SpotDCPower || dataType == SpotACPower) {
+          if (containsIgnoredType(ignoreQueryErrorTypes, dataType)) {
+              ESP_LOGI(TAG, "Get Data RC %d (ignored) for %d", rc, dataType);
             //ignore
           } else {
             ESP_LOGE(TAG, "Get Data RC %d (failed) for %d ", rc, dataType);
