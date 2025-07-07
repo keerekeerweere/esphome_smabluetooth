@@ -435,15 +435,12 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   if (iSPOT_PDC==0) {
                     invData.Pdc1 = toW(value32);
                     dispData.Pdc1 = tokW(value32);
-                    iSPOT_PDC++;
                   } else if (iSPOT_PDC==1) {
                     invData.Pdc2 = toW(value32);
                     dispData.Pdc2 = tokW(value32);
-                    iSPOT_PDC++;
-                  } else {
-                    //strange !!!
-                  }
-                  ESP_LOGI(TAG, "SPOT_PDC%d %15.2f kW ", iSPOT_PDC, tokW(value32));
+                  } 
+                  ESP_LOGI(TAG, "SPOT_PDC%d %15.2f kW - item(%d)", iSPOT_PDC+1, tokW(value32));
+                  iSPOT_PDC++;
                   //printUnixTime(timeBuf, datetime);
                   break;
        
@@ -451,15 +448,12 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   if (iSPOT_UDC==0) {
                     invData.Udc1 = value32;
                     dispData.Udc1 = toVolt(value32);
-                    iSPOT_UDC++;
                   } else if (iSPOT_UDC==1) {
                     invData.Udc2 = value32;
                     dispData.Udc2 = toVolt(value32);
-                    iSPOT_UDC++;
-                  } else{
-                    //strange
-                  }
-                  ESP_LOGI(TAG, "SPOT_UDC%d %15.2f V ", iSPOT_UDC, toVolt(value32));
+                  } 
+                  ESP_LOGI(TAG, "SPOT_UDC%d %15.2f V - item(%d) ", iSPOT_UDC+1, toVolt(value32));
+                  iSPOT_UDC++;
                   //printUnixTime(timeBuf, datetime);
                   break;
        
@@ -467,16 +461,12 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   if (iSPOT_IDC==0) {
                     invData.Idc1 = value32;
                     dispData.Idc1 = toAmp(value32);
-                    iSPOT_IDC++;
                   } else if (iSPOT_IDC==1) {
                     invData.Idc2 = value32;
                     dispData.Idc2 = toAmp(value32);
-                    iSPOT_IDC++;
-                  } else {
-                    //strange
                   }
-                  ESP_LOGI(TAG, "SPOT_IDC%d %15.2f A ", iSPOT_IDC, toAmp(value32));
-
+                  ESP_LOGI(TAG, "SPOT_IDC%d %15.2f A ", iSPOT_IDC+1, toAmp(value32));
+                  iSPOT_IDC++;
 
                   //printUnixTime(timeBuf, datetime);
                   /* if ((invData.Udc[0]!=0) && (invData.Idc[0] != 0))

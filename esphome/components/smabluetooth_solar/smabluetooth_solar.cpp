@@ -162,10 +162,10 @@ void SmaBluetoothSolar::loop() {
 
       if (indexOfInverterDataType<SIZE_INVETER_DATA_TYPE_QUERY) {
         getInverterDataType dataType = invDataTypes[indexOfInverterDataType++];
-        ESP_LOGI(TAG, "Get Data %d", dataType);
+        ESP_LOGI(TAG, "Get Data (%d)", dataType);
         E_RC rc = smaInverter->getInverterData(dataType);
         ESP_LOGI(TAG, "Get Data RC %d (%d)", rc, dataType);
-        waitMillis = 500;
+        waitMillis = 200;
         if (rc != E_OK) {
           //we shouldn't need to disconnect here, some values cannot be read on specific inverters, e.g. SB1600TL-10
           //if (dataType == SpotDCPower || dataType == SpotACPower) {
@@ -444,8 +444,8 @@ void SmaBluetoothSolar::dump_config() {
 //InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
 
 const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] = {
-  EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower,
-  SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus,
+  SpotDCPower, SpotDCVoltage, SpotACPower,
+  SpotACTotalPower, SpotACVoltage, EnergyProduction, SpotGridFrequency, DeviceStatus, GridRelayStatus,
   InverterTemp, OperationTime, TypeLabel, SoftwareVersion
 };
 
