@@ -243,6 +243,7 @@ struct DisplayData {
   float EToday;
   float ETotal;
   //std::string DevStatus;
+  bool needsMissingValues = false;
 };
 
 enum getInverterDataType {
