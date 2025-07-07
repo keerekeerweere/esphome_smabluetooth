@@ -65,6 +65,8 @@ CONF_PROTOCOL_VERSION = "protocol_version"
 
 CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
+CONF_SMA_INVERTER_DELAY_VALUES = "sma_inverter_delay_values"
+
 CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_strength"
 
 CONF_GRID_RELAY = "grid_relay"
@@ -145,6 +147,7 @@ CONFIG_SCHEMA = (
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
             cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC): cv.string,
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
+            cv.Optiona(CONF_SMA_INVERTER_DELAY_VALUES): cv.int,
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PERCENT,
@@ -229,6 +232,9 @@ async def to_code(config):
 
     cg.add(var.set_sma_inverter_bluetooth_mac(config[CONF_SMA_INVERTER_BLUETOOTH_MAC]))
     cg.add(var.set_sma_inverter_password(config[CONF_SMA_INVERTER_PASSWORD]))
+
+    if CONF_SMA_INVERTER_DELAY_VALUES in config:
+        cg.add(var.set_sma_inverter_delay_values(config[CONF_SMA_INVERTER_DELAY_VALUES]))
 
     cg.add(var.set_protocol_version(config[CONF_PROTOCOL_VERSION]))
 

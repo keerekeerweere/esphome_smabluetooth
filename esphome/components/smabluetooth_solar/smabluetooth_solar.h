@@ -165,6 +165,9 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_sma_inverter_bluetooth_mac(std::string sma_inverter_bluetooth_mac) { this->sma_inverter_bluetooth_mac_ = sma_inverter_bluetooth_mac; }
   void set_sma_inverter_password(std::string sma_inverter_password) {this->sma_inverter_password_ = sma_inverter_password; }
 
+  void set_sma_inverter_delay_values(std::int sma_inverter_delay_values) {this->sma_inverter_delay_values_ = sma_inverter_delay_values; }
+
+
   void set_inverter_status_code_sensor(sensor::Sensor *sensor) { this->inverter_status_sensor_ = sensor; }
   void set_grid_relay_code_sensor(sensor::Sensor *sensor) { this->grid_relay_sensor_ = sensor; }
 
@@ -256,6 +259,7 @@ class SmaBluetoothSolar : public PollingComponent {
 
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
+  std::int sma_inverter_delay_values_ = 500; //ms
 
   std::map<int, std::string> codeMap;
 
