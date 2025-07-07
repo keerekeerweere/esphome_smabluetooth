@@ -39,6 +39,8 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
+#include <cmath> 
+
 namespace esphome {
 namespace smabluetooth_solar {
 
@@ -181,7 +183,11 @@ void SmaBluetoothSolar::loop() {
           }
         }
       } else {
-        //done for reading values, move on
+        //done for reading values, 
+        //handle missing values
+        ESP_LOGI(TAG, "Done reading values");
+        handleMissingValues();
+        //move on
         indexOfInverterDataType = 0;
         inverterState = SmaInverterState::DoneReadingValues;
       }
@@ -303,30 +309,28 @@ void SmaBluetoothSolar::update() {
 
   ESP_LOGV(TAG, "update sensors ");
 
-  handleMissingValues();
-
   updateSensor(today_production_, String("EToday"), smaInverter->dispData.EToday);
   updateSensor(total_energy_production_, String("ETotal"), smaInverter->dispData.ETotal);
   updateSensor(grid_frequency_sensor_, String("Freq"), smaInverter->dispData.GridFreq);
   updateSensor(pvs_[0].voltage_sensor_, String("UdcA"), smaInverter->dispData.Udc1);
   updateSensor(pvs_[0].current_sensor_, String("IdcA"), smaInverter->dispData.Idc1);
-  updateSensor(pvs_[0].active_power_sensor_, String("PDC"), smaInverter->invData.Pdc1);
+  updateSensor(pvs_[0].active_power_sensor_, String("PDC"), smaInverter->dispData.Pdc1);
 
   updateSensor(pvs_[1].voltage_sensor_, String("UdcA"), smaInverter->dispData.Udc2);
   updateSensor(pvs_[1].current_sensor_, String("IdcA"), smaInverter->dispData.Idc2);
-  updateSensor(pvs_[1].active_power_sensor_, String("PDC"), smaInverter->invData.Pdc2);
+  updateSensor(pvs_[1].active_power_sensor_, String("PDC"), smaInverter->dispData.Pdc2);
 
   updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac1);
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
-  updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->invData.Pac1);
+  updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac1);
 
   updateSensor(phases_[1].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac2);
   updateSensor(phases_[1].current_sensor_, String("IacA"), smaInverter->dispData.Iac2);
-  updateSensor(phases_[1].active_power_sensor_, String("IacA"), smaInverter->invData.Pac2);
+  updateSensor(phases_[1].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac2);
 
   updateSensor(phases_[2].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac3);
   updateSensor(phases_[2].current_sensor_, String("IacA"), smaInverter->dispData.Iac3);
-  updateSensor(phases_[2].active_power_sensor_, String("IacA"), smaInverter->invData.Pac3);
+  updateSensor(phases_[2].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac3);
 
   updateSensor(status_text_sensor_, String("InverterStatus"), getInverterCode(smaInverter->invData.DevStatus));
   updateSensor(grid_relay_binary_sensor_, String("GridRelay"), smaInverter->invData.GridRelay == 51); // 51 is "Closed"

@@ -273,6 +273,8 @@ class SmaBluetoothSolar : public PollingComponent {
     };*/
     int indexOfInverterDataType = 0;
 
+    const float EPSILON = 0.0001f; //ingore small values, avoid equals for float
+
   };
 
 
