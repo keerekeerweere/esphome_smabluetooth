@@ -439,6 +439,22 @@ void SmaBluetoothSolar::dump_config() {
   ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
   ESP_LOGCONFIG(TAG, "  Address: %s", sma_inverter_bluetooth_mac_.c_str());
 }
+//{EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, 
+//SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, 
+//InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
+
+const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] = {
+  EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower,
+  SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus,
+  InverterTemp, OperationTime, TypeLabel, SoftwareVersion
+};
+
+const std::unordered_set<getInverterDataType> SmaBluetoothSolar::ignoreQueryErrorTypes = {
+  DeviceStatus,
+  GridRelayStatus
+};
+
+
 
 }  // namespace smabluetooth_solar
 }  // namespace esphome
