@@ -451,7 +451,8 @@ const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE
 
 const std::unordered_set<getInverterDataType> SmaBluetoothSolar::ignoreQueryErrorTypes = {
   DeviceStatus,
-  GridRelayStatus
+  GridRelayStatus,
+  InverterTemp
 };
 
 
