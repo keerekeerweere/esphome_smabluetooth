@@ -439,7 +439,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                     invData.Pdc2 = toW(value32);
                     dispData.Pdc2 = tokW(value32);
                   } 
-                  ESP_LOGI(TAG, "SPOT_PDC%d %15.2f kW - item(%d)", iSPOT_PDC+1, tokW(value32));
+                  ESP_LOGI(TAG, "SPOT_PDC%d %15.2f kW ", iSPOT_PDC+1, tokW(value32));
                   iSPOT_PDC++;
                   //printUnixTime(timeBuf, datetime);
                   break;
@@ -452,7 +452,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                     invData.Udc2 = value32;
                     dispData.Udc2 = toVolt(value32);
                   } 
-                  ESP_LOGI(TAG, "SPOT_UDC%d %15.2f V - item(%d) ", iSPOT_UDC+1, toVolt(value32));
+                  ESP_LOGI(TAG, "SPOT_UDC%d %15.2f V ", iSPOT_UDC+1, toVolt(value32));
                   iSPOT_UDC++;
                   //printUnixTime(timeBuf, datetime);
                   break;
