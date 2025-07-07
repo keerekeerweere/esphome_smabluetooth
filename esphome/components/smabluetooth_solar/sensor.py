@@ -147,7 +147,7 @@ CONFIG_SCHEMA = (
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
             cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC): cv.string,
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
-            cv.Optiona(CONF_SMA_INVERTER_DELAY_VALUES): cv.int,
+            cv.Optional(CONF_SMA_INVERTER_DELAY_VALUES): cv.int,
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PERCENT,
