@@ -257,24 +257,18 @@ class SmaBluetoothSolar : public PollingComponent {
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
 
-
   std::map<int, std::string> codeMap;
 
   private:
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;
-    static getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
+    static const getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
        {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
     static const std::unordered_set<getInverterDataType> ignoreQueryErrorTypes = {
         DeviceStatus,
         GridRelayStatus
     };
     int indexOfInverterDataType = 0;
-
-    template <typename SetType, typename KeyType>
-    inline bool containsIgnoredType(const SetType& s, const KeyType& key) {
-      return s.find(key) != s.end();
-    }
 
   };
 
