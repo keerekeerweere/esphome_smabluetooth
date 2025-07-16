@@ -487,5 +487,52 @@ const getInverterDataType SmaBluetoothSolar::ignoreQueryErrorTypes[5] = {
 };
 
 
+const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
+      {50,"Status"},
+      {51,"Closed"},
+
+      {300,"Nat"},
+      {301,"Grid failure"},
+      {302,"-------"},
+      {303,"Off"},
+      {304,"Island mode"},
+      {305,"Island mode"},
+      {306,"SMA Island mode 60 Hz"},
+      {307,"OK"},
+      {308,"On"},
+      {309,"Operation"},
+      {310,"General operating mode"},
+      {311,"Open"},
+      {312,"Phase assignment"},
+      {313,"SMA Island mode 50 Hz"},
+
+      {358,  SB " " "4000TL-20"},
+      {359,  SB " " "5000TL-20"},
+      {558,  SB " " "3000TL-20"},
+      {6109, SB " " "1600TL-10"},
+      {9109, SB " " "1600TL-10"},
+
+      {8001,"Solar Inverters"},
+
+      {16777213,"Information not available"},
+
+      {71,"Interference device"},
+      {73,"Diffuse insolation"},
+      {74,"Direct insolation"},
+      {76,"Fault correction measure"},
+      {77,"Check AC circuit breaker"},
+      {78,"Check generator"},
+      {79,"Disconnect generator"},
+      {80,"Check parameter"},
+      {84,"Overcurrent grid hw"},
+      {85,"Overcurrent grid sw"},
+
+      {87,"Grid frequency disturbance"},
+      {88,"Grid frequency not permitted"},
+      {89,"Grid disconnection point"},
+};
+
+
+
 }  // namespace smabluetooth_solar
 }  // namespace esphome
