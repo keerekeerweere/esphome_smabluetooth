@@ -87,7 +87,7 @@ class SmaBluetoothSolar : public PollingComponent {
     SmaBluetoothSolar() {
     };
 
-  const char* lookup_status(uint16_t code);
+  const char* lookup_code(uint16_t code);
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
