@@ -1248,7 +1248,7 @@ char* ESP32_SMA_Inverter::get_version(uint32_t version)
     uint8_t Vmajor = (version >> 24) & 0xFF;
 
     //Vmajor and Vminor = 0x12 should be printed as '12' and not '18' (BCD)
-    snprintf(inverter_version, sizeof(ver), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
+    snprintf(inverter_version, sizeof(inverter_version), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
 
     return inverter_version;
 }
