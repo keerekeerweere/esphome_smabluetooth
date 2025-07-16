@@ -47,9 +47,6 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "SMA_Inverter.h"
 
-#include <vector>
-#include <unordered_set>
-#include <set>
 
 
 #define SIZE_INVETER_DATA_TYPE_QUERY 13

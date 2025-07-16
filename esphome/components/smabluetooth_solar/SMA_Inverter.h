@@ -166,21 +166,13 @@ struct  InverterData {
     int32_t Udc2;
     int32_t Idc1;
     int32_t Idc2;
-    /*
-    int32_t Uac[3];
-    int32_t Iac[3];
-    int32_t Udc[2];
-    int32_t Idc[2];
-    int32_t Wdc[2];
-    */
+ 
     int32_t GridFreq;
     int32_t Eta;
     int32_t InvTemp;
     uint64_t EToday;
     uint64_t ETotal;
-  //DayData dayData[288];
     uint64_t dayWh[ARCH_DAY_SIZE];
-  //int32_t dayW[ARCH_DAY_SIZE];
     time_t  DayStartTime;
     bool hasDayData;
     bool hasMonthData;
@@ -380,11 +372,6 @@ class ESP32_SMA_Inverter  {
     E_RC logonSMAInverter();
     E_RC logonSMAInverter(const char *password, const uint8_t user);
     void logoffSMAInverter();
-
-    E_RC ArchiveDayData(time_t startTime);
-    E_RC ReadCurrentData();
-
-
 
     bool connect();
     bool connect(uint8_t remoteAddress[]);
