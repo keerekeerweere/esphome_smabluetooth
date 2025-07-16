@@ -155,6 +155,11 @@ class SmaBluetoothSolar : public PollingComponent {
 
   void loopNotification();
 
+  struct StatusCode {
+    uint16_t code;
+    const char* message;
+  };
+
  protected:
   bool waiting_to_update_;
   uint32_t last_send_;
@@ -205,10 +210,7 @@ class SmaBluetoothSolar : public PollingComponent {
   uint32_t sma_inverter_delay_values_ = 500; //ms
 
 
-struct StatusCode {
-  uint16_t code;
-  const char* message;
-};
+
 
 
     boolean findIgnoredTypes(getInverterDataType dataType);
