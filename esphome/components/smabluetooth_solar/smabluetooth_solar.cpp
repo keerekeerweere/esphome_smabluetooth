@@ -412,7 +412,7 @@ void SmaBluetoothSolar::update() {
 
   this->last_send_ = millis();
 }
-
+/*
 void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
   // Other components might be sending commands to our device. But we don't get called with enough
   // context to know what is what. So if we didn't do a send, we ignore the data.
@@ -503,7 +503,7 @@ void SmaBluetoothSolar::on_inverter_data(const std::vector<uint8_t> &data) {
     }
   }
 }
-
+*/
 void SmaBluetoothSolar::dump_config() {
   ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
   ESP_LOGCONFIG(TAG, "  Address: %s", sma_inverter_bluetooth_mac_.c_str());
