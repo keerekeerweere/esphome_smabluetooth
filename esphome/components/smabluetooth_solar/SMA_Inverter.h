@@ -221,9 +221,6 @@ struct DisplayData {
   float Iac2;
   float Iac3;
 
-  /*float Uac[3];
-  float Iac[3];
-  */
   float InvTemp;
 
   float Pdc1;
@@ -234,15 +231,9 @@ struct DisplayData {
   float Idc1;
   float Idc2;
 
-  /*
-  float Udc[2];
-  float Idc[2];
-  float Wdc[2];
-  */
   float GridFreq;
   float EToday;
   float ETotal;
-  //std::string DevStatus;
   bool needsMissingValues = false;
 };
 
@@ -465,7 +456,9 @@ class ESP32_SMA_Inverter  {
     uint16_t get_u16(uint8_t *buf);
     uint32_t get_u32(uint8_t *buf);
     uint64_t get_u64(uint8_t *buf);
-    std::string get_version(uint32_t);
+    char inverter_version[16];
+
+    char* get_version(uint32_t);
 
     int32_t  value32 = 0;
     int64_t  value64 = 0;

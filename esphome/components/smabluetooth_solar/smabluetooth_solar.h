@@ -55,6 +55,11 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #define SIZE_INVETER_DATA_TYPE_QUERY 13
 #define SIZE_INVETER_DATA_TYPE_IGNORE 5
 #define SB "SB"
+#define GRID "GRID"
+#define ISLAND "Island"
+#define MODE "mode"
+#define TL20 "TL-20"
+#define TL10 "TL-10"
 
 namespace esphome {
 namespace smabluetooth_solar {
@@ -213,9 +218,6 @@ class SmaBluetoothSolar : public PollingComponent {
   std::string sma_inverter_bluetooth_mac_ ;
   std::string sma_inverter_password_ ;
   uint32_t sma_inverter_delay_values_ = 500; //ms
-
-
-
 
 
     boolean findIgnoredTypes(getInverterDataType dataType);

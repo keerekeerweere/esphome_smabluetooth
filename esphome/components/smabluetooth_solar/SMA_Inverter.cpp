@@ -1238,9 +1238,8 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
     return lnglng;
 }
 
-std::string ESP32_SMA_Inverter::get_version(uint32_t version)
+char* ESP32_SMA_Inverter::get_version(uint32_t version)
 {
-    char ver[16];
 
     uint8_t Vtype = version & 0xFF;
     Vtype = Vtype > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
@@ -1249,9 +1248,9 @@ std::string ESP32_SMA_Inverter::get_version(uint32_t version)
     uint8_t Vmajor = (version >> 24) & 0xFF;
 
     //Vmajor and Vminor = 0x12 should be printed as '12' and not '18' (BCD)
-    snprintf(ver, sizeof(ver), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
+    snprintf(inverter_version, sizeof(ver), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
 
-    return std::string(ver);
+    return inverter_version;
 }
 
 void ESP32_SMA_Inverter::loopNotification() {
