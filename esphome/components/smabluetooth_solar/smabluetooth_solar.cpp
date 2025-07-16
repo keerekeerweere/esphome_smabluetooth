@@ -386,19 +386,25 @@ void SmaBluetoothSolar::update() {
   updateSensor(phases_[0].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac1);
   updateSensor(phases_[0].current_sensor_, String("IacA"), smaInverter->dispData.Iac1);
   updateSensor(phases_[0].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac1);
-
+#ifdef PHASES > 1
   updateSensor(phases_[1].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac2);
   updateSensor(phases_[1].current_sensor_, String("IacA"), smaInverter->dispData.Iac2);
   updateSensor(phases_[1].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac2);
+#endif
 
+#ifdef PHASES > 2
   updateSensor(phases_[2].voltage_sensor_, String("UacA"), smaInverter->dispData.Uac3);
   updateSensor(phases_[2].current_sensor_, String("IacA"), smaInverter->dispData.Iac3);
   updateSensor(phases_[2].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac3);
+#endif
 
   updateSensor(status_text_sensor_, String("InverterStatus"), lookup_code(smaInverter->invData.DevStatus));
   updateSensor(grid_relay_binary_sensor_, String("GridRelay"), smaInverter->invData.GridRelay == 51); // 51 is "Closed"
 
+#ifdef HAVE_MODULE_TEMP
   updateSensor(inverter_module_temp_, String("InvTemp"), smaInverter->dispData.InvTemp);
+#endif
+
   updateSensor(inverter_bluetooth_signal_strength_, String("InvSignal"), smaInverter->dispData.BTSigStrength);
   updateSensor(today_generation_time_, String("TToday"), (float)smaInverter->invData.OperationTime / 3600);
   updateSensor(total_generation_time_, String("TTotal"), (float)smaInverter->invData.FeedInTime / 3600);
