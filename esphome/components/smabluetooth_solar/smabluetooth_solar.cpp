@@ -45,6 +45,68 @@ namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
 
+//{EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, 
+//SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, 
+//InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
+const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] = {
+  SpotDCPower, SpotDCVoltage, SpotACPower,
+  SpotACTotalPower, SpotACVoltage, EnergyProduction, SpotGridFrequency, DeviceStatus, GridRelayStatus,
+  InverterTemp, OperationTime, TypeLabel, SoftwareVersion
+};
+
+const getInverterDataType SmaBluetoothSolar::ignoreQueryErrorTypes[5] = {
+  DeviceStatus,
+  GridRelayStatus,
+  InverterTemp,
+  SpotDCPower,
+  SpotACPower
+};
+
+
+const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
+      {50,"Status"},
+      {51,"Closed"},
+
+      {300,"Nat"},
+      {301,"Grid failure"},
+      {302,"-------"},
+      {303,"Off"},
+      {304,"Island mode"},
+      {305,"Island mode"},
+      {306,"SMA Island mode 60 Hz"},
+      {307,"OK"},
+      {308,"On"},
+      {309,"Operation"},
+      {310,"General operating mode"},
+      {311,"Open"},
+      {312,"Phase assignment"},
+      {313,"SMA Island mode 50 Hz"},
+
+      {358,  SB " " "4000TL-20"},
+      {359,  SB " " "5000TL-20"},
+      {558,  SB " " "3000TL-20"},
+      {6109, SB " " "1600TL-10"},
+      {9109, SB " " "1600TL-10"},
+
+      {8001,"Solar Inverters"},
+
+      {16777213,"Information not available"},
+
+      {71,"Interference device"},
+      {73,"Diffuse insolation"},
+      {74,"Direct insolation"},
+      {76,"Fault correction measure"},
+      {77,"Check AC circuit breaker"},
+      {78,"Check generator"},
+      {79,"Disconnect generator"},
+      {80,"Check parameter"},
+      {84,"Overcurrent grid hw"},
+      {85,"Overcurrent grid sw"},
+
+      {87,"Grid frequency disturbance"},
+      {88,"Grid frequency not permitted"},
+      {89,"Grid disconnection point"},
+};
 
 void SmaBluetoothSolar::setup() {
   ESP_LOGW(TAG, "Starting setup...");
@@ -453,88 +515,19 @@ void SmaBluetoothSolar::dump_config() {
   ESP_LOGCONFIG(TAG, "  Address: %s", sma_inverter_bluetooth_mac_.c_str());
 }
 
-  const char* SmaBluetoothSolar::lookup_code(uint16_t code) {
-    for (auto &entry : status_codes) {
-      if (entry.code == code) return entry.message;
-    }
-    return "Unknown";
+const char* SmaBluetoothSolar::lookup_code(uint16_t code) {
+  for (auto &entry : SmaBluetoothSolar::status_codes) {
+    if (entry.code == code) return entry.message;
   }
+  return "Unknown";
+}
 
-  boolean SmaBluetoothSolar::findIgnoredTypes(getInverterDataType dataType) {
-    for (int =0;i<SIZE_INVETER_DATA_TYPE_IGNORE;i++) 
-      if (dataType == ignoreQueryErrorTypes[i]) return true;
-    }
-    return false;
-  };
-
-
-//{EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, 
-//SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, 
-//InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
-
-const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] = {
-  SpotDCPower, SpotDCVoltage, SpotACPower,
-  SpotACTotalPower, SpotACVoltage, EnergyProduction, SpotGridFrequency, DeviceStatus, GridRelayStatus,
-  InverterTemp, OperationTime, TypeLabel, SoftwareVersion
-};
-
-const getInverterDataType SmaBluetoothSolar::ignoreQueryErrorTypes[5] = {
-  DeviceStatus,
-  GridRelayStatus,
-  InverterTemp,
-  SpotDCPower,
-  SpotACPower
-};
-
-
-
-
-
-const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
-      {50,"Status"},
-      {51,"Closed"},
-
-      {300,"Nat"},
-      {301,"Grid failure"},
-      {302,"-------"},
-      {303,"Off"},
-      {304,"Island mode"},
-      {305,"Island mode"},
-      {306,"SMA Island mode 60 Hz"},
-      {307,"OK"},
-      {308,"On"},
-      {309,"Operation"},
-      {310,"General operating mode"},
-      {311,"Open"},
-      {312,"Phase assignment"},
-      {313,"SMA Island mode 50 Hz"},
-
-      {358,  SB " " "4000TL-20"},
-      {359,  SB " " "5000TL-20"},
-      {558,  SB " " "3000TL-20"},
-      {6109, SB " " "1600TL-10"},
-      {9109, SB " " "1600TL-10"},
-
-      {8001,"Solar Inverters"},
-
-      {16777213,"Information not available"},
-
-      {71,"Interference device"},
-      {73,"Diffuse insolation"},
-      {74,"Direct insolation"},
-      {76,"Fault correction measure"},
-      {77,"Check AC circuit breaker"},
-      {78,"Check generator"},
-      {79,"Disconnect generator"},
-      {80,"Check parameter"},
-      {84,"Overcurrent grid hw"},
-      {85,"Overcurrent grid sw"},
-
-      {87,"Grid frequency disturbance"},
-      {88,"Grid frequency not permitted"},
-      {89,"Grid disconnection point"},
-};
-
+boolean SmaBluetoothSolar::findIgnoredTypes(getInverterDataType dataType) {
+  for (int =0;i<SIZE_INVETER_DATA_TYPE_IGNORE;i++) {
+    if (dataType == ignoreQueryErrorTypes[i]) return true;
+  }
+  return false;
+}
 
 
 }  // namespace smabluetooth_solar
