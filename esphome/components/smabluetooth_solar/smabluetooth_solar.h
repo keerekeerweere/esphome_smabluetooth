@@ -255,12 +255,7 @@ const StatusCode status_codes[] PROGMEM = {
       {89,"Grid disconnection point"}
 };
 
-    static boolean findIgnoredTypes(getInverterDataType dataType) {
-        for (int =0;i<SIZE_INVETER_DATA_TYPE_IGNORE:i++) 
-          if (dataType == ignoreQueryErrorTypes[i]) return true;
-        }
-        return false;
-    }
+    boolean findIgnoredTypes(getInverterDataType dataType);
 
   private:
     ESP32_SMA_Inverter *smaInverter;

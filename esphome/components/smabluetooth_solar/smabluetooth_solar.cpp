@@ -460,6 +460,12 @@ void SmaBluetoothSolar::dump_config() {
     return "Unknown";
   }
 
+  boolean SmaBluetoothSolar::findIgnoredTypes(getInverterDataType dataType) {
+    for (int =0;i<SIZE_INVETER_DATA_TYPE_IGNORE;i++) 
+      if (dataType == ignoreQueryErrorTypes[i]) return true;
+    }
+    return false;
+  };
 
 
 //{EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, 
