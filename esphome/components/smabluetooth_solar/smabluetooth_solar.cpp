@@ -349,8 +349,8 @@ void SmaBluetoothSolar::update() {
   updateSensor(wakeup_time_, String("TWakeup"), (uint64_t)smaInverter->invData.WakeupTime);
   updateSensor(serial_number_, String("SerialNumber"), smaInverter->invData.DeviceName);
   updateSensor(software_version_, String("SoftwareVersion"), smaInverter->invData.SWVersion);
-  updateSensor(device_type_, String("DeviceType"), lookup_code([smaInverter->invData.DeviceType]));
-  updateSensor(device_class_, String("DeviceClass"), lookup_code([smaInverter->invData.DeviceClass]));
+  updateSensor(device_type_, String("DeviceType"), lookup_code(smaInverter->invData.DeviceType));
+  updateSensor(device_class_, String("DeviceClass"), lookup_code(smaInverter->invData.DeviceClass));
 
 	this->running_update_ = false;
 
