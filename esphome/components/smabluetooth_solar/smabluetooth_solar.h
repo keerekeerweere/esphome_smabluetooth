@@ -80,6 +80,15 @@ enum class SmaInverterState {
   NightTime//nighttime, nothing to do here, wait for next sunlight
 };
 
+
+
+struct StatusCode {
+  uint16_t code;
+  const char* message;
+};
+
+
+
 class SmaBluetoothSolar;
 
 class SmaBluetoothSolar : public PollingComponent {
@@ -155,10 +164,6 @@ class SmaBluetoothSolar : public PollingComponent {
 
   void loopNotification();
 
-  struct StatusCode {
-    uint16_t code;
-    const char* message;
-  };
 
  protected:
   bool waiting_to_update_;
