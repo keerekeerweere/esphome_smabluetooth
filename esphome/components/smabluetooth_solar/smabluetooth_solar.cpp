@@ -90,7 +90,7 @@ const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
 
       {8001,"Solar Inverters"},
 
-      {16777213,"Information not available"},
+      {16777213U,"Information not available"},
 
       {71,"Interference device"},
       {73,"Diffuse insolation"},

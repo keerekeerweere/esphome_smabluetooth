@@ -212,6 +212,7 @@ struct StatusCode {
 
 
     boolean findIgnoredTypes(getInverterDataType dataType);
+    static const StatusCode status_codes[];
 
   private:
     ESP32_SMA_Inverter *smaInverter;
@@ -221,7 +222,6 @@ struct StatusCode {
     int indexOfInverterDataType = 0;
 
     const float EPSILON = 0.0001f; //ingore small values, avoid equals for float
-    static const StatusCode status_codes[];
 
   };
 
