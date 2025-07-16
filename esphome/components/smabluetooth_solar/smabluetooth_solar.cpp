@@ -170,7 +170,8 @@ void SmaBluetoothSolar::loop() {
         if (rc != E_OK) {
           //we shouldn't need to disconnect here, some values cannot be read on specific inverters, e.g. SB1600TL-10
           //if (dataType == SpotDCPower || dataType == SpotACPower) {
-          if (ignoreQueryErrorTypes.find(dataType) != ignoreQueryErrorTypes.end()) {
+          //findIgnoredTypes(dataType)
+          if (findIgnoredTypes(dataType)) {
               ESP_LOGI(TAG, "Get Data RC %d (ignored) for %d", rc, dataType);
             //ignore
           } else {
@@ -338,7 +339,7 @@ void SmaBluetoothSolar::update() {
   updateSensor(phases_[2].current_sensor_, String("IacA"), smaInverter->dispData.Iac3);
   updateSensor(phases_[2].active_power_sensor_, String("IacA"), smaInverter->dispData.Pac3);
 
-  updateSensor(status_text_sensor_, String("InverterStatus"), getInverterCode(smaInverter->invData.DevStatus));
+  updateSensor(status_text_sensor_, String("InverterStatus"), lookup_code(smaInverter->invData.DevStatus));
   updateSensor(grid_relay_binary_sensor_, String("GridRelay"), smaInverter->invData.GridRelay == 51); // 51 is "Closed"
 
   updateSensor(inverter_module_temp_, String("InvTemp"), smaInverter->dispData.InvTemp);
@@ -348,11 +349,8 @@ void SmaBluetoothSolar::update() {
   updateSensor(wakeup_time_, String("TWakeup"), (uint64_t)smaInverter->invData.WakeupTime);
   updateSensor(serial_number_, String("SerialNumber"), smaInverter->invData.DeviceName);
   updateSensor(software_version_, String("SoftwareVersion"), smaInverter->invData.SWVersion);
-  updateSensor(device_type_, String("DeviceType"), codeMap[smaInverter->invData.DeviceType]);
-  updateSensor(device_class_, String("DeviceClass"), codeMap[smaInverter->invData.DeviceClass]);
-
-  //todo add phases_[1] and  phases_[2]
-  //updateSensor(phases_[0].active_power_sensor_, "UacA", smaInverter->dispData.Uac[0]; // doest exist, could be calculated
+  updateSensor(device_type_, String("DeviceType"), lookup_code[smaInverter->invData.DeviceType]);
+  updateSensor(device_class_, String("DeviceClass"), lookup_code[smaInverter->invData.DeviceClass]);
 
 	this->running_update_ = false;
 
@@ -454,6 +452,16 @@ void SmaBluetoothSolar::dump_config() {
   ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
   ESP_LOGCONFIG(TAG, "  Address: %s", sma_inverter_bluetooth_mac_.c_str());
 }
+
+  const char* SmaBluetoothSolar::lookup_status(uint16_t code) {
+    for (auto &entry : status_codes) {
+      if (entry.code == code) return entry.message;
+    }
+    return "Unknown";
+  }
+
+
+
 //{EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, 
 //SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, 
 //InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
@@ -464,14 +472,13 @@ const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE
   InverterTemp, OperationTime, TypeLabel, SoftwareVersion
 };
 
-const std::unordered_set<getInverterDataType> SmaBluetoothSolar::ignoreQueryErrorTypes = {
+const getInverterDataType SmaBluetoothSolar::ignoreQueryErrorTypes[5] = {
   DeviceStatus,
   GridRelayStatus,
   InverterTemp,
   SpotDCPower,
   SpotACPower
 };
-
 
 
 }  // namespace smabluetooth_solar

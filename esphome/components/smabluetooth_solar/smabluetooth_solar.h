@@ -48,12 +48,12 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 #include "SMA_Inverter.h"
 
 #include <vector>
-#include <map>
 #include <unordered_set>
 #include <set>
 
 
 #define SIZE_INVETER_DATA_TYPE_QUERY 13
+#define SIZE_INVETER_DATA_TYPE_IGNORE 5
 #define SB "SB"
 
 namespace esphome {
@@ -85,65 +85,9 @@ class SmaBluetoothSolar;
 class SmaBluetoothSolar : public PollingComponent {
  public:
     SmaBluetoothSolar() {
-      initMap();
     };
 
-    void initMap() {
-
-      codeMap[50]="Status";
-      codeMap[51]="Closed";
-
-      codeMap[300]="Nat";
-      codeMap[301]="Grid failure";
-      codeMap[302]="-------";
-      codeMap[303]="Off";
-      codeMap[304]="Island mode";
-      codeMap[305]="Island mode";
-      codeMap[306]="SMA Island mode 60 Hz";
-      codeMap[307]="OK";
-      codeMap[308]="On";
-      codeMap[309]="Operation";
-      codeMap[310]="General operating mode";
-      codeMap[311]="Open";
-      codeMap[312]="Phase assignment";
-      codeMap[313]="SMA Island mode 50 Hz";
-
-      codeMap[358]=  SB " " "4000TL-20";
-      codeMap[359]=  SB " " "5000TL-20";
-      codeMap[558]=  SB " " "3000TL-20";
-      codeMap[6109]= SB " " "1600TL-10";
-      codeMap[9109]= SB " " "1600TL-10";
-
-      codeMap[8001]="Solar Inverters";
-
-      codeMap[16777213]="Information not available";
-
-      codeMap[71]="Interference device";
-      codeMap[73]="Diffuse insolation";
-      codeMap[74]="Direct insolation";
-      codeMap[76]="Fault correction measure";
-      codeMap[77]="Check AC circuit breaker";
-      codeMap[78]="Check generator";
-      codeMap[79]="Disconnect generator";
-      codeMap[80]="Check parameter";
-      codeMap[84]="Overcurrent grid hw";
-      codeMap[85]="Overcurrent grid sw";
-
-      codeMap[87]="Grid frequency disturbance";
-      codeMap[88]="Grid frequency not permitted";
-      codeMap[89]="Grid disconnection point";
-
-
-    }
-
-
-    std::string getInverterCode(int invCode) {
-      std::map<int, std::string>::iterator it = codeMap.find(invCode);
-      if (it != codeMap.end())
-        return it->second;
-      else
-        return std::to_string(invCode);
-    }
+  const char* lookup_status(uint16_t code);
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
@@ -166,7 +110,6 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_sma_inverter_password(std::string sma_inverter_password) {this->sma_inverter_password_ = sma_inverter_password; }
 
   void set_sma_inverter_delay_values(uint32_t sma_inverter_delay_values) {this->sma_inverter_delay_values_ = sma_inverter_delay_values; }
-
 
   void set_inverter_status_code_sensor(sensor::Sensor *sensor) { this->inverter_status_sensor_ = sensor; }
   void set_grid_relay_code_sensor(sensor::Sensor *sensor) { this->grid_relay_sensor_ = sensor; }
@@ -261,20 +204,69 @@ class SmaBluetoothSolar : public PollingComponent {
   std::string sma_inverter_password_ ;
   uint32_t sma_inverter_delay_values_ = 500; //ms
 
-  std::map<int, std::string> codeMap;
+
+struct StatusCode {
+  uint16_t code;
+  const char* message;
+};
+
+const StatusCode status_codes[] PROGMEM = {
+      {50,"Status"},
+      {51,"Closed"},
+
+      {300,"Nat"},
+      {301,"Grid failure"},
+      {302,"-------"},
+      {303,"Off"},
+      {304,"Island mode"},
+      {305,"Island mode"},
+      {306,"SMA Island mode 60 Hz"},
+      {307,"OK"},
+      {308,"On"},
+      {309,"Operation"},
+      {310,"General operating mode"},
+      {311,"Open"},
+      {312,"Phase assignment"},
+      {313,"SMA Island mode 50 Hz"},
+
+      {358,  SB " " "4000TL-20"},
+      {359,  SB " " "5000TL-20"},
+      {558,  SB " " "3000TL-20"},
+      {6109, SB " " "1600TL-10"},
+      {9109, SB " " "1600TL-10"},
+
+      {8001,"Solar Inverters"},
+
+      {16777213,"Information not available"},
+
+      {71,"Interference device"},
+      {73,"Diffuse insolation"},
+      {74,"Direct insolation"},
+      {76,"Fault correction measure"},
+      {77,"Check AC circuit breaker"},
+      {78,"Check generator"},
+      {79,"Disconnect generator"},
+      {80,"Check parameter"},
+      {84,"Overcurrent grid hw"},
+      {85,"Overcurrent grid sw"},
+
+      {87,"Grid frequency disturbance"},
+      {88,"Grid frequency not permitted"},
+      {89,"Grid disconnection point"}
+};
+
+    static boolean findIgnoredTypes(getInverterDataType dataType) {
+        for (int =0;i<SIZE_INVETER_DATA_TYPE_IGNORE:i++) 
+          if (dataType == ignoreQueryErrorTypes[i]) return true;
+        }
+        return false;
+    }
 
   private:
     ESP32_SMA_Inverter *smaInverter;
     SmaInverterState inverterState = SmaInverterState::Off;
- static const getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY];
-  static const std::unordered_set<getInverterDataType> ignoreQueryErrorTypes;
-  /*    
-    static const getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] =
-       {EnergyProduction, SpotGridFrequency, SpotDCPower, SpotDCVoltage, SpotACPower, SpotACTotalPower, SpotACVoltage, DeviceStatus, GridRelayStatus, InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
-    static const std::unordered_set<getInverterDataType> ignoreQueryErrorTypes = {
-        DeviceStatus,
-        GridRelayStatus
-    };*/
+    static const getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY];
+    static const getInverterDataType ignoreQueryErrorTypes[5];
     int indexOfInverterDataType = 0;
 
     const float EPSILON = 0.0001f; //ingore small values, avoid equals for float

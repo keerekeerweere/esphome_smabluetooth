@@ -486,8 +486,8 @@ class ESP32_SMA_Inverter  {
         uint16_t pcktID = 1;
         bool readTimeout = false;
         uint16_t fcsChecksum=0xffff;
-        uint8_t sixzeros[6]= {0x00,0x00,0x00,0x00,0x00,0x00};
-        uint8_t sixff[6]   = {0xff,0xff,0xff,0xff,0xff,0xff};
+        PROGMEM uint8_t sixzeros[6]= {0x00,0x00,0x00,0x00,0x00,0x00};
+        PROGMEM uint8_t sixff[6]   = {0xff,0xff,0xff,0xff,0xff,0xff};
         const char btPin[5] = {'0','0','0','0',0}; // BT pin Always 0000. (not login passcode!)
 
         PROGMEM prog_uint16_t  fcstab[256]  = {
