@@ -210,6 +210,20 @@ struct StatusCode {
   const char* message;
 };
 
+
+    boolean findIgnoredTypes(getInverterDataType dataType);
+
+  private:
+    ESP32_SMA_Inverter *smaInverter;
+    SmaInverterState inverterState = SmaInverterState::Off;
+    static const getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY];
+    static const getInverterDataType ignoreQueryErrorTypes[5];
+    int indexOfInverterDataType = 0;
+
+    const float EPSILON = 0.0001f; //ingore small values, avoid equals for float
+
+  };
+
 const StatusCode status_codes[] PROGMEM = {
       {50,"Status"},
       {51,"Closed"},
@@ -254,20 +268,6 @@ const StatusCode status_codes[] PROGMEM = {
       {88,"Grid frequency not permitted"},
       {89,"Grid disconnection point"}
 };
-
-    boolean findIgnoredTypes(getInverterDataType dataType);
-
-  private:
-    ESP32_SMA_Inverter *smaInverter;
-    SmaInverterState inverterState = SmaInverterState::Off;
-    static const getInverterDataType invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY];
-    static const getInverterDataType ignoreQueryErrorTypes[5];
-    int indexOfInverterDataType = 0;
-
-    const float EPSILON = 0.0001f; //ingore small values, avoid equals for float
-
-  };
-
 
 }  // namespace smabluetooth_solar
 }  // namespace esphome
