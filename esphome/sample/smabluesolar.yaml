@@ -1,6 +1,6 @@
 substitutions:
-  name: smablue-inverter
-  friendly_name: smablue-inverter
+  name: smablue-stream
+  friendly_name: smablue-stream
 
 esphome:
   name: ${name}
@@ -17,12 +17,12 @@ external_components:
   source:
     type: git
     url: https://github.com/keerekeerweere/esphome_smabluetooth
-    #url: https://github.com/LinuxJohannes/esphome_smabluetooth_2025
-  refresh: 1min
+  components: [smabluetooth_solar]
+  refresh: 0sec
 
 # Enable logging
 logger:
-  level: DEBUG
+  level: INFO
 
 # Enable Home Assistant API
 api:
@@ -30,7 +30,8 @@ api:
     key: !secret api_encryption_key
 
 ota:
-  password: !secret ota_password 
+  - platform: esphome
+    password: !secret ota_password 
 
 wifi:
   ssid: !secret wifi_ssid
@@ -44,9 +45,10 @@ wifi:
 
 sensor:
   - platform: smabluetooth_solar
-    update_interval: 20s
-    sma_inverter_bluetooth_mac: !secret sma_etsolar_bluetoothmac
-    sma_inverter_password: !secret sma_etsolar_password
+    update_interval: 10s
+    sma_inverter_bluetooth_mac: !secret sma_stream_bluetoothmac
+    sma_inverter_password: !secret sma_stream_password
+    sma_inverter_delay_values: 800ms
 
     inverter_status: 
       name: "Inverter Status"
@@ -92,11 +94,11 @@ sensor:
       active_power:
           name: "Power mppt2"
 
-    active_power:
-      name: "Grid Active Power"
+#    active_power:
+#      name: "Grid Active Power"
 
-    pv_active_power:
-      name: "PV Active Power"
+#    pv_active_power:
+#      name: "PV Active Power"
 
     frequency:
       name: "Frequency"
