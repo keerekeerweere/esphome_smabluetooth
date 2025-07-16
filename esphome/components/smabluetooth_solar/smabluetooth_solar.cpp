@@ -86,7 +86,7 @@ const StatusCode SmaBluetoothSolar::status_codes[36] = {
       {6109, SB " " "1600TL-10"},
       {9109, SB " " "1600TL-10"},
       {8001,"Solar Inverters"},
-      {16777213U,"Information not available"},
+//      {16777213U,"Information not available"},
       {71,"Interference device"},
       {73,"Diffuse insolation"},
       {74,"Direct insolation"},
@@ -517,7 +517,7 @@ const char* SmaBluetoothSolar::lookup_code(uint16_t code) {
 }
 
 boolean SmaBluetoothSolar::findIgnoredTypes(getInverterDataType dataType) {
-  for (int =0;i<SIZE_INVETER_DATA_TYPE_IGNORE;i++) {
+  for (int i=0;i<SIZE_INVETER_DATA_TYPE_IGNORE;i++) {
     if (dataType == ignoreQueryErrorTypes[i]) return true;
   }
   return false;
