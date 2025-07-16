@@ -63,10 +63,9 @@ const getInverterDataType SmaBluetoothSolar::ignoreQueryErrorTypes[5] = {
 };
 
 
-const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
+const StatusCode SmaBluetoothSolar::status_codes[36] = {
       {50,"Status"},
       {51,"Closed"},
-
       {300,"Nat"},
       {301,"Grid failure"},
       {302,"-------"},
@@ -81,17 +80,13 @@ const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
       {311,"Open"},
       {312,"Phase assignment"},
       {313,"SMA Island mode 50 Hz"},
-
       {358,  SB " " "4000TL-20"},
       {359,  SB " " "5000TL-20"},
       {558,  SB " " "3000TL-20"},
       {6109, SB " " "1600TL-10"},
       {9109, SB " " "1600TL-10"},
-
       {8001,"Solar Inverters"},
-
       {16777213U,"Information not available"},
-
       {71,"Interference device"},
       {73,"Diffuse insolation"},
       {74,"Direct insolation"},
@@ -102,7 +97,6 @@ const SmaBluetoothSolar::StatusCode status_codes[] PROGMEM = {
       {80,"Check parameter"},
       {84,"Overcurrent grid hw"},
       {85,"Overcurrent grid sw"},
-
       {87,"Grid frequency disturbance"},
       {88,"Grid frequency not permitted"},
       {89,"Grid disconnection point"},
