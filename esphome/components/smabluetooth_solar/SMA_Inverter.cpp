@@ -1240,7 +1240,7 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
 
 std::string ESP32_SMA_Inverter::get_version(uint32_t version)
 {
-    char ver[16];
+    char ver[24];
 
     uint8_t Vtype = version & 0xFF;
     Vtype = Vtype > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
