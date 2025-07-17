@@ -515,7 +515,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   const char* recordChar = (const char*)recptr + 8;
                   size_t maxLen = (recordsize > 8) ? recordsize - 8 : 0;
                   invData.DeviceName = (recordChar, strnlen(recordChar, maxLen));  // Safe copy
-                  ESP_LOGD(TAG, "INV_NAME %s ", deviceName.c_str());
+                  ESP_LOGD(TAG, "INV_NAME %s", invData.DeviceName.c_str());
                   break;
 
               case NameplatePkgRev: //INV_SWVER
