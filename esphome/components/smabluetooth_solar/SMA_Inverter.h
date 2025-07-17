@@ -429,6 +429,7 @@ class ESP32_SMA_Inverter  {
 
     char timeBuf[24];
     char charBuf[64];
+    const size_t max_buf_size = 64;
     int  charLen = 0;
 
     char smaInvPass[12];  
