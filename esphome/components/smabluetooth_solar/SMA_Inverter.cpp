@@ -1093,7 +1093,7 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
 void ESP32_SMA_Inverter::get_version(uint32_t version, char * inverter_version_)
 {
     uint8_t vType = version & 0xFF;
-    vType = vType > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
+    vType = vType > 5 ? '?' : "NEABRS"[vType]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
     uint8_t vBuild = (version >> 8) & 0xFF;
     uint8_t vMinor = (version >> 16) & 0xFF;
     uint8_t vMajor = (version >> 24) & 0xFF;
