@@ -1,22 +1,29 @@
 substitutions:
-  name: smablue-stream
-  friendly_name: smablue-stream
+  name: smablue-atersa
+  friendly_name: smablue-atersa
 
 esphome:
   name: ${name}
   name_add_mac_suffix: false
   friendly_name: ${friendly_name}
 
-
 esp32:
   board: esp32dev
+  flash_size: 4MB
   framework:
     type: arduino
+#  partitions: /config/esphome/4m_partition_tight.csv
+  partitions: /config/esphome/ota_nofs_4MB.csv
+  
 
 external_components:
   source:
     type: git
-    url: https://github.com/keerekeerweere/esphome_smabluetooth
+    url: https://github.com/keerekeerweere/esphome_smabluetooth    
+#    ref: feature/size-optimize-01
+#    ref: feature/bluetoothserial-espidf
+#    ref: feature/bluetooth-yield
+#    ref: feature/esp32-arduino-3.2.1
   components: [smabluetooth_solar]
   refresh: 0sec
 
@@ -38,17 +45,18 @@ wifi:
   password: !secret wifi_password
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
-  ap:
-    ssid: "espcustom Fallback Hotspot"
-    password: !secret wifi_password
+  #ap:
+  #  ssid: "espcustom Fallback Hotspot"
+  #  password: !secret wifi_password
 
 
 sensor:
   - platform: smabluetooth_solar
     update_interval: 10s
-    sma_inverter_bluetooth_mac: !secret sma_stream_bluetoothmac
-    sma_inverter_password: !secret sma_stream_password
-    sma_inverter_delay_values: 800ms
+    sma_inverter_bluetooth_mac: !secret sma_atersa_bluetoothmac
+    sma_inverter_password: !secret sma_atersa_password
+    sma_inverter_delay_values: 400ms
+
 
     inverter_status: 
       name: "Inverter Status"
@@ -94,12 +102,6 @@ sensor:
       active_power:
           name: "Power mppt2"
 
-#    active_power:
-#      name: "Grid Active Power"
-
-#    pv_active_power:
-#      name: "PV Active Power"
-
     frequency:
       name: "Frequency"
 
@@ -109,20 +111,14 @@ sensor:
     total_energy_production:
       name: "Total Energy Production"
 
-    today_generation_time:
-      name: "Today's Generation Time"
-
-    total_generation_time:
-      name: "Total Generation Time"
-
-    wakeup_time:
-      name: "Wakeup Time"
-
-    serial_number:
-      name: "Serial Number"
+    inverter_module_temp:
+      name: "Inverter Module Temp"
 
     software_version:
       name: "Software Version"
+
+    wakeup_time:
+      name: "Wakeup Time"
 
     device_type:
       name: "Device Type"
@@ -130,8 +126,6 @@ sensor:
     device_class:
       name: "Device Class"
 
-    inverter_module_temp:
-      name: "Inverter Module Temp"
-
     sma_inverter_bluetooth_signal_strength:
       name: "Inverter Bluetooth Signal Strength"
+    
