@@ -328,7 +328,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               ESP_LOGD(TAG, "lri=0x%04x cls=0x%08X dataType=0x%02x",lri, cls, dataType);
        
               if (recordsize == 16) {
-                Dalue64 = get_u64(recptr + 8);
+                value64 = get_u64(recptr + 8);
                 ESP_LOGV(TAG, "value64=%d=0x%08x",value64, value64);
        
                   if (is_NaN(value64) || is_NaN((uint64_t)value64)) value64 = 0;
