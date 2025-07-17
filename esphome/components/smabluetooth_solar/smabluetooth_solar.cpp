@@ -50,8 +50,8 @@ static const char *const TAG = "smabluetooth_solar";
 //InverterTemp, OperationTime, TypeLabel, SoftwareVersion};
 const getInverterDataType SmaBluetoothSolar::invDataTypes[SIZE_INVETER_DATA_TYPE_QUERY] = {
   SpotDCPower, SpotDCVoltage, SpotACPower,
-  SpotACTotalPower, SpotACVoltage, EnergyProduction, SpotGridFrequency, DeviceStatus, GridRelayStatus,
-  InverterTemp, OperationTime, TypeLabel, SoftwareVersion
+  SpotACTotalPower, SpotACVoltage, EnergyProduction, SpotGridFrequency, DeviceStatus, 
+  GridRelayStatus, InverterTemp, OperationTime, TypeLabel, SoftwareVersion
 };
 
 const getInverterDataType SmaBluetoothSolar::ignoreQueryErrorTypes[5] = {

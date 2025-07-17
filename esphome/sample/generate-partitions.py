@@ -1,58 +1,63 @@
-def align_down(value, alignment):
-    return value & ~(alignment - 1)
+def align_up(value, alignment):
+    return (value + alignment - 1) & ~(alignment - 1)
 
 def generate_partition_csv(flash_size_bytes=0x400000, useCoreDump=False):
     """
-    Generates a valid ESP32 partition table CSV string for a given flash size (default: 4MB).
-    Ensures app0/app1 start and size are aligned to 0x10000 (64KB).
-    Optionally includes coredump.
+    Generate a valid ESP32 partition table, ensuring total size does not exceed flash size.
+    Aligns app partitions to 0x10000 (64KB), and checks cumulative size.
     """
     ALIGNMENT = 0x10000  # 64KB
+    partitions = []
+
+    total = 0
 
     # Fixed system partitions
-    partitions = [
-        ("nvs", "data", "nvs", 0x9000, 0x5000),
-        ("otadata", "data", "ota", 0xE000, 0x2000),
-    ]
+    def add(name, ptype, subtype, start, size):
+        nonlocal total
+        total = max(total, start + size)
+        partitions.append((name, ptype, subtype, start, size))
 
-    app0_start = 0x10000
+    add("nvs", "data", "nvs", 0x9000, 0x5000)
+    add("otadata", "data", "ota", 0xE000, 0x2000)
 
-    # Reserve space for EEPROM, SPIFFS, and optional core dump
+    app0_start = align_up(0x10000, ALIGNMENT)
+
+    # Reserve space at end
     eeprom_size = 0x1000
-    spiffs_size = 0x400
+    spiffs_size = 0x1000
     coredump_size = 0x4000 if useCoreDump else 0
 
     reserved_end = eeprom_size + spiffs_size + coredump_size
     available_space = flash_size_bytes - app0_start - reserved_end
 
-    # Align available app partition space down to multiple of ALIGNMENT * 2 (for even app split)
-    total_app_space = align_down(available_space, ALIGNMENT * 2)
+    total_app_space = (available_space // (2 * ALIGNMENT)) * ALIGNMENT * 2
     app_size = total_app_space // 2
+
     app1_start = app0_start + app_size
+
+    add("app0", "app", "ota_0", app0_start, app_size)
+    add("app1", "app", "ota_1", app1_start, app_size)
 
     if useCoreDump:
         coredump_start = app1_start + app_size
-        eeprom_start = coredump_start + coredump_size
+        add("coredump", "data", "coredump", coredump_start, coredump_size)
     else:
-        eeprom_start = app1_start + app_size
+        coredump_start = app1_start + app_size
 
+    eeprom_start = coredump_start if not useCoreDump else coredump_start + coredump_size
     spiffs_start = eeprom_start + eeprom_size
 
-    # App and data partitions
-    partitions += [
-        ("app0", "app", "ota_0", app0_start, app_size),
-        ("app1", "app", "ota_1", app1_start, app_size),
-    ]
+    add("eeprom", "data", "0x99", eeprom_start, eeprom_size)
+    add("spiffs", "data", "spiffs", spiffs_start, spiffs_size)
 
-    if useCoreDump:
-        partitions.append(("coredump", "data", "coredump", coredump_start, coredump_size))
+    # Final overflow check
+    if total > flash_size_bytes:
+        raise ValueError(f"Partition layout exceeds flash size! Used: {hex(total)}, Limit: {hex(flash_size_bytes)}")
 
-    partitions += [
-        ("eeprom", "data", "0x99", eeprom_start, eeprom_size),
-        ("spiffs", "data", "spiffs", spiffs_start, spiffs_size),
-    ]
+    # Print total
+    print(f"# Total size used: {total} bytes = {total / 1024:.1f} KB = {total / (1024*1024):.2f} MB")
 
-    # Format CSV: both hex (for ESPHome) and decimal (for tooling like esptool.py)
+    # Output both hex and decimal
     lines = [f"{name}, {ptype}, {subtype}, 0x{start:X}, 0x{size:X}" for name, ptype, subtype, start, size in partitions]
     lines += ["", "# Decimal version"]
     lines += [f"{name}, {ptype}, {subtype}, {start}, {size}" for name, ptype, subtype, start, size in partitions]
@@ -60,5 +65,4 @@ def generate_partition_csv(flash_size_bytes=0x400000, useCoreDump=False):
     return "\n".join(lines)
 
 if __name__ == "__main__":
-    csv = generate_partition_csv()
-    print(csv)
+    print(generate_partition_csv(flash_size_bytes=0x400000, useCoreDump=False))

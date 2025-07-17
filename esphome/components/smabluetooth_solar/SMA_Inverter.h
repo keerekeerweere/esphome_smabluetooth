@@ -428,9 +428,8 @@ class ESP32_SMA_Inverter  {
     bool btConnected = false;
 
     char timeBuf[24];
-    char charBuf[256];
+    char charBuf[64];
     int  charLen = 0;
-
 
     char smaInvPass[12];  
     uint8_t smaBTAddress[6]; // SMA bluetooth address

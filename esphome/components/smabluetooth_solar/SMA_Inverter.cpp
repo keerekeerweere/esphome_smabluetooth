@@ -513,7 +513,14 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               case NameplateLocation: //INV_NAME
                   //This function gives us the time when the inverter was switched on
                   invData.WakeupTime = datetime;
-                  invData.DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, recordsize - 8));
+                  if (recordsize > 8) {
+                    size_t len = strnlen((const char*)recptr + 8, std::min(sizeof(charBuf) - 1, recordsize - 8));
+                    memcpy(charBuf, (const char*)recptr + 8, len);
+                    buffer[len] = '\0';
+                    invData.DeviceName = std::string(charBuf);  // or assign to a char[] if that's your structure
+                  } else {
+                    ESP_LOGW(TAG, "recordsize too small — cannot extract DeviceName");
+                  }                  
                   ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName.c_str());
                   break;
 
@@ -537,17 +544,17 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               case CoolsysTmpNom:
                   invData.InvTemp = value32;
                   dispData.InvTemp = toTemp(value32);
-                  ESP_LOGI(TAG, "Temp.     %7.3f C ", toTemp(value32));
+                  ESP_LOGI(TAG, "Temp. %7.3f C ", toTemp(value32));
                   break;
               case OperationHealth:
                   value32 = getattribute(recptr);
                   invData.DevStatus =value32 ;// value32;
-                  ESP_LOGI(TAG, "Device Status:    %d  ", value32);
+                  ESP_LOGI(TAG, "Device Status: %d  ", value32);
                   break;
               case OperationGriSwStt:
                   value32 = getattribute(recptr);
                   invData.GridRelay = value32;
-                  ESP_LOGI(TAG, "Grid Relay:    %d  ", invData.GridRelay);
+                  ESP_LOGI(TAG, "Grid Relay: %d  ", invData.GridRelay);
                   break;
               case MeteringGridMsTotWOut:
                   invData.MeteringGridMsTotWOut = value32;
