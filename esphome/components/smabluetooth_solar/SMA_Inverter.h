@@ -447,9 +447,10 @@ class ESP32_SMA_Inverter  {
     bool btConnected = false;
 
     char timeBuf[24]= {0};
+    const size_t timeBufLen = 24;
     char charBuf[256]= {0};
-    uint8_t charBufLen = 256;
-    int  charLen = 0;
+    const size_t charBufLen = 256;
+    size_t  charLen = 0;
 
 
     char smaInvPass[12]= {0};  

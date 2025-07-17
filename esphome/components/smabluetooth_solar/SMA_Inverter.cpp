@@ -513,7 +513,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   //This function gives us the time when the inverter was switched on
                   invData.WakeupTime = datetime;
                   const char* recordChar = (const char*)recptr + 8;
-                  size_t maxLen = (recordsize > 8) ? recordsize - 8 : 0;
+                  size_t maxLen = (recordsize > 8) ? (recordsize - 8) : 0;
                   invData.DeviceName = (recordChar, strnlen(recordChar, maxLen));  // Safe copy
                   ESP_LOGD(TAG, "INV_NAME %s", invData.DeviceName.c_str());
                   break;
