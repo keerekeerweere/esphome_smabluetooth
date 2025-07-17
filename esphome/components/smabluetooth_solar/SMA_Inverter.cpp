@@ -522,7 +522,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                     strncpy(charBuf, nameptr, max_copy);
                     charBuf[max_copy] = '\0';  // ensure null-termination
 
-                    invData.DeviceName = charBuf;
+                    invData.DeviceName = std::string(charBuf);
                   } else {
                     ESP_LOGW(TAG, "recordsize too small — cannot extract DeviceName");
                   }                  
@@ -531,7 +531,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
 
               case NameplatePkgRev: //INV_SWVER
                   get_version(get_u32(recptr + 24), inverter_version);
-                  invData.SWVersion = inverter_version;
+                  invData.SWVersion = std::string(inverter_version);
                   ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
