@@ -146,13 +146,16 @@ class SmaBluetoothSolar : public PollingComponent {
   void set_device_type(text_sensor::TextSensor *text_sensor) { this->device_type_ = text_sensor; }
   void set_device_class(text_sensor::TextSensor *text_sensor) { this->device_class_ = text_sensor; }
   void set_voltage_sensor(uint8_t phase, sensor::Sensor *voltage_sensor) {
-    this->phases_[phase].voltage_sensor_ = voltage_sensor;
+    if (phase<PHASES) 
+      this->phases_[phase].voltage_sensor_ = voltage_sensor;    
   }
   void set_current_sensor(uint8_t phase, sensor::Sensor *current_sensor) {
-    this->phases_[phase].current_sensor_ = current_sensor;
+    if (phase<PHASES) 
+      this->phases_[phase].current_sensor_ = current_sensor;
   }
   void set_active_power_sensor(uint8_t phase, sensor::Sensor *active_power_sensor) {
-    this->phases_[phase].active_power_sensor_ = active_power_sensor;
+    if (phase<PHASES) 
+      this->phases_[phase].active_power_sensor_ = active_power_sensor;
   }
   void set_voltage_sensor_pv(uint8_t pv, sensor::Sensor *voltage_sensor) {
     this->pvs_[pv].voltage_sensor_ = voltage_sensor;
