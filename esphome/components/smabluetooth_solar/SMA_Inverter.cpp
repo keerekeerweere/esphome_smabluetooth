@@ -956,60 +956,6 @@ E_RC ArchiveDayData(time_t startTime) {
 }
 */
 
-
-// ******* read SMA current data **********
-E_RC ESP32_SMA_Inverter::ReadCurrentData() {
-  /*
-
-  if (!btConnected) {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "Bluetooth offline!");
-    return E_NODATA;
-  }
-  
-  if ((getInverterData(SpotACTotalPower)) != E_OK)  {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "SpotACTotalPower error!" ); // Pac
-    return E_NODATA;
-  }
-  if ((getInverterData(SpotDCVoltage)) != E_OK)     {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "getSpotDCVoltage error!" ); // Udc + Idc
-    return E_NODATA;
-  }
-  if ((getInverterData(SpotACVoltage)) != E_OK)     {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "getSpotACVoltage error!" ); // Uac + Iac
-    return E_NODATA;
-  }
-  if ((getInverterData(EnergyProduction)) != E_OK)  {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "EnergyProduction error!" ); // E-Total + E-Today
-    return E_NODATA;
-  }
-  if ((getInverterData(SpotGridFrequency)) != E_OK) {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "SpotGridFrequency error!");
-    return E_NODATA;
-  }
-  if ((getInverterData(InverterTemp)) != E_OK) {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "InverterTemp error!");
-    return E_NODATA;
-  }
-  if ((getInverterData(DeviceStatus)) != E_OK) {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "Device Status error!");
-    return E_NODATA;
-  }
-  if ((getInverterData(GridRelayStatus)) != E_OK) {
-    charLen += snprintf(charBuf+charLen, CHAR_BUF_MAX-charLen, "Grid Relay Status error!");
-    return E_NODATA;
-  }
-
-  */
-
-//case 5: if ((getInverterData(SpotDCPower)) != E_OK)   DEBUG1_PRINTLN("getSpotDCPower error!"); //pcktBuf[23]=15 error!
-//case 6: if ((getInverterData(SpotACPower)) != E_OK)   DEBUG1_PRINTLN("SpotACPower error!"   ); //pcktBuf[23]=15 error!
-//case 7: if ((getInverterData(InverterTemp)) != E_OK)  DEBUG1_PRINTLN("InverterTemp error!"  ); //pcktBuf[23]=15 error!
-//case 8: if ((getInverterData(OperationTime)) != E_OK) DEBUG1_PRINTLN("OperationTime error!" ); // OperTime + OperTime
-  return E_OK;
-} 
-
-
-
 // **** receive BT byte *******
 uint8_t ESP32_SMA_Inverter::BTgetByte() {
   readTimeout = false;

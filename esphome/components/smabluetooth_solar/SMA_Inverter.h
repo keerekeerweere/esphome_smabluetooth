@@ -391,9 +391,6 @@ class ESP32_SMA_Inverter  {
     void logoffSMAInverter();
 
     E_RC ArchiveDayData(time_t startTime);
-    E_RC ReadCurrentData();
-
-
 
     bool connect();
     bool connect(uint8_t remoteAddress[]);
