@@ -514,7 +514,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                     invData.WakeupTime = datetime;
                     char* recordChar = (char*)(recptr + 8);
                     size_t maxLen = (recordsize > 8) ? (recordsize - 8) : 0;
-                    invData.DeviceName = (recordChar, strnlen(recordChar, maxLen));  // Safe copy
+                    invData.DeviceName = std::string(recordChar, strnlen(recordChar, maxLen));  // Safe copy
                     ESP_LOGD(TAG, "INV_NAME %s", invData.DeviceName.c_str());
                     break;
                   }
