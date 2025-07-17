@@ -526,7 +526,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   } else {
                     ESP_LOGW(TAG, "recordsize too small — cannot extract DeviceName");
                   }                  
-                  ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName!:nullptr ? invData.DeviceName.c_str() : "");
+                  ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName!=nullptr ? invData.DeviceName.c_str() : "");
                   break;
 
               case NameplatePkgRev: //INV_SWVER
