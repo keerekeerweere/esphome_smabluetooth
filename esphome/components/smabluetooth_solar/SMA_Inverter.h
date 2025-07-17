@@ -26,11 +26,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifdef USE_ARDUINO
+
+//#define USE_ESP_IDF 
+
+#ifdef USE_ESP32_FRAMEWORK_ARDUINO
 #include "BluetoothSerial.h"
 #endif
 
-#ifdef ESP_PLATFORM
+#ifdef USE_ESP_IDF
 #include "BluetoothSerialEspidf.h"
 #endif
 
@@ -337,6 +340,9 @@ typedef struct __attribute__ ((packed)) PacketHeader {
 } L1Hdr;
 #pragma pack(pop)
 
+
+
+#ifdef USE_ESP32_FRAMEWORK_ARDUINO
 /*
 */
 class ESP32BluetoothSerial : public BluetoothSerial {
@@ -348,6 +354,10 @@ class ESP32BluetoothSerial : public BluetoothSerial {
       
     };
 };
+#endif
+
+
+
 
 
 class ESP32_SMA_Inverter  {
@@ -426,7 +436,14 @@ class ESP32_SMA_Inverter  {
     ~ESP32_SMA_Inverter() {}
     void loopNotification();
 
+
+#ifdef USE_ESP32_FRAMEWORK_ARDUINO
     BluetoothSerial serialBT = ESP32BluetoothSerial();
+#endif
+
+#ifdef USE_ESP_IDF
+    BluetoothSerialWrapper serialBT = BluetoothSerialWrapper();
+#endif
     
     uint8_t  btrdBuf[COMMBUFSIZE];    
     uint16_t pcktBufMax = 0; // max. used size of PcktBuf

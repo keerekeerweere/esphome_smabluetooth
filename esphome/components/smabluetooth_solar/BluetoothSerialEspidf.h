@@ -2,9 +2,13 @@
 
 #pragma once
 
-#ifdef ESP_PLATFORM
+#ifdef USE_ESP_IDF
+
 
 #include "esp_spp_api.h"
+#include "esp_gap_bt_api.h"
+#include "esp_bt_device.h"
+#include "esp_bt_main.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
@@ -13,12 +17,15 @@ public:
     BluetoothSerialWrapper();
     ~BluetoothSerialWrapper();
 
-    esp_err_t begin(const char* deviceName);
-    esp_err_t write(const uint8_t* data, size_t len);
+    bool begin(const char* name);
+    bool connect(const esp_bd_addr_t mac);
+    bool connect(const char* mac_str);  // "00:11:22:33:44:55"
+    size_t write(const uint8_t* data, size_t len);
+    size_t write(uint8_t c);
+    int read(uint8_t* buf, size_t maxLen = 1);
+    int read(); 
     int available();
-    int read(uint8_t* buf, size_t maxLen);
-    esp_err_t disconnect();
-
+    void disconnect();
     bool isConnected();
 
 private:
@@ -27,8 +34,8 @@ private:
 
     static BluetoothSerialWrapper* instance;
 
-    QueueHandle_t rxQueue;     // incoming bytes
-    uint32_t connectionHandle; // active connection handle
+    QueueHandle_t rxQueue;
+    uint32_t connectionHandle;
     bool connected;
 };
 
