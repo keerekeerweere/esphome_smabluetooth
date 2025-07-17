@@ -325,10 +325,10 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               uint32_t cls = code & 0xFF;
               uint8_t dataType = code >> 24;
               time_t datetime = (time_t)get_u32(recptr + 4);
-              ESP_LOGV(TAG, "lri=0x%04x cls=0x%08X dataType=0x%02x",lri, cls, dataType);
+              ESP_LOGD(TAG, "lri=0x%04x cls=0x%08X dataType=0x%02x",lri, cls, dataType);
        
               if (recordsize == 16) {
-                value64 = get_u64(recptr + 8);
+                Dalue64 = get_u64(recptr + 8);
                 ESP_LOGV(TAG, "value64=%d=0x%08x",value64, value64);
        
                   if (is_NaN(value64) || is_NaN((uint64_t)value64)) value64 = 0;
@@ -346,7 +346,6 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   invData.LastTime = datetime;
                   invData.TotalPac = toW(value32);
                   dispData.TotalPac = tokW(value32);
-                  //debug_watt("SPOT_PACTOT", value32, datetime);
                   printUnixTime(timeBuf, datetime);
                   ESP_LOGI(TAG, "SPOT_PACTOT %15.3f kW %x  GMT:%s ", tokW(value32),value32, timeBuf);
                   break;
@@ -513,7 +512,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
               case NameplateLocation: //INV_NAME
                   //This function gives us the time when the inverter was switched on
                   invData.WakeupTime = datetime;
-                  invData.DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, recordsize - 8));
+                  invData.DeviceName = std::string((char *)recptr + 8, strnlen((char *)recptr + 8, (recordsize - 8) > 16 ? 16 : (recordsize - 8)));
                   ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName.c_str());
                   break;
 
@@ -849,112 +848,6 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
     return rc;
 }
 
-/* 
-// ******* Archive Day Data **********
-E_RC ArchiveDayData(time_t startTime) {
-  DEBUG2_PRINT("*** ArchiveDayData ***");
-  printUnixTime(timeBuf, startTime); DEBUG2_PRINTF("StartTime0 GMT:%s", timeBuf);
-  // set time to begin of day
-  uint8_t minutes = (startTime/60) % 60;
-  uint8_t hours = (startTime/(60*60)) % 24;
-  startTime -= minutes*60 + hours*60*60;
-  printUnixTime(timeBuf, startTime); DEBUG2_PRINTF("StartTime2 GMT:%s", timeBuf);
-
-  E_RC rc = E_OK;
-
-  for (unsigned int i = 0; i<ARCH_DAY_SIZE; i++) {
-     invData.dayWh[i] = 0;
-  }
-  invData.hasDayData = false;
-
-  int packetcount = 0;
-  bool validPcktID = false;
-
-  E_RC hasData = E_ARCHNODATA;
-  pcktID++;
-  writePacketHeader(pcktBuf, 0x01, invData.btAddress);
-  writePacket(pcktBuf, 0x09, 0xE0, 0, invData.SUSyID, invData.Serial);
-  write32(pcktBuf, 0x70000200);
-  write32(pcktBuf, startTime - 300);
-  write32(pcktBuf, startTime + 86100);
-  writePacketTrailer(pcktBuf);
-  writePacketLength(pcktBuf);
-
-  BTsendPacket(pcktBuf);
-
-  do {
-    totalWh = 0;
-    totalWh_prev = 0;
-    dateTime = 0;
-
-    do {
-      rc = getPacket(invData.btAddress, 1);
-
-      if (rc != E_OK) {
-         DEBUG3_PRINTF("getPacket error=%d", rc);
-         return rc;
-      }
-      // packetcount=nr of packets left on multi packet transfer n..0
-      packetcount = pcktBuf[25];
-      DEBUG2_PRINTF("packetcount=%d", packetcount);
-
-      //TODO: Move checksum validation to getPacket
-      if (!validateChecksum())
-        return E_CHKSUM;
-      else {
-        unsigned short rcvpcktID = get_u16(pcktBuf + 27) & 0x7FFF;
-        if (validPcktID || (pcktID == rcvpcktID)) {
-          validPcktID = true;
-          for (int x = 41; x < (pcktBufPos - 3); x += 12) {
-            dateTime = (time_t)get_u32(pcktBuf + x);
-            uint16_t idx =((dateTime/3600)%24 * 12)+((dateTime/60)%60/5); //h*12+min/5
-
-            totalWh = get_u64(pcktBuf + x + 4);
-            if ((totalWh > 0) && (!invData.hasDayData)) { 
-              invData.DayStartTime = dateTime;
-              invData.hasDayData = true;
-              hasData = E_OK; 
-              printUnixTime(timeBuf, dateTime); 
-              DEBUG1_PRINTF("ArchiveDayData %s", timeBuf);
-            }
-            if (idx < ARCH_DAY_SIZE) {
-              invData.dayWh[idx] = totalWh;
-              value64 = (totalWh - totalWh_prev) * 60 / 5; // assume 5 min. interval
-              DEBUG3_PRINTF("[%03u] %6llu Wh %6llu W", idx, totalWh, value64);
-            }
-            totalWh_prev = totalWh;
-          } //for
-        } else {
-            DEBUG1_PRINTF("Packet ID mismatch. Exp. %d, rec. %d", pcktID, rcvpcktID);
-            validPcktID = true;
-            packetcount = 0;
-        }
-      }
-    } while (packetcount > 0);
-  } while (!validPcktID);
-
-  /* print values
-  time_t startT = invData.DayStartTime;
-  printUnixTime(timeBuf, startT);
-  DEBUG2_PRINTF("Day History: %s", timeBuf);
-  totalWh_prev = 0;
-
-  for (uint16_t i = 0; i<ARCH_DAY_SIZE; i++) {
-    totalWh = invData.dayWh[i];
-    value32=0;
-    if ((totalWh>0) && (totalWh_prev>0)) {
-      value32 = (uint32_t)((totalWh - totalWh_prev)*60/5); 
-    }
-    if (totalWh>0) {
-      printUnixTime(timeBuf, startT+3600+i*60*5); // GMT+1 + 5 min. interval
-      DEBUG2_PRINTF("[%03d] %11.3f kWh  %7.3f kW %s", i, tokWh(totalWh), tokW(value32), timeBuf);
-    }
-    totalWh_prev = totalWh;
-  }
-  
-  return hasData;
-}
-*/
 
 // **** receive BT byte *******
 uint8_t ESP32_SMA_Inverter::BTgetByte() {
