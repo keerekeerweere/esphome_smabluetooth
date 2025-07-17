@@ -431,6 +431,7 @@ class ESP32_SMA_Inverter  {
     char charBuf[64];
     const size_t max_buf_size = 64;
     int  charLen = 0;
+    char inverter_version[24];
 
     char smaInvPass[12];  
     uint8_t smaBTAddress[6]; // SMA bluetooth address
@@ -443,9 +444,8 @@ class ESP32_SMA_Inverter  {
     uint16_t get_u16(uint8_t *buf);
     uint32_t get_u32(uint8_t *buf);
     uint64_t get_u64(uint8_t *buf);
-    char inverter_version[16];
 
-    char* get_version(uint32_t);
+    void get_version(uint32_t, const char * inverter_version_);
 
     int32_t  value32 = 0;
     int64_t  value64 = 0;

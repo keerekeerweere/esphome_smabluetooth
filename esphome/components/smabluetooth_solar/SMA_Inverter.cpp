@@ -522,15 +522,16 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                     strncpy(charBuf, nameptr, max_copy);
                     charBuf[max_copy] = '\0';  // ensure null-termination
 
-                    invData.DeviceName = std::string(charBuf);
+                    invData.DeviceName = charBuf;
                   } else {
                     ESP_LOGW(TAG, "recordsize too small — cannot extract DeviceName");
                   }                  
-                  ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName.c_str());
+                  ESP_LOGI(TAG, "INV_NAME %d %s", datetime, invData.DeviceName!:nullptr ? invData.DeviceName.c_str() : "");
                   break;
 
               case NameplatePkgRev: //INV_SWVER
-                  invData.SWVersion = get_version(get_u32(recptr + 24));
+                  get_version(get_u32(recptr + 24), inverter_version);
+                  invData.SWVersion = inverter_version;
                   ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                   break;
 
@@ -1089,19 +1090,17 @@ uint64_t ESP32_SMA_Inverter::get_u64(uint8_t *buf) {
     return lnglng;
 }
 
-char* ESP32_SMA_Inverter::get_version(uint32_t version)
+void ESP32_SMA_Inverter::get_version(uint32_t version, char * inverter_version_)
 {
-
-    uint8_t Vtype = version & 0xFF;
-    Vtype = Vtype > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
-    uint8_t Vbuild = (version >> 8) & 0xFF;
-    uint8_t Vminor = (version >> 16) & 0xFF;
-    uint8_t Vmajor = (version >> 24) & 0xFF;
+    uint8_t vType = version & 0xFF;
+    vType = vType > 5 ? '?' : "NEABRS"[Vtype]; //NOREV-EXPERIMENTAL-ALPHA-BETA-RELEASE-SPECIAL
+    uint8_t vBuild = (version >> 8) & 0xFF;
+    uint8_t vMinor = (version >> 16) & 0xFF;
+    uint8_t vMajor = (version >> 24) & 0xFF;
 
     //Vmajor and Vminor = 0x12 should be printed as '12' and not '18' (BCD)
-    snprintf(inverter_version, sizeof(inverter_version), "%c%c.%c%c.%02d.%c", '0' + (Vmajor >> 4), '0' + (Vmajor & 0x0F), '0' + (Vminor >> 4), '0' + (Vminor & 0x0F), Vbuild, Vtype);
+    snprintf(inverter_version_, sizeof(inverter_version_), "%c%c.%c%c.%02d.%c", '0' + (vMajor >> 4), '0' + (vMajor & 0x0F), '0' + (vMinor >> 4), '0' + (vMinor & 0x0F), vBuild, vType);
 
-    return inverter_version;
 }
 
 void ESP32_SMA_Inverter::loopNotification() {
