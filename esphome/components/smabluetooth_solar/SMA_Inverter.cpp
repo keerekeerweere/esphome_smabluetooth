@@ -514,10 +514,15 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                   //This function gives us the time when the inverter was switched on
                   invData.WakeupTime = datetime;
                   if (recordsize > 8) {
-                    size_t len = strnlen((const char*)recptr + 8, std::min(sizeof(charBuf) - 1, recordsize - 8));
-                    memcpy(charBuf, (const char*)recptr + 8, len);
-                    charBuf[len] = '\0';
-                    invData.DeviceName = std::string(charBuf);  // or assign to a char[] if that's your structure
+                    const char* nameptr = (const char*)recptr + 8;
+                    size_t max_copy = recordsize - 8;
+                    if (max_copy >= max_buf_size) {
+                      max_copy = max_buf_size - 1;  // leave space for null
+                    }
+                    strncpy(charBuf, nameptr, max_copy);
+                    charBuf[max_copy] = '\0';  // ensure null-termination
+
+                    invData.DeviceName = std::string(charBuf);
                   } else {
                     ESP_LOGW(TAG, "recordsize too small — cannot extract DeviceName");
                   }                  
