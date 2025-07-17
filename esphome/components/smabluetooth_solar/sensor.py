@@ -315,8 +315,6 @@ async def to_code(config):
                 sens = await sensor.new_sensor(pv_config[sensor_type])
                 cg.add(getattr(var, f"set_{sensor_type}_sensor_pv")(i, sens))
 
-
     if CORE.using_arduino:
         if CORE.is_esp32 | CORE.is_esp8266:
             cg.add_library("BluetoothSerial", None)
-
