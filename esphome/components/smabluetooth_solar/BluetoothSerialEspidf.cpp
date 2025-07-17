@@ -59,6 +59,8 @@ bool BluetoothSerialWrapper::connect(const esp_bd_addr_t mac) {
     const TickType_t timeout = pdMS_TO_TICKS(10000);
     TickType_t waited = 0;
 
+    connected = false; // reset state
+
     esp_err_t err = esp_spp_connect(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_MASTER, 1, mac);
     if (err != ESP_OK) {
         ESP_LOGE(BT_TAG, "Failed to initiate connect: %s", esp_err_to_name(err));
@@ -69,16 +71,11 @@ bool BluetoothSerialWrapper::connect(const esp_bd_addr_t mac) {
 
     while (waited < timeout) {
         if (xSemaphoreTake(connect_semaphore, step) == pdTRUE) {
-            ESP_LOGI(BT_TAG, "Connection established");
-            return true;
+            return connected; // true if OPEN, false if CLOSE
         }
 
         waited += step;
-
-        // Optional: call a yield or tick handler here
-        if (this->connect_tick) {
-            this->connect_tick();
-        }
+        connect_tick();
     }
 
     ESP_LOGE(BT_TAG, "Connection timed out");
@@ -153,7 +150,11 @@ void BluetoothSerialWrapper::sppCallback(esp_spp_cb_event_t event, esp_spp_cb_pa
             break;
 
         case ESP_SPP_CLOSE_EVT:
-            ESP_LOGI(BT_TAG, "Connection closed");
+            ESP_LOGW(BT_TAG, "SPP connection closed");
+            if (!instance->connected) {
+                // this was a failed connection attempt
+                xSemaphoreGive(instance->connect_semaphore);
+            }
             instance->connected = false;
             instance->connectionHandle = 0;
             break;
