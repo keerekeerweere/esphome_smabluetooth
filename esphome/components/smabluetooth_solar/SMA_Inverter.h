@@ -338,6 +338,7 @@ class ESP32_SMA_Inverter {
     E_RC        logonSMAInverter();
     E_RC        logonSMAInverter(const char *password, const uint8_t user);
     void        logoffSMAInverter();
+    void        setInverterTime();
 
     // ---- Low-level BT I/O (blocking on stream buffer — safe inside btTask) ----
     uint8_t BTgetByte();           // returns 0 and sets readTimeout on timeout

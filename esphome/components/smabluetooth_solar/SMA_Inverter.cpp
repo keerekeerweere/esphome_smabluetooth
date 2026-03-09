@@ -347,6 +347,9 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             continue;
         }
 
+        // --- Phase 5b: sync inverter clock from ESP32 NTP time ---
+        self->setInverterTime();
+
         ESP_LOGI(TTAG, "Logged on to inverter, starting read loop");
 
         // --- Phase 6: continuous read loop ---
@@ -981,6 +984,37 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
         rc = E_INVRESP;
     }
     return rc;
+}
+
+// ============================================================
+//  Inverter time sync (mirrors SBFspot SetPlantTime_V1)
+// ============================================================
+
+void ESP32_SMA_Inverter::setInverterTime() {
+    time_t now = time(nullptr);
+    if (now < 946684800L) {  // before year 2000 — NTP not yet synced
+        ESP_LOGW(TAG, "setInverterTime: system clock not synced, skipping");
+        return;
+    }
+    printUnixTime(timeBuf, now);
+    ESP_LOGI(TAG, "setInverterTime: setting inverter clock to %s (UTC)", timeBuf);
+
+    pcktID++;
+    writePacketHeader(pcktBuf, 0x01, sixff);
+    writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
+    write32(pcktBuf, 0xF000020A);
+    write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, (uint32_t)now);
+    write32(pcktBuf, (uint32_t)now);
+    write32(pcktBuf, (uint32_t)now);
+    write32(pcktBuf, 0);  // tzOffset | dst = 0 (UTC)
+    write32(pcktBuf, 1);  // timesetCount
+    write32(pcktBuf, 1);
+    writePacketTrailer(pcktBuf);
+    writePacketLength(pcktBuf);
+    BTsendPacket(pcktBuf);
 }
 
 // ============================================================
