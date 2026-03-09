@@ -382,7 +382,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
 
         // Types where errors are silently ignored (not all inverters support them)
         static const getInverterDataType ignoreErrors[] = {
-            DeviceStatus, GridRelayStatus, InverterTemp, SpotDCPower, SpotACPower
+            DeviceStatus, GridRelayStatus, InverterTemp, SpotDCPower, SpotACPower, OperationTime
         };
         static const int NUM_IGNORE = sizeof(ignoreErrors) / sizeof(ignoreErrors[0]);
 
