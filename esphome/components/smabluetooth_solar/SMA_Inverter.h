@@ -307,6 +307,8 @@ class ESP32_SMA_Inverter {
     void clearTaskError()      { task_error_ = false; }
     bool isBtConnected() const { return btConnected_; }
 
+    void requestTimeSync()     { sync_time_requested_ = true; }
+
     void initPcktID()              { setPcktID(1); }
     void setPcktID(uint8_t id)     { pcktID = id; }
 
@@ -369,10 +371,11 @@ class ESP32_SMA_Inverter {
     uint8_t           discovered_scn_ = 1;   // default SCN; overwritten by discovery
 
     // ---- Cross-task status flags (volatile for visibility across cores) ----
-    volatile bool btConnected_ = false;
-    volatile bool data_ready_  = false;
-    volatile bool task_error_  = false;
-    volatile bool stop_task_   = false;
+    volatile bool btConnected_        = false;
+    volatile bool data_ready_         = false;
+    volatile bool task_error_         = false;
+    volatile bool stop_task_          = false;
+    volatile bool sync_time_requested_ = false;
 
     // ---- Configuration (written once in setup(), read-only afterward) ----
     uint8_t  smaBTAddress[6];

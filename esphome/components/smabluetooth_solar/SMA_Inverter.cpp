@@ -392,6 +392,12 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
 
             if (!cycle_ok || !self->btConnected_) break;
 
+            // On-demand time sync (triggered from main loop via requestTimeSync())
+            if (self->sync_time_requested_) {
+                self->setInverterTime();
+                // flag cleared inside setInverterTime()
+            }
+
             // Signal ESPHome that fresh data is available
             self->data_ready_ = true;
 
@@ -987,34 +993,77 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 }
 
 // ============================================================
-//  Inverter time sync (mirrors SBFspot SetPlantTime_V1)
+//  Inverter time sync  (mirrors SBFspot SetPlantTime_V2)
+//
+//  Step 1 — query: send packet with zeros → inverter returns its
+//           current time, tz/dst, and timesetCount in the response.
+//  Step 2 — write: send packet with host UTC time + incremented
+//           timesetCount → inverter updates its RTC.
+//  Response to the write is read and logged for confirmation.
 // ============================================================
 
 void ESP32_SMA_Inverter::setInverterTime() {
-    time_t now = time(nullptr);
-    if (now < 946684800L) {  // before year 2000 — NTP not yet synced
+    time_t hosttime = time(nullptr);
+    if (hosttime < 946684800L) {  // before year 2000 — NTP not yet synced
         ESP_LOGW(TAG, "setInverterTime: system clock not synced, skipping");
         return;
     }
-    printUnixTime(timeBuf, now);
-    ESP_LOGI(TAG, "setInverterTime: setting inverter clock to %s (UTC)", timeBuf);
 
+    // --- Step 1: query inverter's current time (all-zero timestamps) ---
     pcktID++;
     writePacketHeader(pcktBuf, 0x01, sixff);
     writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
     write32(pcktBuf, 0xF000020A);
-    write32(pcktBuf, 0x00236D00);
-    write32(pcktBuf, 0x00236D00);
-    write32(pcktBuf, 0x00236D00);
-    write32(pcktBuf, (uint32_t)now);
-    write32(pcktBuf, (uint32_t)now);
-    write32(pcktBuf, (uint32_t)now);
-    write32(pcktBuf, 0);  // tzOffset | dst = 0 (UTC)
-    write32(pcktBuf, 1);  // timesetCount
+    write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0);
+    write32(pcktBuf, 1); write32(pcktBuf, 1);
+    writePacketTrailer(pcktBuf);
+    writePacketLength(pcktBuf);
+    BTsendPacket(pcktBuf);
+
+    E_RC rc = getPacket(sixff, 1);
+    if (rc != E_OK || pcktBufPos < 65) {
+        ESP_LOGW(TAG, "setInverterTime: query failed rc=%d len=%d, skipping", rc, pcktBufPos);
+        return;
+    }
+
+    time_t   invTime      = (time_t)  get_u32(pcktBuf + 45);
+    uint32_t tz_dst       =           get_u32(pcktBuf + 57);
+    uint32_t timesetCount =           get_u32(pcktBuf + 61);
+
+    printUnixTime(timeBuf, invTime);
+    ESP_LOGI(TAG, "setInverterTime: inverter clock = %s (UTC)", timeBuf);
+
+    hosttime = time(nullptr);
+    printUnixTime(timeBuf, hosttime);
+    ESP_LOGI(TAG, "setInverterTime: host clock     = %s (UTC), writing to inverter", timeBuf);
+
+    // --- Step 2: write host time to inverter ---
+    pcktID++;
+    writePacketHeader(pcktBuf, 0x01, sixff);
+    writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
+    write32(pcktBuf, 0xF000020A);
+    write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, (uint32_t)hosttime);
+    write32(pcktBuf, (uint32_t)hosttime);
+    write32(pcktBuf, (uint32_t)hosttime);
+    write32(pcktBuf, tz_dst);            // preserve inverter's tz/dst setting
+    write32(pcktBuf, timesetCount + 1);  // increment counter
     write32(pcktBuf, 1);
     writePacketTrailer(pcktBuf);
     writePacketLength(pcktBuf);
     BTsendPacket(pcktBuf);
+
+    // Read back response — confirms or reveals failure
+    rc = getPacket(sixff, 1);
+    if (rc == E_OK && pcktBufPos >= 50) {
+        time_t newTime = (time_t)get_u32(pcktBuf + 45);
+        printUnixTime(timeBuf, newTime);
+        ESP_LOGI(TAG, "setInverterTime: inverter clock now = %s (UTC)", timeBuf);
+    } else {
+        ESP_LOGW(TAG, "setInverterTime: no confirm response rc=%d (time may still have been set)", rc);
+    }
+    sync_time_requested_ = false;
 }
 
 // ============================================================

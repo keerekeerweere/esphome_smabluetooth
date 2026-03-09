@@ -56,8 +56,15 @@ wifi:
     password: !secret wifi_password
 
 
+button:
+  - platform: template
+    name: "Sync Inverter Time"
+    on_press:
+      - lambda: 'id(sma_inverter).trigger_time_sync();'
+
 sensor:
   - platform: smabluetooth_solar
+    id: sma_inverter
     update_interval: 10s
     sma_inverter_bluetooth_mac: !secret sma_stream_bluetoothmac
     sma_inverter_password: !secret sma_stream_password
