@@ -449,6 +449,12 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                 // flag cleared inside setInverterTime()
             }
 
+            // On-demand time fetch (triggered from main loop via requestTimeFetch())
+            if (self->fetch_time_requested_) {
+                self->fetchInverterTime();
+                self->fetch_time_requested_ = false;
+            }
+
             // Signal ESPHome that fresh data is available
             self->data_ready_ = true;
 
@@ -1044,6 +1050,35 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 }
 
 // ============================================================
+//  Inverter time read — query only, no write
+// ============================================================
+
+void ESP32_SMA_Inverter::fetchInverterTime() {
+    pcktID++;
+    writePacketHeader(pcktBuf, 0x01, espBTAddress);
+    writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
+    write32(pcktBuf, 0xF000020A);
+    write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0);
+    write32(pcktBuf, 1); write32(pcktBuf, 1);
+    writePacketTrailer(pcktBuf);
+    writePacketLength(pcktBuf);
+    BTsendPacket(pcktBuf);
+
+    E_RC rc = getPacket(sixff, 1);
+    if (rc != E_OK || pcktBufPos < 50) {
+        ESP_LOGW(TAG, "fetchInverterTime: query failed rc=%d len=%d", rc, pcktBufPos);
+        return;
+    }
+
+    time_t invTime = (time_t)get_u32(pcktBuf + 45);
+    printUnixTime(timeBuf, invTime);
+    strncpy(invData.InverterTimestamp, timeBuf, sizeof(invData.InverterTimestamp) - 1);
+    invData.InverterTimestamp[sizeof(invData.InverterTimestamp) - 1] = '\0';
+    ESP_LOGI(TAG, "fetchInverterTime: inverter clock = %s (UTC)", timeBuf);
+}
+
+// ============================================================
 //  Inverter time sync  (mirrors SBFspot SetPlantTime_V2)
 //
 //  Step 1 — query: send packet with zeros → inverter returns its
@@ -1087,6 +1122,8 @@ void ESP32_SMA_Inverter::setInverterTime(bool force) {
     uint32_t timesetCount   =           get_u32(pcktBuf + 61);
 
     printUnixTime(timeBuf, invTime);
+    strncpy(invData.InverterTimestamp, timeBuf, sizeof(invData.InverterTimestamp) - 1);
+    invData.InverterTimestamp[sizeof(invData.InverterTimestamp) - 1] = '\0';
     ESP_LOGI(TAG, "setInverterTime: inverter clock = %s (UTC)", timeBuf);
     ESP_LOGI(TAG, "setInverterTime: tz_dst=0x%08X timesetCount=%u", tz_dst, timesetCount);
 

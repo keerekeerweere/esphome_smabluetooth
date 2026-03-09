@@ -57,6 +57,7 @@ CONF_SERIAL_NUMBER = "serial_number"
 CONF_SOFTWARE_VERSION = "software_version"
 CONF_DEVICE_TYPE = "device_type"
 CONF_DEVICE_CLASS = "device_class"
+CONF_INVERTER_TIME = "inverter_time"
 CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
 
@@ -219,6 +220,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_SOFTWARE_VERSION): text_sensor.text_sensor_schema(),
             cv.Optional(CONF_DEVICE_TYPE): text_sensor.text_sensor_schema(),
             cv.Optional(CONF_DEVICE_CLASS): text_sensor.text_sensor_schema(),
+            cv.Optional(CONF_INVERTER_TIME): text_sensor.text_sensor_schema(),
         }
     )
     .extend(cv.polling_component_schema("60s"))
@@ -294,6 +296,10 @@ async def to_code(config):
     if CONF_DEVICE_CLASS in config:
         sens = await text_sensor.new_text_sensor(config[CONF_DEVICE_CLASS])
         cg.add(var.set_device_class(sens))
+
+    if CONF_INVERTER_TIME in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_INVERTER_TIME])
+        cg.add(var.set_inverter_time_sensor(sens))
 
     for i, phase in enumerate([CONF_PHASE_A, CONF_PHASE_B, CONF_PHASE_C]):
         if phase not in config:
