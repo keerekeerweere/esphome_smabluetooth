@@ -1005,7 +1005,8 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 void ESP32_SMA_Inverter::setInverterTime() {
     time_t hosttime = time(nullptr);
     if (hosttime < 946684800L) {  // before year 2000 — NTP not yet synced
-        ESP_LOGW(TAG, "setInverterTime: system clock not synced, skipping");
+        ESP_LOGW(TAG, "setInverterTime: system clock not synced yet, will retry next cycle");
+        sync_time_requested_ = true;  // keep flag set so the loop retries
         return;
     }
 
@@ -1054,14 +1055,29 @@ void ESP32_SMA_Inverter::setInverterTime() {
     writePacketLength(pcktBuf);
     BTsendPacket(pcktBuf);
 
-    // Read back response — confirms or reveals failure
+    // Give the inverter time to process the write before querying again
+    // (some inverters briefly reset their BT module after a time write)
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // --- Step 3: verify — send another read query, inverter responds with updated time ---
+    pcktID++;
+    writePacketHeader(pcktBuf, 0x01, sixff);
+    writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
+    write32(pcktBuf, 0xF000020A);
+    write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
+    write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0);
+    write32(pcktBuf, 1); write32(pcktBuf, 1);
+    writePacketTrailer(pcktBuf);
+    writePacketLength(pcktBuf);
+    BTsendPacket(pcktBuf);
+
     rc = getPacket(sixff, 1);
     if (rc == E_OK && pcktBufPos >= 50) {
         time_t newTime = (time_t)get_u32(pcktBuf + 45);
         printUnixTime(timeBuf, newTime);
         ESP_LOGI(TAG, "setInverterTime: inverter clock now = %s (UTC)", timeBuf);
     } else {
-        ESP_LOGW(TAG, "setInverterTime: no confirm response rc=%d (time may still have been set)", rc);
+        ESP_LOGW(TAG, "setInverterTime: verify query failed rc=%d", rc);
     }
     sync_time_requested_ = false;
 }
