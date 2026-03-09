@@ -101,6 +101,11 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_sma_inverter_password(std::string v)            { sma_inverter_password_ = v; }
     void set_sma_inverter_delay_values(uint32_t v)           { sma_inverter_delay_values_ = v; }
 
+    // Callable from a YAML button/lambda: queues a time sync for the BT task
+    void trigger_time_sync() {
+        if (smaInverter) smaInverter->requestTimeSync();
+    }
+
     void set_inverter_status_code_sensor(sensor::Sensor *s) { inverter_status_sensor_ = s; }
     void set_grid_relay_code_sensor(sensor::Sensor *s)      { grid_relay_sensor_ = s; }
 
