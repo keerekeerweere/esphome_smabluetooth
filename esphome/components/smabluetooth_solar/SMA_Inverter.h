@@ -155,7 +155,7 @@ struct InverterData {
     std::string SWVersion;
     uint32_t DeviceType;
     uint32_t DeviceClass;
-    char     InverterTimestamp[32];  // human-readable UTC string of inverter's clock
+    std::string InverterTimestamp;   // human-readable UTC string of inverter's clock
 };
 
 struct DisplayData {
@@ -344,6 +344,8 @@ class ESP32_SMA_Inverter {
     void        logoffSMAInverter();
     void        setInverterTime(bool force = false);
     void        fetchInverterTime();
+    E_RC        queryCurrentInverterTime(time_t &invTime, time_t &invLastTimeSet,
+                                         uint32_t &tz_dst, uint32_t &timesetCount);
 
     // ---- Low-level BT I/O (blocking on stream buffer — safe inside btTask) ----
     uint8_t BTgetByte();           // returns 0 and sets readTimeout on timeout

@@ -201,8 +201,7 @@ void SmaBluetoothSolar::update() {
                  std::string(lookup_code(smaInverter->invData.DeviceType)));
     updateSensor(device_class_,           "DevClass",
                  std::string(lookup_code(smaInverter->invData.DeviceClass)));
-    updateSensor(inverter_time_sensor_,   "InvTime",
-                 std::string(smaInverter->invData.InverterTimestamp));
+    updateSensor(inverter_time_sensor_,   "InvTime",  smaInverter->invData.InverterTimestamp);
 
     smaInverter->clearDataReady();
 }
