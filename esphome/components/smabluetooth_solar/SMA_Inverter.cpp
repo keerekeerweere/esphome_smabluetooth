@@ -1011,8 +1011,10 @@ void ESP32_SMA_Inverter::setInverterTime() {
     }
 
     // --- Step 1: query inverter's current time (all-zero timestamps) ---
+    // Use espBTAddress (host's own BT address) as destination — required by SMA protocol
+    // for time commands (SBFspot added this in v3.1.5 as LocalBTAddress)
     pcktID++;
-    writePacketHeader(pcktBuf, 0x01, sixff);
+    writePacketHeader(pcktBuf, 0x01, espBTAddress);
     writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
     write32(pcktBuf, 0xF000020A);
     write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
@@ -1034,25 +1036,29 @@ void ESP32_SMA_Inverter::setInverterTime() {
 
     printUnixTime(timeBuf, invTime);
     ESP_LOGI(TAG, "setInverterTime: inverter clock = %s (UTC)", timeBuf);
+    ESP_LOGI(TAG, "setInverterTime: tz_dst=0x%08X timesetCount=%u", tz_dst, timesetCount);
 
     hosttime = time(nullptr);
     printUnixTime(timeBuf, hosttime);
     ESP_LOGI(TAG, "setInverterTime: host clock     = %s (UTC), writing to inverter", timeBuf);
 
     // --- Step 2: write host time to inverter ---
-    pcktID++;
-    writePacketHeader(pcktBuf, 0x01, sixff);
-    writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
-    write32(pcktBuf, 0xF000020A);
-    write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
-    write32(pcktBuf, (uint32_t)hosttime);
-    write32(pcktBuf, (uint32_t)hosttime);
-    write32(pcktBuf, (uint32_t)hosttime);
-    write32(pcktBuf, tz_dst);            // preserve inverter's tz/dst setting
-    write32(pcktBuf, timesetCount + 1);  // increment counter
-    write32(pcktBuf, 1);
-    writePacketTrailer(pcktBuf);
-    writePacketLength(pcktBuf);
+    // Use do-while to retry if FCS bytes happen to be 0x7E/0x7D (would corrupt framing)
+    do {
+        pcktID++;
+        writePacketHeader(pcktBuf, 0x01, espBTAddress);
+        writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
+        write32(pcktBuf, 0xF000020A);
+        write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
+        write32(pcktBuf, (uint32_t)hosttime);
+        write32(pcktBuf, (uint32_t)hosttime);
+        write32(pcktBuf, (uint32_t)hosttime);
+        write32(pcktBuf, tz_dst);            // preserve inverter's tz/dst setting
+        write32(pcktBuf, timesetCount + 1);  // increment counter
+        write32(pcktBuf, 1);
+        writePacketTrailer(pcktBuf);
+        writePacketLength(pcktBuf);
+    } while (!isCrcValid(pcktBuf[pcktBufPos - 3], pcktBuf[pcktBufPos - 2]));
     BTsendPacket(pcktBuf);
 
     // Give the inverter time to process the write before querying again
@@ -1061,7 +1067,7 @@ void ESP32_SMA_Inverter::setInverterTime() {
 
     // --- Step 3: verify — send another read query, inverter responds with updated time ---
     pcktID++;
-    writePacketHeader(pcktBuf, 0x01, sixff);
+    writePacketHeader(pcktBuf, 0x01, espBTAddress);
     writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
     write32(pcktBuf, 0xF000020A);
     write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
