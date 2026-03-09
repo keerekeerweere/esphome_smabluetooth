@@ -348,18 +348,35 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         }
 
         // --- Phase 5b: sync inverter clock from ESP32 NTP time ---
-        self->setInverterTime();
+        self->setInverterTime(false);  // auto: skip if recently set
+
+        // --- Phase 5c: one-time static info per connection ---
+        // TypeLabel (serial, device type/class) and SoftwareVersion rarely change;
+        // query once at logon so they're available immediately without cluttering every cycle.
+        {
+            static const getInverterDataType onceTypes[] = { TypeLabel, SoftwareVersion };
+            for (int i = 0; i < 2; i++) {
+                self->getInverterData(onceTypes[i]);
+                vTaskDelay(pdMS_TO_TICKS(self->delay_values_ms_));
+            }
+        }
 
         ESP_LOGI(TTAG, "Logged on to inverter, starting read loop");
 
         // --- Phase 6: continuous read loop ---
-        static const getInverterDataType dataTypes[] = {
+        // Fast queries run every cycle (driven by update_interval, typically 10 s).
+        // Slow queries run every SLOW_EVERY cycles (~1 min at 10 s/cycle).
+        // BT signal and static diagnostics run every DIAG_EVERY cycles (~5 min).
+        static const getInverterDataType fastTypes[] = {
             SpotDCPower, SpotDCVoltage, SpotACPower,
-            SpotACTotalPower, SpotACVoltage, EnergyProduction, SpotGridFrequency,
-            DeviceStatus, GridRelayStatus, InverterTemp, OperationTime,
-            TypeLabel, SoftwareVersion
+            SpotACTotalPower, SpotACVoltage, EnergyProduction,
+            SpotGridFrequency, OperationTime
         };
-        static const int NUM_DATA_TYPES = sizeof(dataTypes) / sizeof(dataTypes[0]);
+        static const getInverterDataType slowTypes[] = {
+            DeviceStatus, GridRelayStatus, InverterTemp
+        };
+        static const int NUM_FAST = sizeof(fastTypes) / sizeof(fastTypes[0]);
+        static const int NUM_SLOW = sizeof(slowTypes) / sizeof(slowTypes[0]);
 
         // Types where errors are silently ignored (not all inverters support them)
         static const getInverterDataType ignoreErrors[] = {
@@ -367,12 +384,22 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         };
         static const int NUM_IGNORE = sizeof(ignoreErrors) / sizeof(ignoreErrors[0]);
 
+        static const int SLOW_EVERY = 6;   // slow queries every ~1 min (6 × 10 s)
+        static const int DIAG_EVERY = 30;  // BT signal every ~5 min (30 × 10 s)
+
+        uint32_t cycle_count = 0;
+
         while (self->btConnected_ && !self->stop_task_) {
-            self->getBT_SignalStrength();
+            // BT signal strength is diagnostics-only; no need to poll every 10 s
+            if (cycle_count % DIAG_EVERY == 0) {
+                self->getBT_SignalStrength();
+            }
 
             bool cycle_ok = true;
-            for (int i = 0; i < NUM_DATA_TYPES && self->btConnected_ && !self->stop_task_; i++) {
-                getInverterDataType dt = dataTypes[i];
+
+            // Fast: spot measurements — every cycle
+            for (int i = 0; i < NUM_FAST && self->btConnected_ && !self->stop_task_; i++) {
+                getInverterDataType dt = fastTypes[i];
                 rc = self->getInverterData(dt);
                 if (rc != E_OK) {
                     bool ignored = false;
@@ -390,11 +417,35 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                 vTaskDelay(pdMS_TO_TICKS(self->delay_values_ms_));
             }
 
+            // Slow: status / relay / temp — every SLOW_EVERY cycles (~1 min)
+            if (cycle_ok && cycle_count % SLOW_EVERY == 0) {
+                for (int i = 0; i < NUM_SLOW && self->btConnected_ && !self->stop_task_; i++) {
+                    getInverterDataType dt = slowTypes[i];
+                    rc = self->getInverterData(dt);
+                    if (rc != E_OK) {
+                        bool ignored = false;
+                        for (int j = 0; j < NUM_IGNORE; j++) {
+                            if (ignoreErrors[j] == dt) { ignored = true; break; }
+                        }
+                        if (ignored) {
+                            ESP_LOGI(TTAG, "getInverterData %d RC=%d (ignored)", dt, rc);
+                        } else {
+                            ESP_LOGE(TTAG, "getInverterData %d RC=%d (fatal)", dt, rc);
+                            cycle_ok = false;
+                            break;
+                        }
+                    }
+                    vTaskDelay(pdMS_TO_TICKS(self->delay_values_ms_));
+                }
+            }
+
+            cycle_count++;
+
             if (!cycle_ok || !self->btConnected_) break;
 
             // On-demand time sync (triggered from main loop via requestTimeSync())
             if (self->sync_time_requested_) {
-                self->setInverterTime();
+                self->setInverterTime(true);   // forced: always write regardless of last set time
                 // flag cleared inside setInverterTime()
             }
 
@@ -1002,7 +1053,7 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 //  Response to the write is read and logged for confirmation.
 // ============================================================
 
-void ESP32_SMA_Inverter::setInverterTime() {
+void ESP32_SMA_Inverter::setInverterTime(bool force) {
     time_t hosttime = time(nullptr);
     if (hosttime < 946684800L) {  // before year 2000 — NTP not yet synced
         ESP_LOGW(TAG, "setInverterTime: system clock not synced yet, will retry next cycle");
@@ -1030,15 +1081,27 @@ void ESP32_SMA_Inverter::setInverterTime() {
         return;
     }
 
-    time_t   invTime      = (time_t)  get_u32(pcktBuf + 45);
-    uint32_t tz_dst       =           get_u32(pcktBuf + 57);
-    uint32_t timesetCount =           get_u32(pcktBuf + 61);
+    time_t   invTime        = (time_t)  get_u32(pcktBuf + 45);
+    time_t   invLastTimeSet = (time_t)  get_u32(pcktBuf + 49);
+    uint32_t tz_dst         =           get_u32(pcktBuf + 57);
+    uint32_t timesetCount   =           get_u32(pcktBuf + 61);
 
     printUnixTime(timeBuf, invTime);
     ESP_LOGI(TAG, "setInverterTime: inverter clock = %s (UTC)", timeBuf);
     ESP_LOGI(TAG, "setInverterTime: tz_dst=0x%08X timesetCount=%u", tz_dst, timesetCount);
 
     hosttime = time(nullptr);
+
+    // Skip write if the time was set recently (within 12 h) and this isn't a forced sync.
+    // Mirrors SBFspot's ndays/synchTimeLow/synchTimeHigh guard to avoid hammering the RTC
+    // on every BT reconnect when the inverter clock is already accurate.
+    if (!force && invLastTimeSet > 946684800L && (hosttime - invLastTimeSet) < 43200L) {
+        ESP_LOGI(TAG, "setInverterTime: last set %llds ago, skipping (use button to force)",
+                 (long long)(hosttime - invLastTimeSet));
+        sync_time_requested_ = false;
+        return;
+    }
+
     printUnixTime(timeBuf, hosttime);
     ESP_LOGI(TAG, "setInverterTime: host clock     = %s (UTC), writing to inverter", timeBuf);
 
