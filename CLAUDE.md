@@ -26,6 +26,10 @@ For local development, replace the `external_components` GitHub URL in the sampl
 
 There is no test suite. `esphome config` + `esphome compile` is the validation loop. The sample YAML is the regression fixture — keep it updated when options change.
 
+## Framework
+
+The component targets **ESP-IDF** (not Arduino). `smabluesolar.yaml` uses `framework: type: esp-idf` with sdkconfig options to enable classic BT SPP (`CONFIG_BT_ENABLED`, `CONFIG_BT_CLASSIC_ENABLED`, `CONFIG_BT_SPP_ENABLED`, `CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY`). BLE is disabled to save RAM.
+
 ## Architecture
 
 ### Component Files (`esphome/components/smabluetooth_solar/`)
@@ -40,28 +44,34 @@ There is no test suite. `esphome config` + `esphome compile` is the validation l
 ### Data Flow
 
 ```
-loop() state machine → ESP32_SMA_Inverter singleton
-  ↓ BluetoothSerial (Arduino built-in)
-  ↓ SMANET2 packet encode → send → receive → decode
-  ↓ InverterData {raw int32/int64} → DisplayData {float}
-update() callback → ESPHome sensors → Home Assistant
+ESPHome Main Loop (core 1)
+  SmaBluetoothSolar::loop()   ← thin: just manages task lifecycle (Off/Running/Error)
+  SmaBluetoothSolar::update() ← reads shared data, publishes sensors on update_interval
+
+FreeRTOS BT Task (core 0)  "bt_sma_proto"  12 KB stack
+  wait BT_EVT_SPP_INIT → esp_spp_start_discovery() → wait BT_EVT_DISC_DONE
+  esp_spp_connect() → wait BT_EVT_CONNECTED
+  initialiseSMAConnection() + logonSMAInverter()
+  loop: getBT_SignalStrength + 13× getInverterData() → data_ready_ = true
+
+SPP callback (Bluedroid task)
+  ESP_SPP_DATA_IND_EVT → xStreamBufferSend(rx_stream_buf_)
+  ESP_SPP_OPEN/CLOSE_EVT  → xEventGroupSetBits(bt_event_group_)
 ```
 
 ### State Machine (`SmaInverterState`)
 
+Simplified — the BT task handles the full protocol internally:
 ```
-Off → Begin → Connect → Initialize → Logon → SignalStrength
-→ ReadValues → DoneReadingValues → (loop: SignalStrength)
+Off → (begin + startBtTask) → Running ↔ Error
 ```
-
-Night mode optimization: scan interval drops to 15 minutes when no generation is detected.
 
 ### Key Design Points
 
 - `ESP32_SMA_Inverter` is a **singleton** — only one inverter connection per device.
-- `handleMissingValues()` calculates `Pdc`/`Pac` from `U × I` when inverters don't return power directly; controlled by `needsMissingValues` flag and `ignoreQueryErrorTypes[]`.
-- Watchdog feeding (`App.feed_wdt()`) is called frequently to prevent resets during blocking Bluetooth operations.
-- Fixed 2048-byte packet buffer. Max usage is tracked for debugging.
+- All blocking I/O (`BTgetByte` via `xStreamBufferReceive`) runs inside the **FreeRTOS BT task**. The ESPHome main loop is never blocked.
+- `handleMissingValues()` calculates `Pdc`/`Pac` from `U × I` when inverters don't return power directly; controlled by `needsMissingValues` flag.
+- RX data path: SPP callback → 4096-byte `StreamBuffer` → `BTgetByte()` in the BT task.
 - Error codes: `E_OK`, `E_NODATA`, `E_CHKSUM`, `E_INVPASSW`, etc.
 
 ### SMANET2 Protocol Essentials
