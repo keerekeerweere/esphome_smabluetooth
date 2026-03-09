@@ -1091,7 +1091,10 @@ void ESP32_SMA_Inverter::fetchInverterTime() {
 //           current time, tz/dst, and timesetCount in the response.
 //  Step 2 — write: send packet with host UTC time + incremented
 //           timesetCount → inverter updates its RTC.
-//  Response to the write is read and logged for confirmation.
+//           SBFspot: "no reply expected". flushRxBuffer() drains any
+//           unexpected ack some inverter models send.
+//  Step 3 — verify: re-query inverter time. Success when
+//           |invLastTimeSet - hosttime| < 5 s (SBFspot check).
 // ============================================================
 
 void ESP32_SMA_Inverter::setInverterTime(bool force) {
@@ -1150,20 +1153,28 @@ void ESP32_SMA_Inverter::setInverterTime(bool force) {
         writePacketLength(pcktBuf);
     } while (!isCrcValid(pcktBuf[pcktBufPos - 3], pcktBuf[pcktBufPos - 2]));
     BTsendPacket(pcktBuf);
+    // SBFspot: "no reply expected" after write. Flush any unexpected ack some inverters send.
+    flushRxBuffer();
 
-    // Read the inverter's response to the write — it echoes back the new time.
-    // (SBFspot SetPlantTime_V2 reads the write response directly; no extra query needed.)
-    // Sending another read-with-zeros would write time=0 back to the inverter RTC.
-    rc = getPacket(sixff, 1);
-    if (rc == E_OK && pcktBufPos >= 50) {
-        time_t newTime = (time_t)get_u32(pcktBuf + 45);
-        printUnixTime(timeBuf, newTime);
+    // --- Step 3: verify — re-query inverter time (mirrors SBFspot SetPlantTime_V2 step 3) ---
+    time_t   verifyTime, verifyLastSet;
+    uint32_t verifyTzDst, verifyCount;
+    rc = queryCurrentInverterTime(verifyTime, verifyLastSet, verifyTzDst, verifyCount);
+    if (rc == E_OK) {
+        printUnixTime(timeBuf, verifyTime);
         invData.InverterTimestamp = std::string(timeBuf);
-        ESP_LOGI(TAG, "setInverterTime: inverter clock now = %s (UTC)", timeBuf);
+        // SBFspot success check: |invLastTimeSet - hosttime| < 5 s
+        long long setDiff = (long long)verifyLastSet - (long long)hosttime;
+        if (setDiff < 0) setDiff = -setDiff;
+        if (setDiff < 5) {
+            long long drift = (long long)verifyTime - (long long)hosttime;
+            ESP_LOGI(TAG, "setInverterTime: accepted, inverter clock = %s (UTC), drift=%llds", timeBuf, drift);
+        } else {
+            ESP_LOGW(TAG, "setInverterTime: inverter ignored the write, clock = %s (UTC)", timeBuf);
+        }
     } else {
-        ESP_LOGW(TAG, "setInverterTime: write sent, no confirmation rc=%d (time may still be set)", rc);
+        ESP_LOGW(TAG, "setInverterTime: verify query failed rc=%d", rc);
     }
-    // Flush any remaining buffered BT data so subsequent measurement queries are clean
     flushRxBuffer();
     sync_time_requested_ = false;
 }
