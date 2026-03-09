@@ -21,16 +21,16 @@ esp32:
       CONFIG_BT_BLE_ENABLED: "n"
 
 external_components:
-  - source:
-      type: local
-      path: ../components
-    components: [smabluetooth_solar]
-  # For production (after pushing to GitHub), replace the above with:
   # - source:
-  #     type: git
-  #     url: https://github.com/keerekeerweere/esphome_smabluetooth
-  #   components: [smabluetooth_solar]
-  #   refresh: 0sec
+  #    type: local
+  #    path: ../components
+  #  components: [smabluetooth_solar]
+  # For production (after pushing to GitHub), replace the above with:
+  - source:
+      type: git
+      url: https://github.com/keerekeerweere/esphome_smabluetooth
+    components: [smabluetooth_solar]
+    refresh: 0sec
 
 # Enable logging
 logger:
