@@ -105,6 +105,12 @@ class SmaBluetoothSolar : public PollingComponent {
     void trigger_time_sync() {
         if (smaInverter) smaInverter->requestTimeSync();
     }
+    // Callable from a YAML button/lambda: reads the inverter clock into inverter_time sensor
+    void trigger_time_fetch() {
+        if (smaInverter) smaInverter->requestTimeFetch();
+    }
+
+    void set_inverter_time_sensor(text_sensor::TextSensor *s)     { inverter_time_sensor_ = s; }
 
     void set_inverter_status_code_sensor(sensor::Sensor *s) { inverter_status_sensor_ = s; }
     void set_grid_relay_code_sensor(sensor::Sensor *s)      { grid_relay_sensor_ = s; }
@@ -173,6 +179,7 @@ class SmaBluetoothSolar : public PollingComponent {
     text_sensor::TextSensor *software_version_{nullptr};
     text_sensor::TextSensor *device_type_{nullptr};
     text_sensor::TextSensor *device_class_{nullptr};
+    text_sensor::TextSensor *inverter_time_sensor_{nullptr};
 
     SmaBluetoothProtocolVersion protocol_version_ = SMANET2;
     std::string sma_inverter_bluetooth_mac_;

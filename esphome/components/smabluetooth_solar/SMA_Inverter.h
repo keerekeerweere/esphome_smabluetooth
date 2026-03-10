@@ -155,6 +155,7 @@ struct InverterData {
     std::string SWVersion;
     uint32_t DeviceType;
     uint32_t DeviceClass;
+    std::string InverterTimestamp;   // human-readable UTC string of inverter's clock
 };
 
 struct DisplayData {
@@ -308,6 +309,7 @@ class ESP32_SMA_Inverter {
     bool isBtConnected() const { return btConnected_; }
 
     void requestTimeSync()     { sync_time_requested_ = true; }
+    void requestTimeFetch()    { fetch_time_requested_ = true; }
 
     void initPcktID()              { setPcktID(1); }
     void setPcktID(uint8_t id)     { pcktID = id; }
@@ -340,7 +342,10 @@ class ESP32_SMA_Inverter {
     E_RC        logonSMAInverter();
     E_RC        logonSMAInverter(const char *password, const uint8_t user);
     void        logoffSMAInverter();
-    void        setInverterTime();
+    void        setInverterTime(bool force = false);
+    void        fetchInverterTime();
+    E_RC        queryCurrentInverterTime(time_t &invTime, time_t &invLastTimeSet,
+                                         uint32_t &tz_dst, uint32_t &timesetCount);
 
     // ---- Low-level BT I/O (blocking on stream buffer — safe inside btTask) ----
     uint8_t BTgetByte();           // returns 0 and sets readTimeout on timeout
@@ -375,7 +380,8 @@ class ESP32_SMA_Inverter {
     volatile bool data_ready_         = false;
     volatile bool task_error_         = false;
     volatile bool stop_task_          = false;
-    volatile bool sync_time_requested_ = false;
+    volatile bool sync_time_requested_  = false;
+    volatile bool fetch_time_requested_ = false;
 
     // ---- Configuration (written once in setup(), read-only afterward) ----
     uint8_t  smaBTAddress[6];
