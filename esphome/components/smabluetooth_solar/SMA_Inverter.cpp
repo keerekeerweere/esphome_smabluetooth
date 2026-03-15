@@ -734,13 +734,27 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                             }
 
                             switch (lri) {
-                            case GridMsTotW:
+                            case GridMsTotW: {
+                                // 2026-01-01 00:00:00 UTC
+                                static const time_t MIN_VALID_TIME = 1735689600;
+                                if (datetime < MIN_VALID_TIME) {
+                                    time_t now = time(nullptr);
+                                    if (now >= MIN_VALID_TIME) {
+                                        ESP_LOGW(TAG, "PACTOT timestamp %ld before 2026, using ESP32 time %ld",
+                                                 (long)datetime, (long)now);
+                                        datetime = now;
+                                    } else {
+                                        ESP_LOGW(TAG, "PACTOT timestamp %ld before 2026, ESP32 time not yet synced (%ld), keeping inverter value",
+                                                 (long)datetime, (long)now);
+                                    }
+                                }
                                 invData.LastTime = datetime;
                                 invData.TotalPac = toW(value32);
                                 dispData.TotalPac = tokW(value32);
                                 printUnixTime(timeBuf, datetime);
                                 ESP_LOGI(TAG, "SPOT_PACTOT %15.3f kW  GMT:%s", tokW(value32), timeBuf);
                                 break;
+                            }
                             case GridMsWphsA:
                                 invData.Pac1 = toW(value32);
                                 dispData.Pac1 = tokW(value32);
