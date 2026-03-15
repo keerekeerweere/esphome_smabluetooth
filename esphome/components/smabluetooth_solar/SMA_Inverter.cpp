@@ -26,11 +26,62 @@ SOFTWARE.
 #include "SMA_Inverter.h"
 #include "esphome/core/log.h"
 #include "esp_idf_version.h"
+#include <cmath>
 
 namespace esphome {
 namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
+
+// ============================================================
+//  Sunrise / sunset helper
+// ============================================================
+
+// Estimate latitude from the current UTC offset:
+//   UTC-12..UTC-3  → Americas  (~40 °N)
+//   UTC-2..UTC+3   → Europe/Africa (~50 °N)
+//   UTC+4 and east → Asia/Oceania (~30 °N)
+static float latitude_from_utc_offset(int offset_hours) {
+    if (offset_hours <= -3) return 40.0f;
+    if (offset_hours <= +3) return 50.0f;
+    return 30.0f;
+}
+
+// Returns true when the sun is below the horizon at the current local time.
+// Uses a standard solar-declination / hour-angle formula.
+// If NTP has not synced yet (time < 2026) returns false so polling continues normally.
+bool ESP32_SMA_Inverter::is_nighttime() const {
+    static const time_t MIN_VALID_TIME = 1735689600; // 2026-01-01 UTC
+    time_t now = time(nullptr);
+    if (now < MIN_VALID_TIME) return false;
+
+    struct tm local_tm, gm_tm;
+    localtime_r(&now, &local_tm);
+    gmtime_r(&now, &gm_tm);
+
+    // UTC offset in whole hours (ignores DST sub-hour offsets, good enough)
+    int utc_offset = local_tm.tm_hour - gm_tm.tm_hour;
+    if (utc_offset >  12) utc_offset -= 24;
+    if (utc_offset < -12) utc_offset += 24;
+
+    float lat_deg = latitude_from_utc_offset(utc_offset);
+    float lat_rad = lat_deg * (float)M_PI / 180.0f;
+
+    int day_of_year = local_tm.tm_yday + 1; // 1..365
+    float decl_rad  = -23.45f * ((float)M_PI / 180.0f)
+                      * cosf(2.0f * (float)M_PI * (day_of_year + 10) / 365.0f);
+
+    float cos_ha = -tanf(lat_rad) * tanf(decl_rad);
+    if (cos_ha >= 1.0f) return true;   // polar night
+    if (cos_ha <= -1.0f) return false; // midnight sun
+
+    float ha_hours = acosf(cos_ha) * (180.0f / (float)M_PI) / 15.0f;
+    float sunrise  = 12.0f - ha_hours;
+    float sunset   = 12.0f + ha_hours;
+
+    float local_hours = local_tm.tm_hour + local_tm.tm_min / 60.0f;
+    return (local_hours < sunrise) || (local_hours > sunset);
+}
 
 // ============================================================
 //  setup / begin
@@ -284,6 +335,13 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
     }
 
     while (!self->stop_task_) {
+        // Night mode: don't connect at all, check again in 30 min
+        if (self->is_nighttime()) {
+            ESP_LOGI(TTAG, "Night mode: inverter idle, sleeping 30 min");
+            vTaskDelay(pdMS_TO_TICKS(30 * 60 * 1000));
+            continue;
+        }
+
         // --- Phase 2: service discovery ---
         xEventGroupClearBits(self->bt_event_group_, BT_EVT_DISC_DONE | BT_EVT_CONNECTED | BT_EVT_DISCONNECTED);
         self->flushRxBuffer();
@@ -430,6 +488,12 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             cycle_count++;
 
             if (!cycle_ok || !self->btConnected_) break;
+
+            // Disconnect at sunset — outer loop will not reconnect until sunrise
+            if (self->is_nighttime()) {
+                ESP_LOGI(TTAG, "Sunset detected, disconnecting");
+                break;
+            }
 
             // On-demand time sync (triggered from main loop via requestTimeSync())
             if (self->sync_time_requested_) {

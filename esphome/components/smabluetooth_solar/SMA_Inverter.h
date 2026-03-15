@@ -317,6 +317,8 @@ class ESP32_SMA_Inverter {
     uint32_t getBtgetByteTimeout() const { return btgetByteTimeout; }
     void setBtgetByteTimeout(uint32_t v) { btgetByteTimeout = v; }
 
+    bool is_nighttime() const;
+
     // Shared data — written by BT task, read by ESPHome update()
     InverterData invData  = InverterData();
     DisplayData  dispData = DisplayData();
