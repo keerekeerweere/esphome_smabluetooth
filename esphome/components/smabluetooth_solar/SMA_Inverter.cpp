@@ -543,6 +543,12 @@ E_RC ESP32_SMA_Inverter::getPacket(const uint8_t expAddr[6], int wait4Command) {
         }
 
         if (pL1Hdr->pkLength > sizeof(L1Hdr)) {
+            if (pL1Hdr->pkLength > COMMBUFSIZE) {
+                ESP_LOGE(TAG, "pkLength too large: %d, flushing", pL1Hdr->pkLength);
+                flushRxBuffer();
+                rc = E_RETRY;
+                continue;
+            }
             // Read L2 payload
             for (rdCnt = 18; rdCnt < pL1Hdr->pkLength; rdCnt++) {
                 btrdBuf[rdCnt] = BTgetByte();
@@ -576,7 +582,10 @@ E_RC ESP32_SMA_Inverter::getPacket(const uint8_t expAddr[6], int wait4Command) {
                                 index++;
                         }
                         if (index >= MAX_PCKT_BUF_SIZE) {
-                            ESP_LOGE(TAG, "pcktBuf overflow! (%d)", index);
+                            ESP_LOGE(TAG, "pcktBuf overflow! (%d), retrying", index);
+                            index = 0;
+                            rc = E_RETRY;
+                            break;
                         }
                     }
                     pcktBufPos = index;
@@ -699,7 +708,17 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                         ESP_LOGD(TAG, "pcktID=0x%04x recsize=%d BufPos=%d pcktCnt=%04x",
                                  rcvpcktID, recordsize, pcktBufPos, pcktcount);
 
+                        if (recordsize == 0) {
+                            ESP_LOGE(TAG, "Invalid recordsize=0, skipping");
+                            break;
+                        }
+
                         for (uint16_t ii = 41; ii < pcktBufPos - 3; ii += recordsize) {
+                            // Ensure the full record (up to offset +20) is within the buffer
+                            if (ii + 20 > pcktBufPos) {
+                                ESP_LOGW(TAG, "Record at %d exceeds pcktBufPos=%d, stopping", ii, pcktBufPos);
+                                break;
+                            }
                             uint8_t *recptr  = pcktBuf + ii;
                             uint32_t code    = get_u32(recptr);
                             uint16_t lri     = (code & 0x00FFFF00) >> 8;
