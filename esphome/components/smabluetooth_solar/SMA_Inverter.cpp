@@ -32,6 +32,7 @@ namespace esphome {
 namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
+static const time_t MIN_VALID_TIME = 1735689600; // 2026-01-01 UTC
 
 // ============================================================
 //  Sunrise / sunset helper
@@ -51,7 +52,6 @@ static float latitude_from_utc_offset(int offset_hours) {
 // Uses a standard solar-declination / hour-angle formula.
 // If NTP has not synced yet (time < 2026) returns false so polling continues normally.
 bool ESP32_SMA_Inverter::is_nighttime() const {
-    static const time_t MIN_VALID_TIME = 1735689600; // 2026-01-01 UTC
     time_t now = time(nullptr);
     if (now < MIN_VALID_TIME) return false;
 
@@ -335,11 +335,34 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
     }
 
     while (!self->stop_task_) {
+        time_t now = time(nullptr);
+        if (now < MIN_VALID_TIME) {
+            if (!self->night_mode_time_invalid_logged_) {
+                ESP_LOGI(TTAG, "Night mode waiting for valid system time before evaluating sunrise/sunset");
+                self->night_mode_time_invalid_logged_ = true;
+            }
+        } else {
+            self->night_mode_time_invalid_logged_ = false;
+        }
+
         // Night mode: don't connect at all, check again in 30 min
         if (self->is_nighttime()) {
-            ESP_LOGI(TTAG, "Night mode: inverter idle, sleeping 30 min");
+            if (!self->night_mode_active_) {
+                struct tm local_tm;
+                char local_time_buf[32];
+                localtime_r(&now, &local_tm);
+                strftime(local_time_buf, sizeof(local_time_buf), "%Y-%m-%d %H:%M:%S %Z", &local_tm);
+                ESP_LOGI(TTAG, "Night mode entered at %s; inverter idle, next wake check in 30 min", local_time_buf);
+                self->night_mode_active_ = true;
+            } else {
+                ESP_LOGI(TTAG, "Night mode: inverter idle, sleeping 30 min");
+            }
             vTaskDelay(pdMS_TO_TICKS(30 * 60 * 1000));
             continue;
+        }
+        if (self->night_mode_active_) {
+            ESP_LOGI(TTAG, "Night mode cleared; resuming inverter polling");
+            self->night_mode_active_ = false;
         }
 
         // --- Phase 2: service discovery ---
