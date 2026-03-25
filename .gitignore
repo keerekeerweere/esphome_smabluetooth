@@ -1,6 +1,3 @@
 .vscode/settings.json
 sunny-explorer.png
-<<<<<<< HEAD
 esphome/components/smabluetooth_solar/__pycache__/**
-=======
->>>>>>> 15d9da0 (add night time sleep)
