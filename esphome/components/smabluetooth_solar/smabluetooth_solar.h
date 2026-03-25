@@ -192,7 +192,9 @@ class SmaBluetoothSolar : public PollingComponent {
     ESP32_SMA_Inverter *smaInverter{nullptr};
     SmaInverterState    inverterState{SmaInverterState::Off};
     uint32_t            errorRetryTime_{0};
+    uint32_t            nextNightModeStatusLogTime_{0};
     bool                hasSetup_{false};
+    bool                nightModeStatusActive_{false};
 
     const float EPSILON = 0.0001f;
 };

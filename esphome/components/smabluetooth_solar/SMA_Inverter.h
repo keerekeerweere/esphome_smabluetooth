@@ -307,6 +307,7 @@ class ESP32_SMA_Inverter {
     bool hasTaskError()  const { return task_error_; }
     void clearTaskError()      { task_error_ = false; }
     bool isBtConnected() const { return btConnected_; }
+    bool isNightModeActive() const { return night_mode_active_; }
 
     void requestTimeSync()     { sync_time_requested_ = true; }
     void requestTimeFetch()    { fetch_time_requested_ = true; }

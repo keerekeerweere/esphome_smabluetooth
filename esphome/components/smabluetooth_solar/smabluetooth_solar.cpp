@@ -122,6 +122,18 @@ void SmaBluetoothSolar::loop() {
 
     case SmaInverterState::Running:
         // Task runs autonomously. Just watch for errors.
+        if (smaInverter->isNightModeActive()) {
+            if (!nightModeStatusActive_ || now >= nextNightModeStatusLogTime_) {
+                ESP_LOGI(TAG, "Night mode active; inverter polling suspended until the next wake check");
+                nightModeStatusActive_ = true;
+                nextNightModeStatusLogTime_ = now + 60000;
+            }
+        } else if (nightModeStatusActive_) {
+            ESP_LOGI(TAG, "Night mode inactive; inverter polling resumed");
+            nightModeStatusActive_ = false;
+            nextNightModeStatusLogTime_ = 0;
+        }
+
         if (smaInverter->hasTaskError()) {
             ESP_LOGE(TAG, "BT task error detected, restarting in 10 s");
             smaInverter->clearTaskError();
