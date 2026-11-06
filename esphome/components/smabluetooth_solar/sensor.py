@@ -35,7 +35,6 @@ from esphome.const import (
 )
 
 
-from esphome.core import CORE
 from esphome.components.esp32 import include_builtin_idf_component
 
 ICON_CURRENT_DC = "mdi:current-dc"
@@ -149,8 +148,8 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
-            cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC): cv.string,
-            cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.string,
+            cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC): cv.mac_address,
+            cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.All(cv.string_strict, cv.Length(max=12)),
             cv.Optional(CONF_SMA_INVERTER_DELAY_VALUES, default="200ms"): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_SMA_INVERTER_NIGHT_MARGIN, default="30min"): cv.positive_time_period_milliseconds,
 
@@ -240,7 +239,7 @@ async def to_code(config):
     await cg.register_component(var, config)
 #    await modbus.register_modbus_device(var, config)
 
-    cg.add(var.set_sma_inverter_bluetooth_mac(config[CONF_SMA_INVERTER_BLUETOOTH_MAC]))
+    cg.add(var.set_sma_inverter_bluetooth_mac(str(config[CONF_SMA_INVERTER_BLUETOOTH_MAC])))
     cg.add(var.set_sma_inverter_password(config[CONF_SMA_INVERTER_PASSWORD]))
 
     if CONF_SMA_INVERTER_DELAY_VALUES in config:
@@ -330,9 +329,4 @@ async def to_code(config):
             if sensor_type in pv_config:
                 sens = await sensor.new_sensor(pv_config[sensor_type])
                 cg.add(getattr(var, f"set_{sensor_type}_sensor_pv")(i, sens))
-
-
-    if CORE.using_arduino:
-        if CORE.is_esp32 | CORE.is_esp8266:
-            cg.add_library("BluetoothSerial", None)
 

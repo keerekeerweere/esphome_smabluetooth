@@ -110,16 +110,25 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
 //  setup / begin
 // ============================================================
 
-void ESP32_SMA_Inverter::setup(std::string mac, std::string pw, uint32_t delay_values_ms) {
+bool ESP32_SMA_Inverter::setup(const std::string &mac, const std::string &pw,
+                               uint32_t delay_values_ms, float night_margin_min) {
     ESP_LOGW(TAG, "setup inverter mac=%s", mac.c_str());
-    sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
-           &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2],
-           &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]);
+    if (sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
+               &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2],
+               &smaBTAddress[3], &smaBTAddress[4], &smaBTAddress[5]) != 6) {
+        ESP_LOGE(TAG, "Invalid Bluetooth MAC address: %s", mac.c_str());
+        return false;
+    }
+    if (pw.size() > 12) {
+        ESP_LOGE(TAG, "SMA password exceeds the 12-character protocol limit");
+        return false;
+    }
 
-    for (int i = 0; i < (int)sizeof(smaInvPass); i++) smaInvPass[i] = '\0';
+    memset(smaInvPass, 0, sizeof(smaInvPass));
     strlcpy(smaInvPass, pw.c_str(), sizeof(smaInvPass));
 
     delay_values_ms_ = delay_values_ms;
+    night_margin_min_ = night_margin_min;
     if (data_mutex_ == nullptr) data_mutex_ = xSemaphoreCreateMutex();
 
     invData.SUSyID = 0x7d;
@@ -129,6 +138,7 @@ void ESP32_SMA_Inverter::setup(std::string mac, std::string pw, uint32_t delay_v
     ESP_LOGD(TAG, "invData.btAddress: %02X:%02X:%02X:%02X:%02X:%02X",
              invData.btAddress[5], invData.btAddress[4], invData.btAddress[3],
              invData.btAddress[2], invData.btAddress[1], invData.btAddress[0]);
+    return data_mutex_ != nullptr;
 }
 
 bool ESP32_SMA_Inverter::begin(const char *localName) {
@@ -1192,7 +1202,7 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
     uint8_t pw[MAX_PWLENGTH];
     uint8_t encChar = (user == USERGROUP) ? 0x88 : 0xBB;
     uint8_t idx;
-    for (idx = 0; password[idx] != 0 && idx < MAX_PWLENGTH; idx++)
+    for (idx = 0; idx < MAX_PWLENGTH && password[idx] != 0; idx++)
         pw[idx] = password[idx] + encChar;
     for (; idx < MAX_PWLENGTH; idx++) pw[idx] = encChar;
 

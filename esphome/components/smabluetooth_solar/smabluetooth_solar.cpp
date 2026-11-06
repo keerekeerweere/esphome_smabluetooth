@@ -92,10 +92,15 @@ const StatusCode SmaBluetoothSolar::status_codes[] = {
 void SmaBluetoothSolar::setup() {
     ESP_LOGW(TAG, "Starting setup...");
     smaInverter = ESP32_SMA_Inverter::getInstance();
-    smaInverter->setup(sma_inverter_bluetooth_mac_,
-                       sma_inverter_password_,
-                       sma_inverter_delay_values_);
-    hasSetup_ = true;
+    hasSetup_ = smaInverter->setup(sma_inverter_bluetooth_mac_,
+                                   sma_inverter_password_,
+                                   sma_inverter_delay_values_,
+                                   sma_inverter_night_margin_);
+    if (!hasSetup_) {
+        ESP_LOGE(TAG, "Invalid SMA Bluetooth configuration");
+        mark_failed();
+        return;
+    }
     ESP_LOGW(TAG, "Setup done, inverter mac=%s", sma_inverter_bluetooth_mac_.c_str());
 }
 
