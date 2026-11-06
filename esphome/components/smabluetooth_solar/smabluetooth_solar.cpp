@@ -34,8 +34,10 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 */
 
 #include "smabluetooth_solar.h"
+#include "esphome/components/api/api_server.h"
 #include "esphome/core/application.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -92,6 +94,15 @@ const StatusCode SmaBluetoothSolar::status_codes[] = {
 void SmaBluetoothSolar::setup() {
     ESP_LOGW(TAG, "Starting setup...");
     smaInverter = ESP32_SMA_Inverter::getInstance();
+
+    if (!latitude_configured_) {
+        api::global_api_server->subscribe_home_assistant_state(
+            "zone.home", "latitude", [this](StringRef state) { this->update_home_location_(true, state.c_str()); });
+    }
+    if (!longitude_configured_) {
+        api::global_api_server->subscribe_home_assistant_state(
+            "zone.home", "longitude", [this](StringRef state) { this->update_home_location_(false, state.c_str()); });
+    }
     hasSetup_ = smaInverter->setup(sma_inverter_bluetooth_mac_,
                                    sma_inverter_password_,
                                    sma_inverter_delay_values_,
@@ -103,6 +114,33 @@ void SmaBluetoothSolar::setup() {
         return;
     }
     ESP_LOGW(TAG, "Setup done, inverter mac=%s", sma_inverter_bluetooth_mac_.c_str());
+    if (!latitude_configured_ || !longitude_configured_) {
+        ESP_LOGI(TAG, "Waiting for missing solar coordinates from Home Assistant entity zone.home");
+    }
+}
+
+void SmaBluetoothSolar::update_home_location_(bool latitude, const char *value) {
+    auto parsed = parse_number<float>(value);
+    float minimum = latitude ? -90.0f : -180.0f;
+    float maximum = latitude ? 90.0f : 180.0f;
+    if (!parsed.has_value() || !std::isfinite(*parsed) || *parsed < minimum || *parsed > maximum) {
+        ESP_LOGW(TAG, "Ignoring invalid zone.home %s attribute: '%s'",
+                 latitude ? "latitude" : "longitude", value);
+        return;
+    }
+
+    if (latitude)
+        latitude_ = *parsed;
+    else
+        longitude_ = *parsed;
+
+    if (smaInverter != nullptr) smaInverter->setSolarLocation(latitude_, longitude_);
+    ESP_LOGI(TAG, "Solar %s updated from Home Assistant: %.5f",
+             latitude ? "latitude" : "longitude", *parsed);
+    if (std::isfinite(latitude_) && std::isfinite(longitude_)) {
+        ESP_LOGI(TAG, "Using Home Assistant solar location: latitude=%.5f longitude=%.5f",
+                 latitude_, longitude_);
+    }
 }
 
 void SmaBluetoothSolar::on_shutdown() {

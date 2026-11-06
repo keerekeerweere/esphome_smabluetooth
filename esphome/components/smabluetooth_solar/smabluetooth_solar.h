@@ -101,8 +101,8 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_sma_inverter_password(std::string v)            { sma_inverter_password_ = v; }
     void set_sma_inverter_delay_values(uint32_t v)           { sma_inverter_delay_values_ = v; }
     void set_sma_inverter_night_margin(float v)              { sma_inverter_night_margin_ = v; }
-    void set_latitude(float v)                                { latitude_ = v; }
-    void set_longitude(float v)                               { longitude_ = v; }
+    void set_latitude(float v)                                { latitude_ = v; latitude_configured_ = true; }
+    void set_longitude(float v)                               { longitude_ = v; longitude_configured_ = true; }
 
     // Callable from a YAML button/lambda: queues a time sync for the BT task
     void trigger_time_sync() {
@@ -187,6 +187,10 @@ class SmaBluetoothSolar : public PollingComponent {
     float       sma_inverter_night_margin_ = 30.0f;
     float       latitude_ = NAN;
     float       longitude_ = NAN;
+    bool        latitude_configured_ = false;
+    bool        longitude_configured_ = false;
+
+    void update_home_location_(bool latitude, const char *value);
 
     static const StatusCode status_codes[];
 

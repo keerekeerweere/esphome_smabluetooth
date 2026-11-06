@@ -87,7 +87,15 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
     if (utc_offset >  12) utc_offset -= 24;
     if (utc_offset < -12) utc_offset += 24;
 
-    float lat_deg = std::isnan(latitude_) ? latitude_from_utc_offset(utc_offset) : latitude_;
+    float latitude = NAN;
+    float longitude = NAN;
+    if (location_mutex_ != nullptr && xSemaphoreTake(location_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
+        latitude = latitude_;
+        longitude = longitude_;
+        xSemaphoreGive(location_mutex_);
+    }
+
+    float lat_deg = std::isnan(latitude) ? latitude_from_utc_offset(utc_offset) : latitude;
     float lat_rad = lat_deg * (float)M_PI / 180.0f;
 
     int day_of_year = local_tm.tm_yday + 1; // 1..365
@@ -102,10 +110,10 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
 
     // Correct civil noon for longitude within the local time zone and equation of time.
     float solar_noon = 12.0f;
-    if (!std::isnan(longitude_)) {
+    if (!std::isnan(longitude)) {
         float b = 2.0f * (float)M_PI * (day_of_year - 81) / 364.0f;
         float equation_of_time_min = 9.87f * sinf(2.0f * b) - 7.53f * cosf(b) - 1.5f * sinf(b);
-        solar_noon = 12.0f + (15.0f * utc_offset - longitude_) / 15.0f - equation_of_time_min / 60.0f;
+        solar_noon = 12.0f + (15.0f * utc_offset - longitude) / 15.0f - equation_of_time_min / 60.0f;
     }
     float sunrise  = solar_noon - ha_hours;
     float sunset   = solar_noon + ha_hours + night_margin_min_ / 60.0f;
@@ -141,6 +149,7 @@ bool ESP32_SMA_Inverter::setup(const std::string &mac, const std::string &pw,
     latitude_ = latitude;
     longitude_ = longitude;
     if (data_mutex_ == nullptr) data_mutex_ = xSemaphoreCreateMutex();
+    if (location_mutex_ == nullptr) location_mutex_ = xSemaphoreCreateMutex();
 
     invData.SUSyID = 0x7d;
     invData.Serial = 0;
@@ -149,7 +158,17 @@ bool ESP32_SMA_Inverter::setup(const std::string &mac, const std::string &pw,
     ESP_LOGD(TAG, "invData.btAddress: %02X:%02X:%02X:%02X:%02X:%02X",
              invData.btAddress[5], invData.btAddress[4], invData.btAddress[3],
              invData.btAddress[2], invData.btAddress[1], invData.btAddress[0]);
-    return data_mutex_ != nullptr;
+    return data_mutex_ != nullptr && location_mutex_ != nullptr;
+}
+
+void ESP32_SMA_Inverter::setSolarLocation(float latitude, float longitude) {
+    if (location_mutex_ == nullptr || xSemaphoreTake(location_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) {
+        ESP_LOGW(TAG, "Could not update solar location");
+        return;
+    }
+    latitude_ = latitude;
+    longitude_ = longitude;
+    xSemaphoreGive(location_mutex_);
 }
 
 bool ESP32_SMA_Inverter::begin(const char *localName) {

@@ -8,6 +8,7 @@ ESPHome external component to read SMA solar inverters via classic Bluetooth (SM
 - Runs on ESP-IDF (not Arduino); BLE disabled to preserve RAM
 - Non-blocking BT protocol task on core 0; ESPHome main loop never stalled
 - Automatic night mode: disconnects from inverter at sunset, reconnects at sunrise — no polling during darkness
+- Uses `zone.home` latitude/longitude from Home Assistant automatically; explicit component coordinates remain available as overrides
 
 ## Hardware compatibility
 Only the original ESP32 supports classic Bluetooth (SPP). Other variants do **not** work:

@@ -312,6 +312,7 @@ class ESP32_SMA_Inverter {
 
     void requestTimeSync()     { sync_time_requested_ = true; }
     void requestTimeFetch()    { fetch_time_requested_ = true; }
+    void setSolarLocation(float latitude, float longitude);
 
     void initPcktID()              { setPcktID(1); }
     void setPcktID(uint8_t id)     { pcktID = id; }
@@ -374,6 +375,7 @@ class ESP32_SMA_Inverter {
     StreamBufferHandle_t rx_stream_buf_  = nullptr;  // SPP RX data → task
     EventGroupHandle_t   bt_event_group_ = nullptr;  // connect/disconnect events
     SemaphoreHandle_t    data_mutex_ = nullptr;      // protects published data snapshots
+    SemaphoreHandle_t    location_mutex_ = nullptr;  // protects solar coordinates
     volatile TaskHandle_t bt_task_handle_ = nullptr; // volatile: read/written across cores
 
     // ---- SPP state ----

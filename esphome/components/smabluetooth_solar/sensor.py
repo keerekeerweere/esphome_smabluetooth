@@ -80,7 +80,7 @@ CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_str
 CONF_GRID_RELAY = "grid_relay"
 
 AUTO_LOAD = ["text_sensor", "binary_sensor"]
-DEPENDENCIES = ["esp32", "sensor", "network"]
+DEPENDENCIES = ["api", "esp32", "sensor", "network"]
 CODEOWNERS = ["@keerekeerweere"]
 
 
@@ -251,6 +251,9 @@ async def to_code(config):
     add_idf_sdkconfig_option("CONFIG_BT_SPP_ENABLED", True)
     add_idf_sdkconfig_option("CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY", True)
     add_idf_sdkconfig_option("CONFIG_BT_BLE_ENABLED", False)
+
+    # Required for subscribing to zone.home attributes over the native API.
+    cg.add_define("USE_API_HOMEASSISTANT_STATES")
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
