@@ -292,7 +292,7 @@ void SmaBluetoothSolar::updateSensor(binary_sensor::BinarySensor *sensor, const 
 void SmaBluetoothSolar::dump_config() {
     ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
     ESP_LOGCONFIG(TAG, "  MAC: %s", sma_inverter_bluetooth_mac_.c_str());
-    ESP_LOGCONFIG(TAG, "  Delay between queries: %u ms", sma_inverter_delay_values_);
+    ESP_LOGCONFIG(TAG, "  Delay between queries: %lu ms", static_cast<unsigned long>(sma_inverter_delay_values_));
 }
 
 const char *SmaBluetoothSolar::lookup_code(uint16_t code) {

@@ -68,19 +68,19 @@ namespace smabluetooth_solar {
 #define BTH_L2SIGNATURE 0x656003FF
 #define USERGROUP UG_USER
 
-#define NaN_S16 0x8000
-#define NaN_U16 0xFFFF
-#define NaN_S32 (int32_t) 0x80000000
-#define NaN_U32 (uint32_t)0xFFFFFFFF
-#define NaN_S64 (int64_t) 0x8000000000000000
-#define NaN_U64 (uint64_t)0xFFFFFFFFFFFFFFFF
+constexpr int16_t NaN_S16 = INT16_MIN;
+constexpr uint16_t NaN_U16 = UINT16_MAX;
+constexpr int32_t NaN_S32 = INT32_MIN;
+constexpr uint32_t NaN_U32 = UINT32_MAX;
+constexpr int64_t NaN_S64 = INT64_MIN;
+constexpr uint64_t NaN_U64 = UINT64_MAX;
 
-inline const bool is_NaN(const int16_t S16)  { return S16 == NaN_S16; }
-inline const bool is_NaN(const uint16_t U16) { return U16 == NaN_U16; }
-inline const bool is_NaN(const int32_t S32)  { return S32 == NaN_S32; }
-inline const bool is_NaN(const uint32_t U32) { return U32 == NaN_U32; }
-inline const bool is_NaN(const int64_t S64)  { return S64 == NaN_S64; }
-inline const bool is_NaN(const uint64_t U64) { return U64 == NaN_U64; }
+inline bool is_NaN(int16_t value) { return value == NaN_S16; }
+inline bool is_NaN(uint16_t value) { return value == NaN_U16; }
+inline bool is_NaN(int32_t value) { return value == NaN_S32; }
+inline bool is_NaN(uint32_t value) { return value == NaN_U32; }
+inline bool is_NaN(int64_t value) { return value == NaN_S64; }
+inline bool is_NaN(uint64_t value) { return value == NaN_U64; }
 
 // ---- Event group bits for BT state signalling between task and callbacks ----
 #define BT_EVT_SPP_INIT     (BIT0)

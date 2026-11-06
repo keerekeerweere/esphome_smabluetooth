@@ -36,6 +36,7 @@ from esphome.const import (
 
 
 from esphome.core import CORE
+from esphome.components.esp32 import include_builtin_idf_component
 
 ICON_CURRENT_DC = "mdi:current-dc"
 ICON_SINE_WAVE = "mdi:sine-wave"
@@ -231,6 +232,10 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
+    # ESPHome excludes ESP-IDF's Bluetooth component by default. Enabling its
+    # Kconfig options alone does not make the headers and libraries available.
+    include_builtin_idf_component("bt")
+
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 #    await modbus.register_modbus_device(var, config)
