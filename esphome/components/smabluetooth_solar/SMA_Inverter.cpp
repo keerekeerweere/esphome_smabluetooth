@@ -620,41 +620,52 @@ E_RC ESP32_SMA_Inverter::getPacket(const uint8_t expAddr[6], int wait4Command) {
             btrdBuf[rdCnt] = BTgetByte();
             if (readTimeout) break;
         }
-        ESP_LOGD(TAG, "L1 Rec=%d bytes pkL=0x%04x Cmd=0x%04x",
-                 rdCnt, pL1Hdr->pkLength, pL1Hdr->command);
-
-        if (rdCnt < 17) {
-            ESP_LOGV(TAG, "L1 < 18 bytes");
+        if (rdCnt != sizeof(L1Hdr)) {
+            ESP_LOGW(TAG, "Incomplete L1 header: %u/%u bytes", rdCnt, sizeof(L1Hdr));
+            flushRxBuffer();
             return E_NODATA;
         }
 
-        if (!((btrdBuf[0] ^ btrdBuf[1] ^ btrdBuf[2]) == btrdBuf[3])) {
-            ESP_LOGW(TAG, "Wrong L1 CRC");
+        ESP_LOGD(TAG, "L1 Rec=%d bytes pkL=0x%04x Cmd=0x%04x",
+                 rdCnt, pL1Hdr->pkLength, pL1Hdr->command);
+
+        if (btrdBuf[0] != 0x7E) {
+            ESP_LOGW(TAG, "Invalid L1 start byte 0x%02X, flushing", btrdBuf[0]);
+            flushRxBuffer();
+            return E_INVRESP;
+        }
+        if ((btrdBuf[0] ^ btrdBuf[1] ^ btrdBuf[2]) != btrdBuf[3]) {
+            ESP_LOGW(TAG, "Invalid L1 checksum, flushing");
+            flushRxBuffer();
+            return E_CHKSUM;
+        }
+        if (pL1Hdr->pkLength < sizeof(L1Hdr) || pL1Hdr->pkLength > COMMBUFSIZE) {
+            ESP_LOGE(TAG, "Invalid L1 packet length: %u", pL1Hdr->pkLength);
+            flushRxBuffer();
+            return E_INVRESP;
         }
 
         if (pL1Hdr->pkLength > sizeof(L1Hdr)) {
-            if (pL1Hdr->pkLength > COMMBUFSIZE) {
-                ESP_LOGE(TAG, "pkLength too large: %d, flushing", pL1Hdr->pkLength);
-                flushRxBuffer();
-                rc = E_RETRY;
-                continue;
-            }
             // Read L2 payload
             for (rdCnt = 18; rdCnt < pL1Hdr->pkLength; rdCnt++) {
                 btrdBuf[rdCnt] = BTgetByte();
                 if (readTimeout) break;
             }
             ESP_LOGD(TAG, "L2 Rec=%d bytes", rdCnt - 18);
+            if (rdCnt != pL1Hdr->pkLength) {
+                ESP_LOGW(TAG, "Incomplete L1 payload: %u/%u bytes", rdCnt, pL1Hdr->pkLength);
+                flushRxBuffer();
+                return E_NODATA;
+            }
 
             if (isValidSender(expAddr, pL1Hdr->SourceAddr)) {
                 rc = E_OK;
 
-                ESP_LOGD(TAG, "HasL2pckt: 0x7E?=0x%02X 0x656003FF?=0x%08lX",
-                         btrdBuf[18], static_cast<unsigned long>(get_u32(btrdBuf + 19)));
-
-                if (!hasL2pckt && btrdBuf[18] == 0x7E &&
-                    get_u32(btrdBuf + 19) == 0x656003FF) {
-                    hasL2pckt = true;
+                if (!hasL2pckt && pL1Hdr->pkLength >= sizeof(L1Hdr) + 5) {
+                    ESP_LOGD(TAG, "HasL2pckt: 0x7E?=0x%02X 0x656003FF?=0x%08lX",
+                             btrdBuf[18], static_cast<unsigned long>(get_u32(btrdBuf + 19)));
+                    if (btrdBuf[18] == 0x7E && get_u32(btrdBuf + 19) == 0x656003FF)
+                        hasL2pckt = true;
                 }
 
                 if (hasL2pckt) {
@@ -695,12 +706,6 @@ E_RC ESP32_SMA_Inverter::getPacket(const uint8_t expAddr[6], int wait4Command) {
             } else {
                 rc = E_RETRY;
             }
-        }
-
-        // Flush if garbage start byte
-        if (btrdBuf[0] != 0x7e) {
-            flushRxBuffer();
-            ESP_LOGD(TAG, "CommBuf[0]!=0x7e -> flush");
         }
 
     } while (((pL1Hdr->command != wait4Command) || (rc == E_RETRY)) &&
