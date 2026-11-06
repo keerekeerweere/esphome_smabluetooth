@@ -87,7 +87,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void loop()   override;
     void setup()  override;
     void update() override;
-    void handleMissingValues();
+    void handleMissingValues(DisplayData &data);
     void dump_config() override;
 
     void updateSensor(text_sensor::TextSensor *sensor, const char *name, std::string v);

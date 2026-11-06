@@ -31,6 +31,7 @@ SOFTWARE.
 #include "freertos/task.h"
 #include "freertos/stream_buffer.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
 
 // ESP-IDF Bluetooth (Classic / Bluedroid / SPP)
 #include "esp_bt.h"
@@ -302,8 +303,7 @@ class ESP32_SMA_Inverter {
     void stopBtTask();
 
     // Status queries (safe to call from ESPHome main loop)
-    bool isDataReady()   const { return data_ready_; }
-    void clearDataReady()      { data_ready_ = false; }
+    bool takeDataSnapshot(InverterData &inverter_data, DisplayData &display_data);
     bool hasTaskError()  const { return task_error_; }
     void clearTaskError()      { task_error_ = false; }
     bool isBtConnected() const { return btConnected_; }
@@ -372,6 +372,7 @@ class ESP32_SMA_Inverter {
     // ---- FreeRTOS handles ----
     StreamBufferHandle_t rx_stream_buf_  = nullptr;  // SPP RX data → task
     EventGroupHandle_t   bt_event_group_ = nullptr;  // connect/disconnect events
+    SemaphoreHandle_t    data_mutex_ = nullptr;      // protects published data snapshots
     volatile TaskHandle_t bt_task_handle_ = nullptr; // volatile: read/written across cores
 
     // ---- SPP state ----

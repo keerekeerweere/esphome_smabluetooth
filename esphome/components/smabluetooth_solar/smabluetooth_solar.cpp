@@ -159,63 +159,68 @@ void SmaBluetoothSolar::loop() {
 // ============================================================
 
 void SmaBluetoothSolar::update() {
-    // Compute any derived values that weren't returned by the inverter
-    handleMissingValues();
+    if (smaInverter == nullptr) return;
 
-    updateSensor(today_production_,         "EToday",  smaInverter->dispData.EToday);
-    updateSensor(total_energy_production_,  "ETotal",  smaInverter->dispData.ETotal);
-    updateSensor(grid_frequency_sensor_,    "Freq",    smaInverter->dispData.GridFreq);
+    InverterData inverter_data;
+    DisplayData display_data;
+    if (!smaInverter->takeDataSnapshot(inverter_data, display_data)) return;
 
-    updateSensor(pvs_[0].voltage_sensor_,      "UdcA",  smaInverter->dispData.Udc1);
-    updateSensor(pvs_[0].current_sensor_,      "IdcA",  smaInverter->dispData.Idc1);
-    updateSensor(pvs_[0].active_power_sensor_, "PDC1",  smaInverter->dispData.Pdc1);
+    // Publish from a coherent snapshot while the BT task prepares the next sample.
+    handleMissingValues(display_data);
 
-    updateSensor(pvs_[1].voltage_sensor_,      "UdcB",  smaInverter->dispData.Udc2);
-    updateSensor(pvs_[1].current_sensor_,      "IdcB",  smaInverter->dispData.Idc2);
-    updateSensor(pvs_[1].active_power_sensor_, "PDC2",  smaInverter->dispData.Pdc2);
+    updateSensor(today_production_,         "EToday",  display_data.EToday);
+    updateSensor(total_energy_production_,  "ETotal",  display_data.ETotal);
+    updateSensor(grid_frequency_sensor_,    "Freq",    display_data.GridFreq);
 
-    updateSensor(phases_[0].voltage_sensor_,      "UacA",  smaInverter->dispData.Uac1);
-    updateSensor(phases_[0].current_sensor_,      "IacA",  smaInverter->dispData.Iac1);
-    updateSensor(phases_[0].active_power_sensor_, "PacA",  smaInverter->dispData.Pac1);
+    updateSensor(pvs_[0].voltage_sensor_,      "UdcA",  display_data.Udc1);
+    updateSensor(pvs_[0].current_sensor_,      "IdcA",  display_data.Idc1);
+    updateSensor(pvs_[0].active_power_sensor_, "PDC1",  display_data.Pdc1);
+
+    updateSensor(pvs_[1].voltage_sensor_,      "UdcB",  display_data.Udc2);
+    updateSensor(pvs_[1].current_sensor_,      "IdcB",  display_data.Idc2);
+    updateSensor(pvs_[1].active_power_sensor_, "PDC2",  display_data.Pdc2);
+
+    updateSensor(phases_[0].voltage_sensor_,      "UacA",  display_data.Uac1);
+    updateSensor(phases_[0].current_sensor_,      "IacA",  display_data.Iac1);
+    updateSensor(phases_[0].active_power_sensor_, "PacA",  display_data.Pac1);
 
 #if PHASES > 1
-    updateSensor(phases_[1].voltage_sensor_,      "UacB",  smaInverter->dispData.Uac2);
-    updateSensor(phases_[1].current_sensor_,      "IacB",  smaInverter->dispData.Iac2);
-    updateSensor(phases_[1].active_power_sensor_, "PacB",  smaInverter->dispData.Pac2);
+    updateSensor(phases_[1].voltage_sensor_,      "UacB",  display_data.Uac2);
+    updateSensor(phases_[1].current_sensor_,      "IacB",  display_data.Iac2);
+    updateSensor(phases_[1].active_power_sensor_, "PacB",  display_data.Pac2);
 #endif
 
 #if PHASES > 2
-    updateSensor(phases_[2].voltage_sensor_,      "UacC",  smaInverter->dispData.Uac3);
-    updateSensor(phases_[2].current_sensor_,      "IacC",  smaInverter->dispData.Iac3);
-    updateSensor(phases_[2].active_power_sensor_, "PacC",  smaInverter->dispData.Pac3);
+    updateSensor(phases_[2].voltage_sensor_,      "UacC",  display_data.Uac3);
+    updateSensor(phases_[2].current_sensor_,      "IacC",  display_data.Iac3);
+    updateSensor(phases_[2].active_power_sensor_, "PacC",  display_data.Pac3);
 #endif
 
     updateSensor(status_text_sensor_,        "InvStatus",
-                 std::string(lookup_code(smaInverter->invData.DevStatus)));
+                 std::string(lookup_code(inverter_data.DevStatus)));
     updateSensor(grid_relay_binary_sensor_,  "GridRelay",
-                 smaInverter->invData.GridRelay == 51);  // 51 = "Closed"
+                 inverter_data.GridRelay == 51);  // 51 = "Closed"
 
 #if HAVE_MODULE_TEMP
-    updateSensor(inverter_module_temp_,      "InvTemp",   smaInverter->dispData.InvTemp);
+    updateSensor(inverter_module_temp_,      "InvTemp",   display_data.InvTemp);
 #endif
 
     updateSensor(inverter_bluetooth_signal_strength_, "BTSignal",
-                 smaInverter->dispData.BTSigStrength);
+                 display_data.BTSigStrength);
     updateSensor(today_generation_time_,  "TToday",
-                 (float)smaInverter->invData.OperationTime / 3600.0f);
+                 (float)inverter_data.OperationTime / 3600.0f);
     updateSensor(total_generation_time_,  "TTotal",
-                 (float)smaInverter->invData.FeedInTime / 3600.0f);
+                 (float)inverter_data.FeedInTime / 3600.0f);
     updateSensor(wakeup_time_,            "TWakeup",
-                 (uint64_t)smaInverter->invData.WakeupTime);
-    updateSensor(serial_number_,          "SerialNum",  smaInverter->invData.DeviceName);
-    updateSensor(software_version_,       "SWVersion",  smaInverter->invData.SWVersion);
+                 (uint64_t)inverter_data.WakeupTime);
+    updateSensor(serial_number_,          "SerialNum",  inverter_data.DeviceName);
+    updateSensor(software_version_,       "SWVersion",  inverter_data.SWVersion);
     updateSensor(device_type_,            "DevType",
-                 std::string(lookup_code(smaInverter->invData.DeviceType)));
+                 std::string(lookup_code(inverter_data.DeviceType)));
     updateSensor(device_class_,           "DevClass",
-                 std::string(lookup_code(smaInverter->invData.DeviceClass)));
-    updateSensor(inverter_time_sensor_,   "InvTime",  smaInverter->invData.InverterTimestamp);
+                 std::string(lookup_code(inverter_data.DeviceClass)));
+    updateSensor(inverter_time_sensor_,   "InvTime",  inverter_data.InverterTimestamp);
 
-    smaInverter->clearDataReady();
 }
 
 // ============================================================
@@ -224,8 +229,7 @@ void SmaBluetoothSolar::update() {
 //  directly; derive it from U * I.
 // ============================================================
 
-void SmaBluetoothSolar::handleMissingValues() {
-    auto &d = smaInverter->dispData;
+void SmaBluetoothSolar::handleMissingValues(DisplayData &d) {
 
     if (d.Pdc1 == 0.0f || d.needsMissingValues) {
         if (d.Udc1 != 0.0f && d.Idc1 != 0.0f) {

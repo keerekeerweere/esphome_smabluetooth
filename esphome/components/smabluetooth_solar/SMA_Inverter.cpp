@@ -120,6 +120,7 @@ void ESP32_SMA_Inverter::setup(std::string mac, std::string pw, uint32_t delay_v
     strlcpy(smaInvPass, pw.c_str(), sizeof(smaInvPass));
 
     delay_values_ms_ = delay_values_ms;
+    if (data_mutex_ == nullptr) data_mutex_ = xSemaphoreCreateMutex();
 
     invData.SUSyID = 0x7d;
     invData.Serial = 0;
@@ -136,7 +137,7 @@ bool ESP32_SMA_Inverter::begin(const char *localName) {
     // Create FreeRTOS primitives
     rx_stream_buf_ = xStreamBufferCreate(4096, 1);
     bt_event_group_ = xEventGroupCreate();
-    if (!rx_stream_buf_ || !bt_event_group_) {
+    if (!rx_stream_buf_ || !bt_event_group_ || !data_mutex_) {
         ESP_LOGE(TAG, "Failed to create FreeRTOS primitives");
         return false;
     }
@@ -216,6 +217,19 @@ void ESP32_SMA_Inverter::startBtTask() {
         0             // core 0 (BT stack also runs on core 0)
     );
     bt_task_handle_ = h;
+}
+
+bool ESP32_SMA_Inverter::takeDataSnapshot(InverterData &inverter_data, DisplayData &display_data) {
+    if (data_mutex_ == nullptr || xSemaphoreTake(data_mutex_, pdMS_TO_TICKS(100)) != pdTRUE)
+        return false;
+    bool ready = data_ready_;
+    if (ready) {
+        inverter_data = invData;
+        display_data = dispData;
+        data_ready_ = false;
+    }
+    xSemaphoreGive(data_mutex_);
+    return ready;
 }
 
 void ESP32_SMA_Inverter::stopBtTask() {
@@ -498,6 +512,11 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         };
 
         while (self->btConnected_ && !self->stop_task_) {
+            if (xSemaphoreTake(self->data_mutex_, portMAX_DELAY) != pdTRUE) {
+                ESP_LOGE(TTAG, "Could not lock inverter data");
+                break;
+            }
+
             // BT signal strength is diagnostics-only; no need to poll every 10 s
             if (cycle_count % DIAG_EVERY == 0) {
                 self->getBT_SignalStrength();
@@ -513,11 +532,15 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
 
             cycle_count++;
 
-            if (!cycle_ok || !self->btConnected_) break;
+            if (!cycle_ok || !self->btConnected_) {
+                xSemaphoreGive(self->data_mutex_);
+                break;
+            }
 
             // Disconnect at sunset — outer loop will not reconnect until sunrise
             if (self->is_nighttime()) {
                 ESP_LOGI(TTAG, "Sunset detected, disconnecting");
+                xSemaphoreGive(self->data_mutex_);
                 break;
             }
 
@@ -533,8 +556,9 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                 self->fetch_time_requested_ = false;
             }
 
-            // Signal ESPHome that fresh data is available
+            // Publish the completed sample and release it to the ESPHome main task.
             self->data_ready_ = true;
+            xSemaphoreGive(self->data_mutex_);
 
             vTaskDelay(pdMS_TO_TICKS(500));
         }
