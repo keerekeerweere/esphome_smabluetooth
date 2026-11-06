@@ -1148,9 +1148,20 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
     writePacketLength(pcktBuf);
     BTsendPacket(pcktBuf);
 
-    E_RC rc = E_OK;
-    if ((rc = getPacket(sixff, 1)) != E_OK) return rc;
+    E_RC rc = getPacket(sixff, 1);
+    if (rc != E_OK) return rc;
+    if (pcktBufPos < 45) return E_NODATA;
     if (!validateChecksum()) return E_CHKSUM;
+
+    uint16_t status = get_u16(pcktBuf + 23);
+    if (status == 0x0100) {
+        ESP_LOGE(TAG, "SMA logon rejected: invalid user password");
+        return E_INVPASSW;
+    }
+    if (status != 0) {
+        ESP_LOGE(TAG, "SMA logon rejected with status 0x%04X", status);
+        return E_INVRESP;
+    }
 
     uint16_t rcvpcktID = get_u16(pcktBuf + 27) & 0x7FFF;
     if (pcktID == rcvpcktID && get_u32(pcktBuf + 41) == (uint32_t)now) {
