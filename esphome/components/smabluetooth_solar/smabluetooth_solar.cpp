@@ -105,6 +105,10 @@ void SmaBluetoothSolar::setup() {
     ESP_LOGW(TAG, "Setup done, inverter mac=%s", sma_inverter_bluetooth_mac_.c_str());
 }
 
+void SmaBluetoothSolar::on_shutdown() {
+    if (smaInverter != nullptr) smaInverter->stopBtTask();
+}
+
 void SmaBluetoothSolar::loop() {
     App.feed_wdt();
 

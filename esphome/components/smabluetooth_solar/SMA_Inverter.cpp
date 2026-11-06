@@ -271,7 +271,13 @@ bool ESP32_SMA_Inverter::takeDataSnapshot(InverterData &inverter_data, DisplayDa
 
 void ESP32_SMA_Inverter::stopBtTask() {
     stop_task_ = true;
-    // Give the task up to 3 s to notice the flag and self-delete
+    if (bt_event_group_ != nullptr)
+        xEventGroupSetBits(bt_event_group_, BT_EVT_DISC_DONE | BT_EVT_CONNECTED | BT_EVT_DISCONNECTED | BT_EVT_SPP_INIT);
+    if (spp_handle_ != 0) esp_spp_disconnect(spp_handle_);
+
+    // Wake long sleeps promptly and give the task time to cleanly self-delete.
+    TaskHandle_t task = bt_task_handle_;
+    if (task != nullptr) xTaskAbortDelay(task);
     for (int i = 0; i < 30 && bt_task_handle_ != nullptr; i++) {
         vTaskDelay(pdMS_TO_TICKS(100));
     }
