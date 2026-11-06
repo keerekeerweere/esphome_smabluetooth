@@ -6,6 +6,7 @@ from esphome.const import (
     CONF_CURRENT,
     CONF_FREQUENCY,
     CONF_ID,
+    Framework,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_VOLTAGE,
@@ -37,7 +38,8 @@ from esphome.const import (
 )
 
 
-from esphome.components.esp32 import include_builtin_idf_component
+from esphome.components import esp32
+from esphome.components.esp32 import add_idf_sdkconfig_option, include_builtin_idf_component
 from esphome.components.sun import parse_latlon
 
 ICON_CURRENT_DC = "mdi:current-dc"
@@ -147,7 +149,7 @@ PROTOCOL_VERSIONS = {
 }
 
 
-CONFIG_SCHEMA = (
+CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
@@ -230,8 +232,12 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_INVERTER_TIME): text_sensor.text_sensor_schema(),
         }
     )
-    .extend(cv.polling_component_schema("60s"))
-#    .extend(modbus.modbus_device_schema(0x01))
+    .extend(cv.polling_component_schema("60s")),
+    cv.only_with_framework(frameworks=[Framework.ESP_IDF]),
+    esp32.only_on_variant(
+        supported=[esp32.VARIANT_ESP32],
+        msg_prefix="SMA Bluetooth Classic",
+    ),
 )
 
 
@@ -239,6 +245,12 @@ async def to_code(config):
     # ESPHome excludes ESP-IDF's Bluetooth component by default. Enabling its
     # Kconfig options alone does not make the headers and libraries available.
     include_builtin_idf_component("bt")
+    add_idf_sdkconfig_option("CONFIG_BT_ENABLED", True)
+    add_idf_sdkconfig_option("CONFIG_BT_BLUEDROID_ENABLED", True)
+    add_idf_sdkconfig_option("CONFIG_BT_CLASSIC_ENABLED", True)
+    add_idf_sdkconfig_option("CONFIG_BT_SPP_ENABLED", True)
+    add_idf_sdkconfig_option("CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY", True)
+    add_idf_sdkconfig_option("CONFIG_BT_BLE_ENABLED", False)
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
