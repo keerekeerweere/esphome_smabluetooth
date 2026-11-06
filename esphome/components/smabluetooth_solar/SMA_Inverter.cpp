@@ -783,6 +783,10 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
             if (invData.status != E_OK) return invData.status;
 
             if (validateChecksum()) {
+                if (pcktBufPos < 41) {
+                    ESP_LOGW(TAG, "Inverter response too short: %u bytes", pcktBufPos);
+                    return E_NODATA;
+                }
                 if ((invData.status = (E_RC)get_u16(pcktBuf + 23)) != E_OK) {
                     ESP_LOGD(TAG, "Packet status 0x%02X", invData.status);
                     return invData.status;
@@ -1065,15 +1069,21 @@ bool ESP32_SMA_Inverter::getBT_SignalStrength() {
     writeByte(pcktBuf, 0x00);
     writePacketLength(pcktBuf);
     BTsendPacket(pcktBuf);
-    getPacket(invData.btAddress, 4);
-    dispData.BTSigStrength = ((float)btrdBuf[22] * 100.0f / 255.0f);
+    E_RC rc = getPacket(invData.btAddress, 4);
+    if (rc != E_OK || pcktBufPos < 23) {
+        ESP_LOGW(TAG, "Signal strength response failed or too short (rc=%d, len=%u)", rc, pcktBufPos);
+        return false;
+    }
+    dispData.BTSigStrength = ((float)pcktBuf[22] * 100.0f / 255.0f);
     ESP_LOGI(TAG, "BT-Signal %9.1f %%", dispData.BTSigStrength);
     return true;
 }
 
 E_RC ESP32_SMA_Inverter::initialiseSMAConnection() {
     ESP_LOGI(TAG, "-> Initialize");
-    getPacket(invData.btAddress, 2);
+    E_RC rc = getPacket(invData.btAddress, 2);
+    if (rc != E_OK) return rc;
+    if (pcktBufPos < 23) return E_NODATA;
     invData.NetID = pcktBuf[22];
     ESP_LOGI(TAG, "SMA netID=0x%02X", invData.NetID);
 
@@ -1085,7 +1095,9 @@ E_RC ESP32_SMA_Inverter::initialiseSMAConnection() {
     writePacketLength(pcktBuf);
     BTsendPacket(pcktBuf);
 
-    getPacket(invData.btAddress, 5);
+    rc = getPacket(invData.btAddress, 5);
+    if (rc != E_OK) return rc;
+    if (pcktBufPos < 32) return E_NODATA;
     memcpy(espBTAddress, pcktBuf + 26, 6);
     ESP_LOGW(TAG, "ESP32 BT addr: %02X:%02X:%02X:%02X:%02X:%02X",
              espBTAddress[5], espBTAddress[4], espBTAddress[3],
@@ -1101,7 +1113,9 @@ E_RC ESP32_SMA_Inverter::initialiseSMAConnection() {
     writePacketLength(pcktBuf);
     BTsendPacket(pcktBuf);
 
-    if (getPacket(invData.btAddress, 1) != E_OK) return E_INIT;
+    rc = getPacket(invData.btAddress, 1);
+    if (rc != E_OK) return rc;
+    if (pcktBufPos < 64) return E_NODATA;
     if (!validateChecksum()) return E_CHKSUM;
 
     invData.Serial = get_u32(pcktBuf + 57);
@@ -1198,7 +1212,14 @@ E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLa
     BTsendPacket(pcktBuf);
 
     E_RC rc = getPacket(sixff, 1);
-    if (rc != E_OK || pcktBufPos < 50) return (rc != E_OK) ? rc : E_NODATA;
+    if (rc != E_OK) return rc;
+    if (pcktBufPos < 65) return E_NODATA;
+    if (!validateChecksum()) return E_CHKSUM;
+    uint16_t status = get_u16(pcktBuf + 23);
+    if (status != 0) {
+        ESP_LOGW(TAG, "Time query rejected with status 0x%04X", status);
+        return E_INVRESP;
+    }
 
     invTime        = (time_t)  get_u32(pcktBuf + 45);
     invLastTimeSet = (time_t)  get_u32(pcktBuf + 49);
