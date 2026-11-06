@@ -802,21 +802,37 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                         validPcktID = true;
                         value32 = 0;
                         value64 = 0;
-                        uint16_t recordsize = 4 * ((uint32_t)pcktBuf[5] - 9) /
-                                              (get_u32(pcktBuf + 37) - get_u32(pcktBuf + 33) + 1);
+                        uint32_t first_record = get_u32(pcktBuf + 33);
+                        uint32_t last_record = get_u32(pcktBuf + 37);
+                        if (pcktBuf[5] < 9 || last_record < first_record) {
+                            ESP_LOGE(TAG, "Invalid record metadata: words=%u first=%lu last=%lu",
+                                     pcktBuf[5], static_cast<unsigned long>(first_record),
+                                     static_cast<unsigned long>(last_record));
+                            return E_INVRESP;
+                        }
+                        uint64_t record_count = static_cast<uint64_t>(last_record) - first_record + 1;
+                        uint32_t record_bytes = 4U * (static_cast<uint32_t>(pcktBuf[5]) - 9U);
+                        if (record_count == 0 || record_bytes == 0 || record_bytes % record_count != 0) {
+                            ESP_LOGE(TAG, "Invalid record layout: bytes=%lu count=%llu",
+                                     static_cast<unsigned long>(record_bytes),
+                                     static_cast<unsigned long long>(record_count));
+                            return E_INVRESP;
+                        }
+                        uint32_t calculated_record_size = record_bytes / record_count;
+                        if (calculated_record_size < 16 || calculated_record_size > MAX_PCKT_BUF_SIZE) {
+                            ESP_LOGE(TAG, "Invalid record size: %lu", static_cast<unsigned long>(calculated_record_size));
+                            return E_INVRESP;
+                        }
+                        uint16_t recordsize = static_cast<uint16_t>(calculated_record_size);
                         ESP_LOGD(TAG, "pcktID=0x%04x recsize=%d BufPos=%d pcktCnt=%04x",
                                  rcvpcktID, recordsize, pcktBufPos, pcktcount);
 
-                        if (recordsize == 0) {
-                            ESP_LOGE(TAG, "Invalid recordsize=0, skipping");
-                            break;
-                        }
-
-                        for (uint16_t ii = 41; ii < pcktBufPos - 3; ii += recordsize) {
-                            // Ensure the full record (up to offset +20) is within the buffer
-                            if (ii + 20 > pcktBufPos) {
-                                ESP_LOGW(TAG, "Record at %d exceeds pcktBufPos=%d, stopping", ii, pcktBufPos);
-                                break;
+                        const uint16_t records_end = pcktBufPos - 3;
+                        for (uint16_t ii = 41; ii < records_end; ii += recordsize) {
+                            if (recordsize > records_end - ii) {
+                                ESP_LOGW(TAG, "Truncated record at %u: need %u, have %u", ii, recordsize,
+                                         records_end - ii);
+                                return E_NODATA;
                             }
                             uint8_t *recptr  = pcktBuf + ii;
                             uint32_t code    = get_u32(recptr);
@@ -828,6 +844,10 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                                 value64 = get_u64(recptr + 8);
                                 if (is_NaN(value64) || is_NaN((uint64_t)value64)) value64 = 0;
                             } else if (dataType != DT_STRING && dataType != DT_STATUS) {
+                                if (recordsize < 20) {
+                                    ESP_LOGW(TAG, "Record 0x%04X too short for a 32-bit value: %u", lri, recordsize);
+                                    return E_NODATA;
+                                }
                                 value32 = get_u32(recptr + 16);
                                 if (is_NaN(value32) || is_NaN((uint32_t)value32)) value32 = 0;
                             }
@@ -956,16 +976,19 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                                 ESP_LOGI(TAG, "INV_NAME %s", invData.DeviceName.c_str());
                                 break;
                             case NameplatePkgRev:
+                                if (recordsize < 28) return E_NODATA;
                                 get_version(get_u32(recptr + 24), inverter_version);
                                 invData.SWVersion = std::string(inverter_version);
                                 ESP_LOGI(TAG, "INV_SWVER %s", invData.SWVersion.c_str());
                                 break;
                             case NameplateModel:
+                                if (recordsize < 40) return E_NODATA;
                                 value32 = getattribute(recptr);
                                 invData.DeviceType = value32;
                                 ESP_LOGI(TAG, "INV_TYPE %ld", static_cast<long>(value32));
                                 break;
                             case NameplateMainModel:
+                                if (recordsize < 40) return E_NODATA;
                                 value32 = getattribute(recptr);
                                 invData.DeviceClass = value32;
                                 ESP_LOGI(TAG, "INV_CLASS %ld", static_cast<long>(value32));
@@ -976,11 +999,13 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                                 ESP_LOGI(TAG, "Temp %7.3f C", toTemp(value32));
                                 break;
                             case OperationHealth:
+                                if (recordsize < 40) return E_NODATA;
                                 value32 = getattribute(recptr);
                                 invData.DevStatus = value32;
                                 ESP_LOGI(TAG, "DevStatus %ld", static_cast<long>(value32));
                                 break;
                             case OperationGriSwStt:
+                                if (recordsize < 40) return E_NODATA;
                                 value32 = getattribute(recptr);
                                 invData.GridRelay = value32;
                                 ESP_LOGI(TAG, "GridRelay %ld", static_cast<long>(value32));
