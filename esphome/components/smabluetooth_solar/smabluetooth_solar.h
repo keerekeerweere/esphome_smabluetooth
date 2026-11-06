@@ -38,8 +38,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 
 */
 
-#define PHASES 1  // Type of inverter, one or 3 phases
-#define HAVE_MODULE_TEMP false
+#define PHASES 3
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
@@ -122,9 +121,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_grid_frequency_sensor(sensor::Sensor *s)             { grid_frequency_sensor_ = s; }
     void set_today_production_sensor(sensor::Sensor *s)           { today_production_ = s; }
     void set_total_energy_production_sensor(sensor::Sensor *s)    { total_energy_production_ = s; }
-#ifdef HAVE_MODULE_TEMP
     void set_inverter_module_temp_sensor(sensor::Sensor *s)       { inverter_module_temp_ = s; }
-#endif
     void set_inverter_bluetooth_signal_strength(sensor::Sensor *s){ inverter_bluetooth_signal_strength_ = s; }
     void set_today_generation_time(sensor::Sensor *s)             { today_generation_time_ = s; }
     void set_total_generation_time(sensor::Sensor *s)             { total_generation_time_ = s; }
@@ -169,9 +166,7 @@ class SmaBluetoothSolar : public PollingComponent {
     sensor::Sensor *grid_frequency_sensor_{nullptr};
     sensor::Sensor *today_production_{nullptr};
     sensor::Sensor *total_energy_production_{nullptr};
-#ifdef HAVE_MODULE_TEMP
     sensor::Sensor *inverter_module_temp_{nullptr};
-#endif
     sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
     sensor::Sensor *today_generation_time_{nullptr};
     sensor::Sensor *total_generation_time_{nullptr};

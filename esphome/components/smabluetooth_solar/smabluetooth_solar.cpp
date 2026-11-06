@@ -189,26 +189,20 @@ void SmaBluetoothSolar::update() {
     updateSensor(phases_[0].current_sensor_,      "IacA",  display_data.Iac1);
     updateSensor(phases_[0].active_power_sensor_, "PacA",  display_data.Pac1);
 
-#if PHASES > 1
     updateSensor(phases_[1].voltage_sensor_,      "UacB",  display_data.Uac2);
     updateSensor(phases_[1].current_sensor_,      "IacB",  display_data.Iac2);
     updateSensor(phases_[1].active_power_sensor_, "PacB",  display_data.Pac2);
-#endif
 
-#if PHASES > 2
     updateSensor(phases_[2].voltage_sensor_,      "UacC",  display_data.Uac3);
     updateSensor(phases_[2].current_sensor_,      "IacC",  display_data.Iac3);
     updateSensor(phases_[2].active_power_sensor_, "PacC",  display_data.Pac3);
-#endif
 
     updateSensor(status_text_sensor_,        "InvStatus",
                  std::string(lookup_code(inverter_data.DevStatus)));
     updateSensor(grid_relay_binary_sensor_,  "GridRelay",
                  inverter_data.GridRelay == 51);  // 51 = "Closed"
 
-#if HAVE_MODULE_TEMP
     updateSensor(inverter_module_temp_,      "InvTemp",   display_data.InvTemp);
-#endif
 
     updateSensor(inverter_bluetooth_signal_strength_, "BTSignal",
                  display_data.BTSigStrength);
@@ -218,7 +212,7 @@ void SmaBluetoothSolar::update() {
                  (float)inverter_data.FeedInTime / 3600.0f);
     updateSensor(wakeup_time_,            "TWakeup",
                  (uint64_t)inverter_data.WakeupTime);
-    updateSensor(serial_number_,          "SerialNum",  inverter_data.DeviceName);
+    updateSensor(serial_number_,          "SerialNum",  std::to_string(inverter_data.Serial));
     updateSensor(software_version_,       "SWVersion",  inverter_data.SWVersion);
     updateSensor(device_type_,            "DevType",
                  std::string(lookup_code(inverter_data.DeviceType)));
