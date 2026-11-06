@@ -100,7 +100,7 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
 
     float ha_hours = acosf(cos_ha) * (180.0f / (float)M_PI) / 15.0f;
     float sunrise  = 12.0f - ha_hours;
-    float sunset   = 12.0f + ha_hours + night_margin_min_;
+    float sunset   = 12.0f + ha_hours + night_margin_min_ / 60.0f;
 
     float local_hours = local_tm.tm_hour + local_tm.tm_min / 60.0f;
     return (local_hours < sunrise) || (local_hours > sunset);
