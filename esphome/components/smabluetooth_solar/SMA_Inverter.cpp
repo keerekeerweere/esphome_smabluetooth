@@ -1156,7 +1156,8 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
     if (pcktID == rcvpcktID && get_u32(pcktBuf + 41) == (uint32_t)now) {
         invData.SUSyID = get_u16(pcktBuf + 15);
         invData.Serial = get_u32(pcktBuf + 17);
-        ESP_LOGV(TAG, "SUSyID=0x%02X Serial=0x%08X", invData.SUSyID, invData.Serial);
+        ESP_LOGV(TAG, "SUSyID=0x%04X Serial=0x%08lX", invData.SUSyID,
+                 static_cast<unsigned long>(invData.Serial));
     } else {
         ESP_LOGW(TAG, "Logon unexpected response pcktID=0x%04X rcvpcktID=0x%04X",
                  pcktID, rcvpcktID);
