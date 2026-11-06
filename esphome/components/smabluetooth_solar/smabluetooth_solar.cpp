@@ -95,7 +95,8 @@ void SmaBluetoothSolar::setup() {
     hasSetup_ = smaInverter->setup(sma_inverter_bluetooth_mac_,
                                    sma_inverter_password_,
                                    sma_inverter_delay_values_,
-                                   sma_inverter_night_margin_);
+                                   sma_inverter_night_margin_,
+                                   latitude_, longitude_);
     if (!hasSetup_) {
         ESP_LOGE(TAG, "Invalid SMA Bluetooth configuration");
         mark_failed();

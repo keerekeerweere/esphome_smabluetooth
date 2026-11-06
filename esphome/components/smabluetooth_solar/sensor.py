@@ -6,6 +6,8 @@ from esphome.const import (
     CONF_CURRENT,
     CONF_FREQUENCY,
     CONF_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_VOLTAGE,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -36,6 +38,7 @@ from esphome.const import (
 
 
 from esphome.components.esp32 import include_builtin_idf_component
+from esphome.components.sun import parse_latlon
 
 ICON_CURRENT_DC = "mdi:current-dc"
 ICON_SINE_WAVE = "mdi:sine-wave"
@@ -152,6 +155,8 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.All(cv.string_strict, cv.Length(max=12)),
             cv.Optional(CONF_SMA_INVERTER_DELAY_VALUES, default="200ms"): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_SMA_INVERTER_NIGHT_MARGIN, default="30min"): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_LATITUDE): cv.All(parse_latlon, cv.float_range(min=-90, max=90)),
+            cv.Optional(CONF_LONGITUDE): cv.All(parse_latlon, cv.float_range(min=-180, max=180)),
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PERCENT,
@@ -247,6 +252,11 @@ async def to_code(config):
 
     if CONF_SMA_INVERTER_NIGHT_MARGIN in config:
         cg.add(var.set_sma_inverter_night_margin(config[CONF_SMA_INVERTER_NIGHT_MARGIN].total_seconds / 60.0))
+
+    if CONF_LATITUDE in config:
+        cg.add(var.set_latitude(config[CONF_LATITUDE]))
+    if CONF_LONGITUDE in config:
+        cg.add(var.set_longitude(config[CONF_LONGITUDE]))
 
     cg.add(var.set_protocol_version(config[CONF_PROTOCOL_VERSION]))
 

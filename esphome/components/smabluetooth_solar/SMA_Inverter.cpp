@@ -87,7 +87,7 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
     if (utc_offset >  12) utc_offset -= 24;
     if (utc_offset < -12) utc_offset += 24;
 
-    float lat_deg = latitude_from_utc_offset(utc_offset);
+    float lat_deg = std::isnan(latitude_) ? latitude_from_utc_offset(utc_offset) : latitude_;
     float lat_rad = lat_deg * (float)M_PI / 180.0f;
 
     int day_of_year = local_tm.tm_yday + 1; // 1..365
@@ -99,8 +99,16 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
     if (cos_ha <= -1.0f) return false; // midnight sun
 
     float ha_hours = acosf(cos_ha) * (180.0f / (float)M_PI) / 15.0f;
-    float sunrise  = 12.0f - ha_hours;
-    float sunset   = 12.0f + ha_hours + night_margin_min_ / 60.0f;
+
+    // Correct civil noon for longitude within the local time zone and equation of time.
+    float solar_noon = 12.0f;
+    if (!std::isnan(longitude_)) {
+        float b = 2.0f * (float)M_PI * (day_of_year - 81) / 364.0f;
+        float equation_of_time_min = 9.87f * sinf(2.0f * b) - 7.53f * cosf(b) - 1.5f * sinf(b);
+        solar_noon = 12.0f + (15.0f * utc_offset - longitude_) / 15.0f - equation_of_time_min / 60.0f;
+    }
+    float sunrise  = solar_noon - ha_hours;
+    float sunset   = solar_noon + ha_hours + night_margin_min_ / 60.0f;
 
     float local_hours = local_tm.tm_hour + local_tm.tm_min / 60.0f;
     return (local_hours < sunrise) || (local_hours > sunset);
@@ -111,7 +119,8 @@ bool ESP32_SMA_Inverter::is_nighttime() const {
 // ============================================================
 
 bool ESP32_SMA_Inverter::setup(const std::string &mac, const std::string &pw,
-                               uint32_t delay_values_ms, float night_margin_min) {
+                               uint32_t delay_values_ms, float night_margin_min,
+                               float latitude, float longitude) {
     ESP_LOGW(TAG, "setup inverter mac=%s", mac.c_str());
     if (sscanf(mac.c_str(), "%2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
                &smaBTAddress[0], &smaBTAddress[1], &smaBTAddress[2],
@@ -129,6 +138,8 @@ bool ESP32_SMA_Inverter::setup(const std::string &mac, const std::string &pw,
 
     delay_values_ms_ = delay_values_ms;
     night_margin_min_ = night_margin_min;
+    latitude_ = latitude;
+    longitude_ = longitude;
     if (data_mutex_ == nullptr) data_mutex_ = xSemaphoreCreateMutex();
 
     invData.SUSyID = 0x7d;
