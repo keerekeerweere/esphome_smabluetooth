@@ -387,6 +387,7 @@ class ESP32_SMA_Inverter {
     volatile bool stop_task_          = false;
     volatile bool sync_time_requested_  = false;
     volatile bool fetch_time_requested_ = false;
+    volatile bool rx_overflow_            = false;
     bool night_mode_active_             = false;
     bool night_mode_time_invalid_logged_ = false;
     bool stack_initialized_                = false;

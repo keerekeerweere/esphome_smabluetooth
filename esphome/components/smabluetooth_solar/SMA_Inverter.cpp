@@ -330,9 +330,13 @@ void ESP32_SMA_Inverter::spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param
 
     case ESP_SPP_CLOSE_EVT:
         ESP_LOGI(TAG, "SPP_CLOSE handle=%lu", param->close.handle);
-        self->spp_handle_  = 0;
-        self->btConnected_ = false;
-        xEventGroupSetBits(self->bt_event_group_, BT_EVT_DISCONNECTED);
+        if (self->spp_handle_ == param->close.handle) {
+            self->spp_handle_  = 0;
+            self->btConnected_ = false;
+            xEventGroupSetBits(self->bt_event_group_, BT_EVT_DISCONNECTED);
+        } else {
+            ESP_LOGD(TAG, "Ignoring stale close event for handle=%lu", param->close.handle);
+        }
         break;
 
     case ESP_SPP_DATA_IND_EVT: {
@@ -345,7 +349,8 @@ void ESP32_SMA_Inverter::spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param
             param->data_ind.len,
             0);  // non-blocking
         if (written != param->data_ind.len) {
-            ESP_LOGW(TAG, "RX stream buffer full! dropped %u bytes",
+            self->rx_overflow_ = true;
+            ESP_LOGW(TAG, "RX stream buffer full! stream will be reset; dropped %u bytes",
                      (unsigned)(param->data_ind.len - written));
         }
         break;
@@ -674,6 +679,12 @@ bool ESP32_SMA_Inverter::isValidSender(const uint8_t expAddr[6], const uint8_t i
 
 E_RC ESP32_SMA_Inverter::getPacket(const uint8_t expAddr[6], int wait4Command) {
     ESP_LOGV(TAG, "getPacket cmd=0x%04x", wait4Command);
+    if (rx_overflow_) {
+        ESP_LOGW(TAG, "Resetting poisoned RX stream after overflow");
+        flushRxBuffer();
+        rx_overflow_ = false;
+        return E_OVERFLOW;
+    }
 
     int index = 0;
     bool hasL2pckt = false;
