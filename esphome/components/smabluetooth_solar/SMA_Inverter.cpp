@@ -142,11 +142,12 @@ bool ESP32_SMA_Inverter::setup(const std::string &mac, const std::string &pw,
 }
 
 bool ESP32_SMA_Inverter::begin(const char *localName) {
+    if (stack_initialized_) return true;
     ESP_LOGD(TAG, "begin BT stack");
 
-    // Create FreeRTOS primitives
-    rx_stream_buf_ = xStreamBufferCreate(4096, 1);
-    bt_event_group_ = xEventGroupCreate();
+    // Create FreeRTOS primitives once so a failed initialization can be retried safely.
+    if (rx_stream_buf_ == nullptr) rx_stream_buf_ = xStreamBufferCreate(4096, 1);
+    if (bt_event_group_ == nullptr) bt_event_group_ = xEventGroupCreate();
     if (!rx_stream_buf_ || !bt_event_group_ || !data_mutex_) {
         ESP_LOGE(TAG, "Failed to create FreeRTOS primitives");
         return false;
@@ -160,18 +161,26 @@ bool ESP32_SMA_Inverter::begin(const char *localName) {
 
     // BT controller
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-    ret = esp_bt_controller_init(&bt_cfg);
-    if (ret != ESP_OK) { ESP_LOGE(TAG, "controller_init: %s", esp_err_to_name(ret)); return false; }
+    if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {
+        ret = esp_bt_controller_init(&bt_cfg);
+        if (ret != ESP_OK) { ESP_LOGE(TAG, "controller_init: %s", esp_err_to_name(ret)); return false; }
+    }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT);
-    if (ret != ESP_OK) { ESP_LOGE(TAG, "controller_enable: %s", esp_err_to_name(ret)); return false; }
+    if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED) {
+        ret = esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT);
+        if (ret != ESP_OK) { ESP_LOGE(TAG, "controller_enable: %s", esp_err_to_name(ret)); return false; }
+    }
 
     // Bluedroid stack
-    ret = esp_bluedroid_init();
-    if (ret != ESP_OK) { ESP_LOGE(TAG, "bluedroid_init: %s", esp_err_to_name(ret)); return false; }
+    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
+        ret = esp_bluedroid_init();
+        if (ret != ESP_OK) { ESP_LOGE(TAG, "bluedroid_init: %s", esp_err_to_name(ret)); return false; }
+    }
 
-    ret = esp_bluedroid_enable();
-    if (ret != ESP_OK) { ESP_LOGE(TAG, "bluedroid_enable: %s", esp_err_to_name(ret)); return false; }
+    if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED) {
+        ret = esp_bluedroid_enable();
+        if (ret != ESP_OK) { ESP_LOGE(TAG, "bluedroid_enable: %s", esp_err_to_name(ret)); return false; }
+    }
 
     // Register callbacks
     ret = esp_bt_gap_register_callback(gap_callback);
@@ -200,6 +209,7 @@ bool ESP32_SMA_Inverter::begin(const char *localName) {
     // Make device non-discoverable / non-connectable (we initiate; don't want to be found)
     esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE, ESP_BT_NON_DISCOVERABLE);
 
+    stack_initialized_ = true;
     ESP_LOGD(TAG, "BT stack init complete, waiting for SPP_INIT event");
     return true;
 }
@@ -208,16 +218,16 @@ bool ESP32_SMA_Inverter::begin(const char *localName) {
 //  FreeRTOS task management
 // ============================================================
 
-void ESP32_SMA_Inverter::startBtTask() {
+bool ESP32_SMA_Inverter::startBtTask() {
     if (bt_task_handle_ != nullptr) {
         ESP_LOGW(TAG, "startBtTask: task already running");
-        return;
+        return true;
     }
     stop_task_  = false;
     task_error_ = false;
     ESP_LOGI(TAG, "Starting BT protocol task");
     TaskHandle_t h = nullptr;
-    xTaskCreatePinnedToCore(
+    BaseType_t result = xTaskCreatePinnedToCore(
         btTask,       // task function
         "bt_sma_proto", // name
         12288,        // stack bytes
@@ -226,7 +236,13 @@ void ESP32_SMA_Inverter::startBtTask() {
         &h,           // handle out
         0             // core 0 (BT stack also runs on core 0)
     );
+    if (result != pdPASS || h == nullptr) {
+        ESP_LOGE(TAG, "Failed to create BT protocol task");
+        task_error_ = true;
+        return false;
+    }
     bt_task_handle_ = h;
+    return true;
 }
 
 bool ESP32_SMA_Inverter::takeDataSnapshot(InverterData &inverter_data, DisplayData &display_data) {

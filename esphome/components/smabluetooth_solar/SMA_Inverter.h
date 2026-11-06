@@ -300,7 +300,7 @@ class ESP32_SMA_Inverter {
     bool begin(const char *localName);
 
     // Start / stop the FreeRTOS protocol task
-    void startBtTask();
+    bool startBtTask();
     void stopBtTask();
 
     // Status queries (safe to call from ESPHome main loop)
@@ -389,6 +389,7 @@ class ESP32_SMA_Inverter {
     volatile bool fetch_time_requested_ = false;
     bool night_mode_active_             = false;
     bool night_mode_time_invalid_logged_ = false;
+    bool stack_initialized_                = false;
 
     // ---- Configuration (written once in setup(), read-only afterward) ----
     uint8_t  smaBTAddress[6];
