@@ -1,0 +1,14 @@
+---
+extends: default
+
+ignore: |
+  .esphome/
+  tests/.esphome/
+
+rules:
+  comments-indentation: disable
+  document-start: disable
+  line-length:
+    max: 120
+  truthy:
+    allowed-values: ["true", "false", "on"]

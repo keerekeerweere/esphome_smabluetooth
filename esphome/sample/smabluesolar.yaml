@@ -39,12 +39,12 @@ logger:
 
 # Enable Home Assistant API
 api:
-  encryption: 
+  encryption:
     key: !secret api_encryption_key
 
 ota:
   - platform: esphome
-    password: !secret ota_password 
+    password: !secret ota_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -77,49 +77,49 @@ sensor:
     # Margin after sunset before night mode engages (default 30min — extends sunset so readings drop to zero naturally)
     # sma_inverter_night_margin: 30min
 
-    inverter_status: 
+    inverter_status:
       name: "Inverter Status"
 
-    grid_relay: 
+    grid_relay:
       name: "Grid relay Status"
 
     phase_a:
       voltage:
-          name: "Voltage Phase A"
+        name: "Voltage Phase A"
       current:
-          name: "Current Phase A"
+        name: "Current Phase A"
       active_power:
-          name: "Power Phase A"
+        name: "Power Phase A"
     phase_b:
       voltage:
-          name: "Voltage Phase B"
+        name: "Voltage Phase B"
       current:
-          name: "Current Phase B"
+        name: "Current Phase B"
       active_power:
-          name: "Power Phase B"
+        name: "Power Phase B"
     phase_c:
       voltage:
-          name: "Voltage Phase C"
+        name: "Voltage Phase C"
       current:
-          name: "Current Phase C"
+        name: "Current Phase C"
       active_power:
-          name: "Power Phase C"
+        name: "Power Phase C"
 
     pv1:
       voltage:
-          name: "Voltage mppt1"
+        name: "Voltage mppt1"
       current:
-          name: "Current mppt1"
+        name: "Current mppt1"
       active_power:
-          name: "Power mppt1"
+        name: "Power mppt1"
 
     pv2:
       voltage:
-          name: "Voltage mppt2"
+        name: "Voltage mppt2"
       current:
-          name: "Current mppt2"
+        name: "Current mppt2"
       active_power:
-          name: "Power mppt2"
+        name: "Power mppt2"
 
 #    active_power:
 #      name: "Grid Active Power"

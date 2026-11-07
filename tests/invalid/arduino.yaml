@@ -1,0 +1,24 @@
+esphome:
+  name: sma-invalid-arduino
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+external_components:
+  - source:
+      type: local
+      path: ../../esphome/components
+    components: [smabluetooth_solar]
+
+wifi:
+  ssid: "compile-test"
+  password: "compile-test-password"
+
+api:
+
+sensor:
+  - platform: smabluetooth_solar
+    sma_inverter_bluetooth_mac: "00:80:25:1D:81:66"
+    sma_inverter_password: "0000"

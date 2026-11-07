@@ -28,9 +28,11 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Compile test configuration
+      - name: Compile full test configuration
         run: |
           docker run --rm \
             --user "$(id -u):$(id -g)" \
@@ -39,3 +41,26 @@ jobs:
             --workdir /config \
             "ghcr.io/esphome/esphome:${{ matrix.esphome-version }}" \
             compile tests/compile.yaml
+
+      - name: Compile minimal test configuration
+        if: matrix.esphome-version == 'stable'
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp \
+            --volume "${{ github.workspace }}:/config" \
+            --workdir /config \
+            ghcr.io/esphome/esphome:stable \
+            compile tests/minimal.yaml
+
+      - name: Verify invalid configurations are rejected
+        if: github.event_name == 'pull_request' && matrix.esphome-version == 'stable'
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp \
+            --volume "${{ github.workspace }}:/config" \
+            --workdir /config \
+            --entrypoint /bin/bash \
+            ghcr.io/esphome/esphome:stable \
+            tests/check-invalid-configs.sh

@@ -1,28 +1,28 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor, text_sensor, binary_sensor
+from esphome.components.esp32 import add_idf_sdkconfig_option, include_builtin_idf_component
+from esphome.components.sun import parse_latlon
 from esphome.const import (
     CONF_ACTIVE_POWER,
     CONF_CURRENT,
     CONF_FREQUENCY,
     CONF_ID,
-    Framework,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_VOLTAGE,
     DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_VOLTAGE,
-    DEVICE_CLASS_FREQUENCY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_DURATION,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     ICON_CURRENT_AC,
-    ICON_SIGNAL_DISTANCE_VARIANT,
     ICON_FLASH,
+    ICON_SIGNAL_DISTANCE_VARIANT,
     ICON_THERMOMETER,
     ICON_TIMER,
     STATE_CLASS_MEASUREMENT,
@@ -30,18 +30,15 @@ from esphome.const import (
     UNIT_AMPERE,
     UNIT_CELSIUS,
     UNIT_HERTZ,
-    UNIT_VOLT,
-    UNIT_WATT,
+    UNIT_HOUR,
     UNIT_KILOWATT,
-    UNIT_PERCENT,
     UNIT_KILOWATT_HOURS,
-    UNIT_HOUR
+    UNIT_PERCENT,
+    UNIT_VOLT,
+    Framework,
 )
 
-
-from esphome.components import esp32
-from esphome.components.esp32 import add_idf_sdkconfig_option, include_builtin_idf_component
-from esphome.components.sun import parse_latlon
+from esphome.components import binary_sensor, esp32, sensor, text_sensor
 
 ICON_CURRENT_DC = "mdi:current-dc"
 ICON_SINE_WAVE = "mdi:sine-wave"
@@ -77,8 +74,8 @@ CONF_PROTOCOL_VERSION = "protocol_version"
 
 CONF_SMA_INVERTER_BLUETOOTH_MAC = "sma_inverter_bluetooth_mac"
 CONF_SMA_INVERTER_PASSWORD = "sma_inverter_password"
-CONF_SMA_INVERTER_DELAY_VALUES      = "sma_inverter_delay_values"
-CONF_SMA_INVERTER_NIGHT_MARGIN      = "sma_inverter_night_margin"
+CONF_SMA_INVERTER_DELAY_VALUES = "sma_inverter_delay_values"
+CONF_SMA_INVERTER_NIGHT_MARGIN = "sma_inverter_night_margin"
 
 CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH = "sma_inverter_bluetooth_signal_strength"
 
@@ -90,9 +87,7 @@ CODEOWNERS = ["@keerekeerweere"]
 
 
 smabluetooth_solar_ns = cg.esphome_ns.namespace("smabluetooth_solar")
-SmaBluetoothSolar = smabluetooth_solar_ns.class_(
-    "SmaBluetoothSolar", cg.PollingComponent
-)
+SmaBluetoothSolar = smabluetooth_solar_ns.class_("SmaBluetoothSolar", cg.PollingComponent)
 
 PHASE_SENSORS = {
     CONF_VOLTAGE: sensor.sensor_schema(
@@ -100,14 +95,14 @@ PHASE_SENSORS = {
         icon=ICON_SINE_WAVE,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_CURRENT: sensor.sensor_schema(
         unit_of_measurement=UNIT_AMPERE,
         icon=ICON_CURRENT_AC,
         accuracy_decimals=2,
         device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_ACTIVE_POWER: sensor.sensor_schema(
         unit_of_measurement=UNIT_KILOWATT,
@@ -123,7 +118,7 @@ PV_SENSORS = {
         icon=ICON_SINE_WAVE,
         accuracy_decimals=1,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_CURRENT: sensor.sensor_schema(
         unit_of_measurement=UNIT_AMPERE,
@@ -141,17 +136,11 @@ PV_SENSORS = {
     ),
 }
 
-PHASE_SCHEMA = cv.Schema(
-    {cv.Optional(sensor): schema for sensor, schema in PHASE_SENSORS.items()}
-)
-PV_SCHEMA = cv.Schema(
-    {cv.Optional(sensor): schema for sensor, schema in PV_SENSORS.items()}
-)
+PHASE_SCHEMA = cv.Schema({cv.Optional(sensor): schema for sensor, schema in PHASE_SENSORS.items()})
+PV_SCHEMA = cv.Schema({cv.Optional(sensor): schema for sensor, schema in PV_SENSORS.items()})
 
 SmaBluetoothProtocolVersion = smabluetooth_solar_ns.enum("SmaBluetoothProtocolVersion")
-PROTOCOL_VERSIONS = {
-    "SMANET2": SmaBluetoothProtocolVersion.SMANET2
-}
+PROTOCOL_VERSIONS = {"SMANET2": SmaBluetoothProtocolVersion.SMANET2}
 
 
 CONFIG_SCHEMA = cv.All(
@@ -164,7 +153,6 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_SMA_INVERTER_NIGHT_MARGIN, default="30min"): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_LATITUDE): cv.All(parse_latlon, cv.float_range(min=-90, max=90)),
             cv.Optional(CONF_LONGITUDE): cv.All(parse_latlon, cv.float_range(min=-180, max=180)),
-
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PERCENT,
                 icon=ICON_SIGNAL_DISTANCE_VARIANT,
@@ -173,9 +161,7 @@ CONFIG_SCHEMA = cv.All(
                 state_class=STATE_CLASS_MEASUREMENT,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(
-                PROTOCOL_VERSIONS, upper=True
-            ),
+            cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(PROTOCOL_VERSIONS, upper=True),
             cv.Optional(CONF_PHASE_A): PHASE_SCHEMA,
             cv.Optional(CONF_PHASE_B): PHASE_SCHEMA,
             cv.Optional(CONF_PHASE_C): PHASE_SCHEMA,
@@ -262,8 +248,7 @@ CONFIG_SCHEMA = cv.All(
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
         }
-    )
-    .extend(cv.polling_component_schema("60s")),
+    ).extend(cv.polling_component_schema("60s")),
     cv.only_with_framework(frameworks=[Framework.ESP_IDF]),
     esp32.only_on_variant(
         supported=[esp32.VARIANT_ESP32],
@@ -288,7 +273,7 @@ async def to_code(config):
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-#    await modbus.register_modbus_device(var, config)
+    #    await modbus.register_modbus_device(var, config)
 
     cg.add(var.set_sma_inverter_bluetooth_mac(str(config[CONF_SMA_INVERTER_BLUETOOTH_MAC])))
     cg.add(var.set_sma_inverter_password(config[CONF_SMA_INVERTER_PASSWORD]))
@@ -397,4 +382,3 @@ async def to_code(config):
             if sensor_type in pv_config:
                 sens = await sensor.new_sensor(pv_config[sensor_type])
                 cg.add(getattr(var, f"set_{sensor_type}_sensor_pv")(i, sens))
-
