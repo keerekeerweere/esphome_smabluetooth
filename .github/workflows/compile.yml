@@ -1,0 +1,46 @@
+name: ESPHome compile tests
+
+on:
+  pull_request:
+    paths:
+      - "esphome/components/smabluetooth_solar/**"
+      - "esphome/sample/**"
+      - "tests/**"
+      - ".github/workflows/compile.yml"
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: ESPHome ${{ matrix.esphome-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        esphome-version:
+          - stable
+          - beta
+          - dev
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Compile test configuration
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp \
+            --volume "${{ github.workspace }}:/config" \
+            --workdir /config \
+            "ghcr.io/esphome/esphome:${{ matrix.esphome-version }}" \
+            compile tests/compile.yaml

@@ -1,3 +1,4 @@
 .vscode/settings.json
 sunny-explorer.png
+.esphome/
 esphome/components/smabluetooth_solar/__pycache__/**
