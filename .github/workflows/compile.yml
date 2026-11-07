@@ -2,11 +2,6 @@ name: ESPHome compile tests
 
 on:
   pull_request:
-    paths:
-      - "esphome/components/smabluetooth_solar/**"
-      - "esphome/sample/**"
-      - "tests/**"
-      - ".github/workflows/compile.yml"
   schedule:
     - cron: "23 5 * * 1"
   workflow_dispatch:
