@@ -280,8 +280,8 @@ bool ESP32_SMA_Inverter::takeDataSnapshot(InverterData &inverter_data, DisplayDa
         return false;
     bool ready = data_ready_;
     if (ready) {
-        inverter_data = invData;
-        display_data = dispData;
+        inverter_data = published_inv_data_;
+        display_data = published_disp_data_;
         data_ready_ = false;
     }
     xSemaphoreGive(data_mutex_);
@@ -579,11 +579,6 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         };
 
         while (self->btConnected_ && !self->stop_task_) {
-            if (xSemaphoreTake(self->data_mutex_, portMAX_DELAY) != pdTRUE) {
-                ESP_LOGE(TTAG, "Could not lock inverter data");
-                break;
-            }
-
             // BT signal strength is diagnostics-only; no need to poll every 10 s
             if (cycle_count % DIAG_EVERY == 0) {
                 self->getBT_SignalStrength();
@@ -600,14 +595,12 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             cycle_count++;
 
             if (!cycle_ok || !self->btConnected_) {
-                xSemaphoreGive(self->data_mutex_);
                 break;
             }
 
             // Disconnect at sunset — outer loop will not reconnect until sunrise
             if (self->is_nighttime()) {
                 ESP_LOGI(TTAG, "Sunset detected, disconnecting");
-                xSemaphoreGive(self->data_mutex_);
                 break;
             }
 
@@ -623,9 +616,17 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                 self->fetch_time_requested_ = false;
             }
 
-            // Publish the completed sample and release it to the ESPHome main task.
-            self->data_ready_ = true;
-            xSemaphoreGive(self->data_mutex_);
+            // Publish the completed sample with only a brief lock. The next query
+            // cycle can update the task-owned working data without blocking ESPHome.
+            if (xSemaphoreTake(self->data_mutex_, portMAX_DELAY) == pdTRUE) {
+                self->published_inv_data_ = self->invData;
+                self->published_disp_data_ = self->dispData;
+                self->data_ready_ = true;
+                xSemaphoreGive(self->data_mutex_);
+            } else {
+                ESP_LOGE(TTAG, "Could not lock inverter snapshot");
+                break;
+            }
 
             vTaskDelay(pdMS_TO_TICKS(500));
         }
@@ -1552,7 +1553,9 @@ void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) 
         }
         lp += sprintf(lp, " %02X", buf[i]);
     }
-    if (lp != line) ESP_LOGD(TAG, "%s", line);
+    if (lp != line) {
+        ESP_LOGD(TAG, "%s", line);
+    }
 }
 
 uint8_t ESP32_SMA_Inverter::printUnixTime(char *buf, time_t t) {

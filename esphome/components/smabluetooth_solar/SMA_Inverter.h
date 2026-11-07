@@ -43,6 +43,7 @@ SOFTWARE.
 #include <cstring>
 #include <cstdint>
 #include <ctime>
+#include <cmath>
 
 #define DEBUG_SMA 0
 
@@ -322,7 +323,7 @@ class ESP32_SMA_Inverter {
 
     bool is_nighttime() const;
 
-    // Shared data — written by BT task, read by ESPHome update()
+    // Working data owned by the Bluetooth task while it builds the next sample.
     InverterData invData  = InverterData();
     DisplayData  dispData = DisplayData();
 
@@ -377,6 +378,10 @@ class ESP32_SMA_Inverter {
     SemaphoreHandle_t    data_mutex_ = nullptr;      // protects published data snapshots
     SemaphoreHandle_t    location_mutex_ = nullptr;  // protects solar coordinates
     volatile TaskHandle_t bt_task_handle_ = nullptr; // volatile: read/written across cores
+
+    // Completed sample handed from the Bluetooth task to the ESPHome main task.
+    InverterData published_inv_data_ = InverterData();
+    DisplayData  published_disp_data_ = DisplayData();
 
     // ---- SPP state ----
     volatile uint32_t spp_handle_    = 0;
