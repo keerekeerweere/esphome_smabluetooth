@@ -31,6 +31,7 @@ SOFTWARE.
 #include "freertos/task.h"
 #include "freertos/stream_buffer.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
 
 // ESP-IDF Bluetooth (Classic / Bluedroid / SPP)
 #include "esp_bt.h"
@@ -42,6 +43,8 @@ SOFTWARE.
 #include <cstring>
 #include <cstdint>
 #include <ctime>
+#include <atomic>
+#include <cmath>
 
 #define DEBUG_SMA 0
 
@@ -68,19 +71,19 @@ namespace smabluetooth_solar {
 #define BTH_L2SIGNATURE 0x656003FF
 #define USERGROUP UG_USER
 
-#define NaN_S16 0x8000
-#define NaN_U16 0xFFFF
-#define NaN_S32 (int32_t) 0x80000000
-#define NaN_U32 (uint32_t)0xFFFFFFFF
-#define NaN_S64 (int64_t) 0x8000000000000000
-#define NaN_U64 (uint64_t)0xFFFFFFFFFFFFFFFF
+constexpr int16_t NaN_S16 = INT16_MIN;
+constexpr uint16_t NaN_U16 = UINT16_MAX;
+constexpr int32_t NaN_S32 = INT32_MIN;
+constexpr uint32_t NaN_U32 = UINT32_MAX;
+constexpr int64_t NaN_S64 = INT64_MIN;
+constexpr uint64_t NaN_U64 = UINT64_MAX;
 
-inline const bool is_NaN(const int16_t S16)  { return S16 == NaN_S16; }
-inline const bool is_NaN(const uint16_t U16) { return U16 == NaN_U16; }
-inline const bool is_NaN(const int32_t S32)  { return S32 == NaN_S32; }
-inline const bool is_NaN(const uint32_t U32) { return U32 == NaN_U32; }
-inline const bool is_NaN(const int64_t S64)  { return S64 == NaN_S64; }
-inline const bool is_NaN(const uint64_t U64) { return U64 == NaN_U64; }
+inline bool is_NaN(int16_t value) { return value == NaN_S16; }
+inline bool is_NaN(uint16_t value) { return value == NaN_U16; }
+inline bool is_NaN(int32_t value) { return value == NaN_S32; }
+inline bool is_NaN(uint32_t value) { return value == NaN_U32; }
+inline bool is_NaN(int64_t value) { return value == NaN_S64; }
+inline bool is_NaN(uint64_t value) { return value == NaN_U64; }
 
 // ---- Event group bits for BT state signalling between task and callbacks ----
 #define BT_EVT_SPP_INIT     (BIT0)
@@ -112,7 +115,7 @@ enum E_RC {
 
 struct InverterData {
     uint8_t btAddress[6];
-    uint8_t SUSyID;
+    uint16_t SUSyID;
     uint32_t Serial;
     uint8_t NetID;
     int32_t Pmax;
@@ -155,7 +158,7 @@ struct InverterData {
     std::string SWVersion;
     uint32_t DeviceType;
     uint32_t DeviceClass;
-    std::string InverterTimestamp;   // human-readable UTC string of inverter's clock
+    std::string InverterTimestamp;   // ISO 8601 UTC string of inverter's clock
 };
 
 struct DisplayData {
@@ -180,9 +183,24 @@ struct DisplayData {
     float Idc1;
     float Idc2;
     float GridFreq;
-    float EToday;
-    float ETotal;
+    double EToday;
+    double ETotal;
     bool needsMissingValues = false;
+};
+
+enum class BluetoothConnectionState : uint8_t {
+    Starting,
+    WaitingForBluetooth,
+    NightMode,
+    Searching,
+    Connecting,
+    Pairing,
+    Initializing,
+    Authenticating,
+    Connected,
+    Retrying,
+    Error,
+    Stopped,
 };
 
 enum getInverterDataType {
@@ -292,25 +310,27 @@ class ESP32_SMA_Inverter {
     ESP32_SMA_Inverter& operator=(const ESP32_SMA_Inverter&) = delete;
 
     // Called from ESPHome setup()
-    void setup(std::string mac, std::string pw, uint32_t delay_values_ms);
+    bool setup(const std::string &mac, const std::string &pw, uint32_t delay_values_ms,
+               float night_margin_min, float latitude, float longitude);
 
     // Initialise ESP-IDF BT stack (non-blocking; fires BT_EVT_SPP_INIT asynchronously)
     bool begin(const char *localName);
 
     // Start / stop the FreeRTOS protocol task
-    void startBtTask();
+    bool startBtTask();
     void stopBtTask();
 
     // Status queries (safe to call from ESPHome main loop)
-    bool isDataReady()   const { return data_ready_; }
-    void clearDataReady()      { data_ready_ = false; }
+    bool takeDataSnapshot(InverterData &inverter_data, DisplayData &display_data);
     bool hasTaskError()  const { return task_error_; }
     void clearTaskError()      { task_error_ = false; }
     bool isBtConnected() const { return btConnected_; }
     bool isNightModeActive() const { return night_mode_active_; }
+    BluetoothConnectionState getConnectionState() const { return connection_state_.load(); }
 
     void requestTimeSync()     { sync_time_requested_ = true; }
     void requestTimeFetch()    { fetch_time_requested_ = true; }
+    void setSolarLocation(float latitude, float longitude);
 
     void initPcktID()              { setPcktID(1); }
     void setPcktID(uint8_t id)     { pcktID = id; }
@@ -320,7 +340,7 @@ class ESP32_SMA_Inverter {
 
     bool is_nighttime() const;
 
-    // Shared data — written by BT task, read by ESPHome update()
+    // Working data owned by the Bluetooth task while it builds the next sample.
     InverterData invData  = InverterData();
     DisplayData  dispData = DisplayData();
 
@@ -372,7 +392,13 @@ class ESP32_SMA_Inverter {
     // ---- FreeRTOS handles ----
     StreamBufferHandle_t rx_stream_buf_  = nullptr;  // SPP RX data → task
     EventGroupHandle_t   bt_event_group_ = nullptr;  // connect/disconnect events
+    SemaphoreHandle_t    data_mutex_ = nullptr;      // protects published data snapshots
+    SemaphoreHandle_t    location_mutex_ = nullptr;  // protects solar coordinates
     volatile TaskHandle_t bt_task_handle_ = nullptr; // volatile: read/written across cores
+
+    // Completed sample handed from the Bluetooth task to the ESPHome main task.
+    InverterData published_inv_data_ = InverterData();
+    DisplayData  published_disp_data_ = DisplayData();
 
     // ---- SPP state ----
     volatile uint32_t spp_handle_    = 0;
@@ -385,14 +411,19 @@ class ESP32_SMA_Inverter {
     volatile bool stop_task_          = false;
     volatile bool sync_time_requested_  = false;
     volatile bool fetch_time_requested_ = false;
+    volatile bool rx_overflow_            = false;
+    std::atomic<BluetoothConnectionState> connection_state_{BluetoothConnectionState::Stopped};
     bool night_mode_active_             = false;
     bool night_mode_time_invalid_logged_ = false;
+    bool stack_initialized_                = false;
 
     // ---- Configuration (written once in setup(), read-only afterward) ----
     uint8_t  smaBTAddress[6];
-    char     smaInvPass[12];
+    char     smaInvPass[13];
     uint32_t delay_values_ms_   = 500;
     float    night_margin_min_  = 30.0f;  // minutes after sunset before night mode engages
+    float    latitude_ = NAN;
+    float    longitude_ = NAN;
 
     // ---- Packet buffers ----
     uint8_t  btrdBuf[COMMBUFSIZE];
@@ -427,7 +458,7 @@ class ESP32_SMA_Inverter {
 
     // ---- Helpers ----
     void     HexDump(uint8_t *buf, int count, int radix, uint8_t c);
-    uint8_t  printUnixTime(char *buf, time_t t);
+    uint8_t  printUnixTime(char *buf, size_t size, time_t t);
     uint16_t get_u16(uint8_t *buf);
     uint32_t get_u32(uint8_t *buf);
     uint64_t get_u64(uint8_t *buf);

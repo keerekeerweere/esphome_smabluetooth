@@ -8,6 +8,7 @@ ESPHome external component to read SMA solar inverters via classic Bluetooth (SM
 - Runs on ESP-IDF (not Arduino); BLE disabled to preserve RAM
 - Non-blocking BT protocol task on core 0; ESPHome main loop never stalled
 - Automatic night mode: disconnects from inverter at sunset, reconnects at sunrise — no polling during darkness
+- Uses `zone.home` latitude/longitude from Home Assistant automatically; explicit component coordinates remain available as overrides
 
 ## Hardware compatibility
 Only the original ESP32 supports classic Bluetooth (SPP). Other variants do **not** work:
@@ -23,5 +24,13 @@ Only the original ESP32 supports classic Bluetooth (SPP). Other variants do **no
 
 ## Usage
 See `esphome/sample/smabluesolar.yaml` for a full configuration example.
+
+Optional entities include `total_ac_power`, `device_name`, and the diagnostic
+`bluetooth_connection_status` lifecycle sensor. Identity, Bluetooth signal,
+connection status, and inverter clock entities default to Home Assistant's
+Diagnostics category but can be overridden in YAML.
+
+`inverter_time` is a read-only text sensor containing the last inverter clock
+value read, formatted as ISO 8601 UTC (for example `2026-11-07T09:11:02Z`).
 
 For local development, replace the `external_components` GitHub URL with a `path:` pointing to the repository root.

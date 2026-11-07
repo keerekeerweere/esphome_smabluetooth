@@ -38,8 +38,7 @@ SMA, Speedwire are registered trademarks of SMA Solar Technology AG
 
 */
 
-#define PHASES 1  // Type of inverter, one or 3 phases
-#define HAVE_MODULE_TEMP false
+#define PHASES 3
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
@@ -87,13 +86,15 @@ class SmaBluetoothSolar : public PollingComponent {
     void loop()   override;
     void setup()  override;
     void update() override;
-    void handleMissingValues();
+    void handleMissingValues(DisplayData &data);
     void dump_config() override;
+    void on_shutdown() override;
 
     void updateSensor(text_sensor::TextSensor *sensor, const char *name, std::string v);
     void updateSensor(sensor::Sensor *sensor, const char *name, int32_t v);
     void updateSensor(sensor::Sensor *sensor, const char *name, uint64_t v);
     void updateSensor(sensor::Sensor *sensor, const char *name, float v);
+    void updateSensor(sensor::Sensor *sensor, const char *name, double v);
     void updateSensor(binary_sensor::BinarySensor *sensor, const char *name, bool v);
 
     void set_protocol_version(SmaBluetoothProtocolVersion v) { protocol_version_ = v; }
@@ -101,6 +102,8 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_sma_inverter_password(std::string v)            { sma_inverter_password_ = v; }
     void set_sma_inverter_delay_values(uint32_t v)           { sma_inverter_delay_values_ = v; }
     void set_sma_inverter_night_margin(float v)              { sma_inverter_night_margin_ = v; }
+    void set_latitude(float v)                                { latitude_ = v; latitude_configured_ = true; }
+    void set_longitude(float v)                               { longitude_ = v; longitude_configured_ = true; }
 
     // Callable from a YAML button/lambda: queues a time sync for the BT task
     void trigger_time_sync() {
@@ -112,6 +115,7 @@ class SmaBluetoothSolar : public PollingComponent {
     }
 
     void set_inverter_time_sensor(text_sensor::TextSensor *s)     { inverter_time_sensor_ = s; }
+    void set_bluetooth_connection_status_sensor(text_sensor::TextSensor *s) { bluetooth_connection_status_sensor_ = s; }
 
     void set_inverter_status_code_sensor(sensor::Sensor *s) { inverter_status_sensor_ = s; }
     void set_grid_relay_code_sensor(sensor::Sensor *s)      { grid_relay_sensor_ = s; }
@@ -122,9 +126,8 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_grid_frequency_sensor(sensor::Sensor *s)             { grid_frequency_sensor_ = s; }
     void set_today_production_sensor(sensor::Sensor *s)           { today_production_ = s; }
     void set_total_energy_production_sensor(sensor::Sensor *s)    { total_energy_production_ = s; }
-#ifdef HAVE_MODULE_TEMP
+    void set_total_ac_power_sensor(sensor::Sensor *s)             { total_ac_power_ = s; }
     void set_inverter_module_temp_sensor(sensor::Sensor *s)       { inverter_module_temp_ = s; }
-#endif
     void set_inverter_bluetooth_signal_strength(sensor::Sensor *s){ inverter_bluetooth_signal_strength_ = s; }
     void set_today_generation_time(sensor::Sensor *s)             { today_generation_time_ = s; }
     void set_total_generation_time(sensor::Sensor *s)             { total_generation_time_ = s; }
@@ -133,6 +136,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void set_software_version(text_sensor::TextSensor *s)         { software_version_ = s; }
     void set_device_type(text_sensor::TextSensor *s)              { device_type_ = s; }
     void set_device_class(text_sensor::TextSensor *s)             { device_class_ = s; }
+    void set_device_name(text_sensor::TextSensor *s)              { device_name_ = s; }
 
     void set_voltage_sensor(uint8_t phase, sensor::Sensor *s) {
         if (phase < PHASES) phases_[phase].voltage_sensor_ = s;
@@ -169,9 +173,8 @@ class SmaBluetoothSolar : public PollingComponent {
     sensor::Sensor *grid_frequency_sensor_{nullptr};
     sensor::Sensor *today_production_{nullptr};
     sensor::Sensor *total_energy_production_{nullptr};
-#ifdef HAVE_MODULE_TEMP
+    sensor::Sensor *total_ac_power_{nullptr};
     sensor::Sensor *inverter_module_temp_{nullptr};
-#endif
     sensor::Sensor *inverter_bluetooth_signal_strength_{nullptr};
     sensor::Sensor *today_generation_time_{nullptr};
     sensor::Sensor *total_generation_time_{nullptr};
@@ -180,13 +183,21 @@ class SmaBluetoothSolar : public PollingComponent {
     text_sensor::TextSensor *software_version_{nullptr};
     text_sensor::TextSensor *device_type_{nullptr};
     text_sensor::TextSensor *device_class_{nullptr};
+    text_sensor::TextSensor *device_name_{nullptr};
     text_sensor::TextSensor *inverter_time_sensor_{nullptr};
+    text_sensor::TextSensor *bluetooth_connection_status_sensor_{nullptr};
 
     SmaBluetoothProtocolVersion protocol_version_ = SMANET2;
     std::string sma_inverter_bluetooth_mac_;
     std::string sma_inverter_password_;
     uint32_t    sma_inverter_delay_values_ = 500;
     float       sma_inverter_night_margin_ = 30.0f;
+    float       latitude_ = NAN;
+    float       longitude_ = NAN;
+    bool        latitude_configured_ = false;
+    bool        longitude_configured_ = false;
+
+    void update_home_location_(bool latitude, const char *value);
 
     static const StatusCode status_codes[];
 
@@ -197,6 +208,11 @@ class SmaBluetoothSolar : public PollingComponent {
     uint32_t            nextNightModeStatusLogTime_{0};
     bool                hasSetup_{false};
     bool                nightModeStatusActive_{false};
+    BluetoothConnectionState lastConnectionState_{BluetoothConnectionState::Stopped};
+    bool                connectionStatePublished_{false};
+
+    void publish_connection_state_();
+    static const char *connection_state_to_string_(BluetoothConnectionState state);
 
     const float EPSILON = 0.0001f;
 };
