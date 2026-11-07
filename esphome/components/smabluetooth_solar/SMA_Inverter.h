@@ -43,6 +43,7 @@ SOFTWARE.
 #include <cstring>
 #include <cstdint>
 #include <ctime>
+#include <atomic>
 #include <cmath>
 
 #define DEBUG_SMA 0
@@ -157,7 +158,7 @@ struct InverterData {
     std::string SWVersion;
     uint32_t DeviceType;
     uint32_t DeviceClass;
-    std::string InverterTimestamp;   // human-readable UTC string of inverter's clock
+    std::string InverterTimestamp;   // ISO 8601 UTC string of inverter's clock
 };
 
 struct DisplayData {
@@ -185,6 +186,21 @@ struct DisplayData {
     double EToday;
     double ETotal;
     bool needsMissingValues = false;
+};
+
+enum class BluetoothConnectionState : uint8_t {
+    Starting,
+    WaitingForBluetooth,
+    NightMode,
+    Searching,
+    Connecting,
+    Pairing,
+    Initializing,
+    Authenticating,
+    Connected,
+    Retrying,
+    Error,
+    Stopped,
 };
 
 enum getInverterDataType {
@@ -310,6 +326,7 @@ class ESP32_SMA_Inverter {
     void clearTaskError()      { task_error_ = false; }
     bool isBtConnected() const { return btConnected_; }
     bool isNightModeActive() const { return night_mode_active_; }
+    BluetoothConnectionState getConnectionState() const { return connection_state_.load(); }
 
     void requestTimeSync()     { sync_time_requested_ = true; }
     void requestTimeFetch()    { fetch_time_requested_ = true; }
@@ -395,6 +412,7 @@ class ESP32_SMA_Inverter {
     volatile bool sync_time_requested_  = false;
     volatile bool fetch_time_requested_ = false;
     volatile bool rx_overflow_            = false;
+    std::atomic<BluetoothConnectionState> connection_state_{BluetoothConnectionState::Stopped};
     bool night_mode_active_             = false;
     bool night_mode_time_invalid_logged_ = false;
     bool stack_initialized_                = false;
@@ -440,7 +458,7 @@ class ESP32_SMA_Inverter {
 
     // ---- Helpers ----
     void     HexDump(uint8_t *buf, int count, int radix, uint8_t c);
-    uint8_t  printUnixTime(char *buf, time_t t);
+    uint8_t  printUnixTime(char *buf, size_t size, time_t t);
     uint16_t get_u16(uint8_t *buf);
     uint32_t get_u32(uint8_t *buf);
     uint64_t get_u64(uint8_t *buf);

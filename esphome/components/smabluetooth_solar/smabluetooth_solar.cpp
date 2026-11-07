@@ -145,6 +145,36 @@ void SmaBluetoothSolar::update_home_location_(bool latitude, const char *value) 
 
 void SmaBluetoothSolar::on_shutdown() {
     if (smaInverter != nullptr) smaInverter->stopBtTask();
+    if (bluetooth_connection_status_sensor_ != nullptr)
+        bluetooth_connection_status_sensor_->publish_state("Stopped");
+}
+
+const char *SmaBluetoothSolar::connection_state_to_string_(BluetoothConnectionState state) {
+    switch (state) {
+    case BluetoothConnectionState::Starting: return "Starting";
+    case BluetoothConnectionState::WaitingForBluetooth: return "Waiting for Bluetooth";
+    case BluetoothConnectionState::NightMode: return "Night mode";
+    case BluetoothConnectionState::Searching: return "Searching";
+    case BluetoothConnectionState::Connecting: return "Connecting";
+    case BluetoothConnectionState::Pairing: return "Pairing";
+    case BluetoothConnectionState::Initializing: return "Initializing";
+    case BluetoothConnectionState::Authenticating: return "Authenticating";
+    case BluetoothConnectionState::Connected: return "Connected";
+    case BluetoothConnectionState::Retrying: return "Retrying";
+    case BluetoothConnectionState::Error: return "Error";
+    case BluetoothConnectionState::Stopped: return "Stopped";
+    }
+    return "Unknown";
+}
+
+void SmaBluetoothSolar::publish_connection_state_() {
+    if (smaInverter == nullptr || bluetooth_connection_status_sensor_ == nullptr) return;
+    BluetoothConnectionState state = smaInverter->getConnectionState();
+    if (!connectionStatePublished_ || state != lastConnectionState_) {
+        bluetooth_connection_status_sensor_->publish_state(connection_state_to_string_(state));
+        lastConnectionState_ = state;
+        connectionStatePublished_ = true;
+    }
 }
 
 void SmaBluetoothSolar::loop() {
@@ -162,6 +192,11 @@ void SmaBluetoothSolar::loop() {
             ESP_LOGI(TAG, "BT task started, state -> Running");
         } else {
             ESP_LOGE(TAG, "BT begin failed, retrying in 10 s");
+            if (bluetooth_connection_status_sensor_ != nullptr) {
+                bluetooth_connection_status_sensor_->publish_state("Error");
+                lastConnectionState_ = BluetoothConnectionState::Error;
+                connectionStatePublished_ = true;
+            }
             errorRetryTime_ = now + 10000;
             inverterState   = SmaInverterState::Error;
         }
@@ -185,6 +220,11 @@ void SmaBluetoothSolar::loop() {
             ESP_LOGE(TAG, "BT task error detected, restarting in 10 s");
             smaInverter->clearTaskError();
             smaInverter->stopBtTask();
+            if (bluetooth_connection_status_sensor_ != nullptr) {
+                bluetooth_connection_status_sensor_->publish_state("Error");
+                lastConnectionState_ = BluetoothConnectionState::Error;
+                connectionStatePublished_ = true;
+            }
             errorRetryTime_ = now + 10000;
             inverterState   = SmaInverterState::Error;
         }
@@ -201,6 +241,8 @@ void SmaBluetoothSolar::loop() {
         }
         break;
     }
+
+    publish_connection_state_();
 }
 
 // ============================================================
@@ -220,7 +262,8 @@ void SmaBluetoothSolar::update() {
 
     updateSensor(today_production_,         "EToday",  display_data.EToday);
     updateSensor(total_energy_production_,  "ETotal",  display_data.ETotal);
-    updateSensor(grid_frequency_sensor_,    "Freq",    display_data.GridFreq);
+    updateSensor(total_ac_power_,            "PACTot",  display_data.TotalPac);
+    updateSensor(grid_frequency_sensor_,     "Freq",    display_data.GridFreq);
 
     updateSensor(pvs_[0].voltage_sensor_,      "UdcA",  display_data.Udc1);
     updateSensor(pvs_[0].current_sensor_,      "IdcA",  display_data.Idc1);
@@ -263,6 +306,7 @@ void SmaBluetoothSolar::update() {
                  std::string(lookup_code(inverter_data.DeviceType)));
     updateSensor(device_class_,           "DevClass",
                  std::string(lookup_code(inverter_data.DeviceClass)));
+    updateSensor(device_name_,            "DevName",   inverter_data.DeviceName);
     updateSensor(inverter_time_sensor_,   "InvTime",  inverter_data.InverterTimestamp);
 
 }

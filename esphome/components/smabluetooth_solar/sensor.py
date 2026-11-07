@@ -19,6 +19,7 @@ from esphome.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_DURATION,
     DEVICE_CLASS_TIMESTAMP,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     ICON_CURRENT_AC,
     ICON_SIGNAL_DISTANCE_VARIANT,
     ICON_FLASH,
@@ -48,6 +49,7 @@ ICON_SOLAR_POWER = "mdi:solar-power"
 ICON_LIGHTNING_BOLT = "mdi:lightning-bolt"
 ICON_TRANSMISSION_TOWER = "mdi:transmission-tower"
 ICON_CLOCK = "mdi:clock"
+ICON_BLUETOOTH_CONNECT = "mdi:bluetooth-connect"
 
 CONF_PHASE_A = "phase_a"
 CONF_PHASE_B = "phase_b"
@@ -55,6 +57,7 @@ CONF_PHASE_C = "phase_c"
 
 CONF_ENERGY_PRODUCTION_DAY = "energy_production_day"
 CONF_TOTAL_ENERGY_PRODUCTION = "total_energy_production"
+CONF_TOTAL_AC_POWER = "total_ac_power"
 CONF_TOTAL_GENERATION_TIME = "total_generation_time"
 CONF_TODAY_GENERATION_TIME = "today_generation_time"
 CONF_WAKEUP_TIME = "wakeup_time"
@@ -62,11 +65,13 @@ CONF_SERIAL_NUMBER = "serial_number"
 CONF_SOFTWARE_VERSION = "software_version"
 CONF_DEVICE_TYPE = "device_type"
 CONF_DEVICE_CLASS = "device_class"
+CONF_DEVICE_NAME = "device_name"
 CONF_INVERTER_TIME = "inverter_time"
 CONF_PV1 = "pv1"
 CONF_PV2 = "pv2"
 
 CONF_INVERTER_STATUS = "inverter_status"
+CONF_BLUETOOTH_CONNECTION_STATUS = "bluetooth_connection_status"
 CONF_INVERTER_MODULE_TEMP = "inverter_module_temp"
 CONF_PROTOCOL_VERSION = "protocol_version"
 
@@ -165,7 +170,8 @@ CONFIG_SCHEMA = cv.All(
                 icon=ICON_SIGNAL_DISTANCE_VARIANT,
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-                state_class=STATE_CLASS_MEASUREMENT
+                state_class=STATE_CLASS_MEASUREMENT,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(
                 PROTOCOL_VERSIONS, upper=True
@@ -176,6 +182,10 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PV1): PV_SCHEMA,
             cv.Optional(CONF_PV2): PV_SCHEMA,
             cv.Optional(CONF_INVERTER_STATUS): text_sensor.text_sensor_schema(),
+            cv.Optional(CONF_BLUETOOTH_CONNECTION_STATUS): text_sensor.text_sensor_schema(
+                icon=ICON_BLUETOOTH_CONNECT,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
             cv.Optional(CONF_GRID_RELAY): binary_sensor.binary_sensor_schema(
                 icon=ICON_TRANSMISSION_TOWER,
             ),
@@ -199,6 +209,13 @@ CONFIG_SCHEMA = cv.All(
                 accuracy_decimals=3,
                 device_class=DEVICE_CLASS_ENERGY,
                 state_class=STATE_CLASS_TOTAL_INCREASING,
+            ),
+            cv.Optional(CONF_TOTAL_AC_POWER): sensor.sensor_schema(
+                unit_of_measurement=UNIT_KILOWATT,
+                icon=ICON_LIGHTNING_BOLT,
+                accuracy_decimals=3,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_INVERTER_MODULE_TEMP): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
@@ -225,11 +242,25 @@ CONFIG_SCHEMA = cv.All(
                 icon=ICON_CLOCK,
                 device_class=DEVICE_CLASS_TIMESTAMP,
             ),
-            cv.Optional(CONF_SERIAL_NUMBER): text_sensor.text_sensor_schema(),
-            cv.Optional(CONF_SOFTWARE_VERSION): text_sensor.text_sensor_schema(),
-            cv.Optional(CONF_DEVICE_TYPE): text_sensor.text_sensor_schema(),
-            cv.Optional(CONF_DEVICE_CLASS): text_sensor.text_sensor_schema(),
-            cv.Optional(CONF_INVERTER_TIME): text_sensor.text_sensor_schema(),
+            cv.Optional(CONF_SERIAL_NUMBER): text_sensor.text_sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_SOFTWARE_VERSION): text_sensor.text_sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_DEVICE_TYPE): text_sensor.text_sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_DEVICE_CLASS): text_sensor.text_sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_DEVICE_NAME): text_sensor.text_sensor_schema(
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_INVERTER_TIME): text_sensor.text_sensor_schema(
+                icon=ICON_CLOCK,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
         }
     )
     .extend(cv.polling_component_schema("60s")),
@@ -279,6 +310,10 @@ async def to_code(config):
         sens = await text_sensor.new_text_sensor(config[CONF_INVERTER_STATUS])
         cg.add(var.set_inverter_status_sensor(sens))
 
+    if CONF_BLUETOOTH_CONNECTION_STATUS in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_BLUETOOTH_CONNECTION_STATUS])
+        cg.add(var.set_bluetooth_connection_status_sensor(sens))
+
     if CONF_GRID_RELAY in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_GRID_RELAY])
         cg.add(var.set_grid_relay_sensor(sens))
@@ -294,6 +329,10 @@ async def to_code(config):
     if CONF_TOTAL_ENERGY_PRODUCTION in config:
         sens = await sensor.new_sensor(config[CONF_TOTAL_ENERGY_PRODUCTION])
         cg.add(var.set_total_energy_production_sensor(sens))
+
+    if CONF_TOTAL_AC_POWER in config:
+        sens = await sensor.new_sensor(config[CONF_TOTAL_AC_POWER])
+        cg.add(var.set_total_ac_power_sensor(sens))
 
     if CONF_INVERTER_MODULE_TEMP in config:
         sens = await sensor.new_sensor(config[CONF_INVERTER_MODULE_TEMP])
@@ -330,6 +369,10 @@ async def to_code(config):
     if CONF_DEVICE_CLASS in config:
         sens = await text_sensor.new_text_sensor(config[CONF_DEVICE_CLASS])
         cg.add(var.set_device_class(sens))
+
+    if CONF_DEVICE_NAME in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_DEVICE_NAME])
+        cg.add(var.set_device_name(sens))
 
     if CONF_INVERTER_TIME in config:
         sens = await text_sensor.new_text_sensor(config[CONF_INVERTER_TIME])

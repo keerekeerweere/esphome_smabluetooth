@@ -255,6 +255,7 @@ bool ESP32_SMA_Inverter::startBtTask() {
     }
     stop_task_  = false;
     task_error_ = false;
+    connection_state_ = BluetoothConnectionState::Starting;
     ESP_LOGI(TAG, "Starting BT protocol task");
     TaskHandle_t h = nullptr;
     BaseType_t result = xTaskCreatePinnedToCore(
@@ -268,6 +269,7 @@ bool ESP32_SMA_Inverter::startBtTask() {
     );
     if (result != pdPASS || h == nullptr) {
         ESP_LOGE(TAG, "Failed to create BT protocol task");
+        connection_state_ = BluetoothConnectionState::Error;
         task_error_ = true;
         return false;
     }
@@ -305,6 +307,8 @@ void ESP32_SMA_Inverter::stopBtTask() {
         bt_task_handle_ = nullptr;
         vTaskDelete(h);
     }
+    btConnected_ = false;
+    connection_state_ = BluetoothConnectionState::Stopped;
 }
 
 // ============================================================
@@ -352,6 +356,7 @@ void ESP32_SMA_Inverter::spp_callback(esp_spp_cb_event_t event, esp_spp_cb_param
         if (self->spp_handle_ == param->close.handle) {
             self->spp_handle_  = 0;
             self->btConnected_ = false;
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             xEventGroupSetBits(self->bt_event_group_, BT_EVT_DISCONNECTED);
         } else {
             ESP_LOGD(TAG, "Ignoring stale close event for handle=%lu", param->close.handle);
@@ -404,6 +409,7 @@ void ESP32_SMA_Inverter::gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb
         break;
 
     case ESP_BT_GAP_PIN_REQ_EVT:
+        self->connection_state_ = BluetoothConnectionState::Pairing;
         ESP_LOGI(TAG, "GAP PIN request min_16_digit=%d", param->pin_req.min_16_digit);
         // Reply with our fixed PIN "0000"
         esp_bt_gap_pin_reply(param->pin_req.bda, true, 4,
@@ -427,11 +433,13 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
     ESP_LOGI(TTAG, "BT task started");
 
     // --- Phase 1: wait for SPP stack to be ready ---
+    self->connection_state_ = BluetoothConnectionState::WaitingForBluetooth;
     EventBits_t bits = xEventGroupWaitBits(
         self->bt_event_group_, BT_EVT_SPP_INIT, pdFALSE, pdFALSE,
         pdMS_TO_TICKS(15000));
     if (!(bits & BT_EVT_SPP_INIT)) {
         ESP_LOGE(TTAG, "Timeout waiting for SPP init");
+        self->connection_state_ = BluetoothConnectionState::Error;
         self->task_error_    = true;
         self->bt_task_handle_ = nullptr;
         vTaskDelete(nullptr);
@@ -451,6 +459,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
 
         // Night mode: don't connect at all, check again in 30 min
         if (self->is_nighttime()) {
+            self->connection_state_ = BluetoothConnectionState::NightMode;
             if (!self->night_mode_active_) {
                 struct tm local_tm;
                 char local_time_buf[32];
@@ -470,6 +479,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         }
 
         // --- Phase 2: service discovery ---
+        self->connection_state_ = BluetoothConnectionState::Searching;
         xEventGroupClearBits(self->bt_event_group_, BT_EVT_DISC_DONE | BT_EVT_CONNECTED | BT_EVT_DISCONNECTED);
         self->flushRxBuffer();
 
@@ -477,6 +487,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         esp_err_t err = esp_spp_start_discovery(self->smaBTAddress);
         if (err != ESP_OK) {
             ESP_LOGE(TTAG, "spp_start_discovery: %s", esp_err_to_name(err));
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
@@ -486,17 +497,20 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             pdMS_TO_TICKS(10000));
         if (!(bits & BT_EVT_DISC_DONE)) {
             ESP_LOGE(TTAG, "SPP discovery timeout");
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
 
         // --- Phase 3: connect ---
+        self->connection_state_ = BluetoothConnectionState::Connecting;
         ESP_LOGI(TTAG, "Connecting, SCN=%d", self->discovered_scn_);
         xEventGroupClearBits(self->bt_event_group_, BT_EVT_CONNECTED | BT_EVT_DISCONNECTED);
         err = esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER,
                               self->discovered_scn_, self->smaBTAddress);
         if (err != ESP_OK) {
             ESP_LOGE(TTAG, "spp_connect: %s", esp_err_to_name(err));
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
@@ -506,6 +520,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             pdMS_TO_TICKS(15000));
         if (!(bits & BT_EVT_CONNECTED)) {
             ESP_LOGE(TTAG, "SPP connect timeout or failed");
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             vTaskDelay(pdMS_TO_TICKS(5000));
             continue;
         }
@@ -515,18 +530,22 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
         self->flushRxBuffer();
 
         // --- Phase 4: SMA protocol init ---
+        self->connection_state_ = BluetoothConnectionState::Initializing;
         E_RC rc = self->initialiseSMAConnection();
         if (rc != E_OK) {
             ESP_LOGE(TTAG, "initialiseSMAConnection RC=%d", rc);
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             esp_spp_disconnect((uint32_t)self->spp_handle_);
             vTaskDelay(pdMS_TO_TICKS(3000));
             continue;
         }
 
         // --- Phase 5: logon ---
+        self->connection_state_ = BluetoothConnectionState::Authenticating;
         rc = self->logonSMAInverter();
         if (rc != E_OK) {
             ESP_LOGE(TTAG, "logon RC=%d", rc);
+            self->connection_state_ = BluetoothConnectionState::Retrying;
             esp_spp_disconnect((uint32_t)self->spp_handle_);
             vTaskDelay(pdMS_TO_TICKS(3000));
             continue;
@@ -548,6 +567,7 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             }
         }
 
+        self->connection_state_ = BluetoothConnectionState::Connected;
         ESP_LOGI(TTAG, "Logged on to inverter, starting read loop");
 
         // --- Phase 6: continuous read loop ---
@@ -636,11 +656,20 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             esp_spp_disconnect((uint32_t)self->spp_handle_);
         }
         self->btConnected_ = false;
-        ESP_LOGI(TTAG, "Disconnected, retrying in 5 s");
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        if (self->is_nighttime()) {
+            self->night_mode_active_ = true;
+            self->connection_state_ = BluetoothConnectionState::NightMode;
+            ESP_LOGI(TTAG, "Disconnected for night mode");
+        } else {
+            self->connection_state_ = BluetoothConnectionState::Retrying;
+            ESP_LOGI(TTAG, "Disconnected, retrying in 5 s");
+            vTaskDelay(pdMS_TO_TICKS(5000));
+        }
     }
 
     ESP_LOGI(TTAG, "BT task stopping");
+    self->btConnected_ = false;
+    self->connection_state_ = BluetoothConnectionState::Stopped;
     self->bt_task_handle_ = nullptr;
     vTaskDelete(nullptr);
 }
@@ -968,7 +997,7 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
                                 invData.LastTime = datetime;
                                 invData.TotalPac = toW(value32);
                                 dispData.TotalPac = tokW(value32);
-                                printUnixTime(timeBuf, datetime);
+                                printUnixTime(timeBuf, sizeof(timeBuf), datetime);
                                 ESP_LOGI(TAG, "SPOT_PACTOT %15.3f kW  GMT:%s", tokW(value32), timeBuf);
                                 break;
                             }
@@ -1363,7 +1392,7 @@ void ESP32_SMA_Inverter::fetchInverterTime() {
         ESP_LOGW(TAG, "fetchInverterTime: query failed rc=%d", rc);
         return;
     }
-    printUnixTime(timeBuf, invTime);
+    printUnixTime(timeBuf, sizeof(timeBuf), invTime);
     invData.InverterTimestamp = std::string(timeBuf);
     ESP_LOGI(TAG, "fetchInverterTime: inverter clock = %s (UTC)", timeBuf);
 }
@@ -1399,7 +1428,7 @@ void ESP32_SMA_Inverter::setInverterTime(bool force) {
         return;
     }
 
-    printUnixTime(timeBuf, invTime);
+    printUnixTime(timeBuf, sizeof(timeBuf), invTime);
     invData.InverterTimestamp = std::string(timeBuf);
     ESP_LOGI(TAG, "setInverterTime: inverter clock = %s (UTC)", timeBuf);
     ESP_LOGI(TAG, "setInverterTime: tz_dst=0x%08lX timesetCount=%lu",
@@ -1417,7 +1446,7 @@ void ESP32_SMA_Inverter::setInverterTime(bool force) {
         return;
     }
 
-    printUnixTime(timeBuf, hosttime);
+    printUnixTime(timeBuf, sizeof(timeBuf), hosttime);
     ESP_LOGI(TAG, "setInverterTime: host clock     = %s (UTC), writing to inverter", timeBuf);
 
     // --- Step 2: write host time to inverter ---
@@ -1446,7 +1475,7 @@ void ESP32_SMA_Inverter::setInverterTime(bool force) {
     uint32_t verifyTzDst, verifyCount;
     rc = queryCurrentInverterTime(verifyTime, verifyLastSet, verifyTzDst, verifyCount);
     if (rc == E_OK) {
-        printUnixTime(timeBuf, verifyTime);
+        printUnixTime(timeBuf, sizeof(timeBuf), verifyTime);
         invData.InverterTimestamp = std::string(timeBuf);
         // SBFspot success check: |invLastTimeSet - hosttime| < 5 s
         long long setDiff = (long long)verifyLastSet - (long long)hosttime;
@@ -1558,21 +1587,15 @@ void ESP32_SMA_Inverter::HexDump(uint8_t *buf, int count, int radix, uint8_t c) 
     }
 }
 
-uint8_t ESP32_SMA_Inverter::printUnixTime(char *buf, time_t t) {
+uint8_t ESP32_SMA_Inverter::printUnixTime(char *buf, size_t size, time_t t) {
+    if (size == 0) return 0;
     if (t < 1) t = 0;
-    uint8_t seconds = t % 60; t /= 60;
-    uint8_t minutes = t % 60; t /= 60;
-    uint8_t hours   = t % 24; t /= 24;
-    uint32_t a = (uint32_t)((4 * t + 102032) / 146097 + 15);
-    uint32_t b = (uint32_t)(t + 2442113 + a - (a / 4));
-    uint32_t c = (20 * b - 2442) / 7305;
-    uint32_t d = b - 365 * c - (c / 4);
-    uint32_t e = d * 1000 / 30601;
-    uint32_t f = d - e * 30 - e * 601 / 1000;
-    if (e <= 13) { c -= 4716; e -= 1; } else { c -= 4715; e -= 13; }
-    return snprintf(buf, 31, "%02u.%02u.%u %02u:%02u:%02u",
-                    (unsigned)f, (unsigned)e, (unsigned)c,
-                    (unsigned)hours, (unsigned)minutes, (unsigned)seconds);
+    struct tm utc_tm;
+    if (gmtime_r(&t, &utc_tm) == nullptr) {
+        buf[0] = '\0';
+        return 0;
+    }
+    return strftime(buf, size, "%Y-%m-%dT%H:%M:%SZ", &utc_tm);
 }
 
 uint16_t ESP32_SMA_Inverter::get_u16(uint8_t *buf) {

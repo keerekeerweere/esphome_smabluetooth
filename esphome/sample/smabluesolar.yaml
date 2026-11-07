@@ -136,6 +136,9 @@ sensor:
     total_energy_production:
       name: "Total Energy Production"
 
+    total_ac_power:
+      name: "Total AC Output Power"
+
     today_generation_time:
       name: "Today's Generation Time"
 
@@ -156,6 +159,12 @@ sensor:
 
     device_class:
       name: "Device Class"
+
+    device_name:
+      name: "Inverter Name"
+
+    bluetooth_connection_status:
+      name: "Inverter Bluetooth Connection"
 
     inverter_module_temp:
       name: "Inverter Module Temp"
