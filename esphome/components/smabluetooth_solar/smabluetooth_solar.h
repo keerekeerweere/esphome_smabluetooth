@@ -94,6 +94,7 @@ class SmaBluetoothSolar : public PollingComponent {
     void updateSensor(sensor::Sensor *sensor, const char *name, int32_t v);
     void updateSensor(sensor::Sensor *sensor, const char *name, uint64_t v);
     void updateSensor(sensor::Sensor *sensor, const char *name, float v);
+    void updateSensor(sensor::Sensor *sensor, const char *name, double v);
     void updateSensor(binary_sensor::BinarySensor *sensor, const char *name, bool v);
 
     void set_protocol_version(SmaBluetoothProtocolVersion v) { protocol_version_ = v; }

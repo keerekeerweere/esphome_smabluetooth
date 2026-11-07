@@ -182,8 +182,8 @@ struct DisplayData {
     float Idc1;
     float Idc2;
     float GridFreq;
-    float EToday;
-    float ETotal;
+    double EToday;
+    double ETotal;
     bool needsMissingValues = false;
 };
 

@@ -328,6 +328,12 @@ void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const char *name, f
     if (v >= 0.0f && sensor != nullptr) sensor->publish_state(v);
 }
 
+void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const char *name, double v) {
+    // ESPHome's Sensor API accepts float, so the final API state is still limited
+    // to float precision even though protocol and snapshot processing retain double.
+    if (v >= 0.0 && sensor != nullptr) sensor->publish_state(static_cast<float>(v));
+}
+
 void SmaBluetoothSolar::updateSensor(binary_sensor::BinarySensor *sensor, const char *name,
                                       bool v) {
     if (sensor != nullptr) sensor->publish_state(v);
