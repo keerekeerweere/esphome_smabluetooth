@@ -42,7 +42,7 @@ jobs:
             "ghcr.io/esphome/esphome:${{ matrix.esphome-version }}" \
             compile tests/compile.yaml
 
-      - name: Compile minimal test configuration
+      - name: Compile minimal test configuration using full-build cache
         if: matrix.esphome-version == 'stable'
         run: |
           docker run --rm \
