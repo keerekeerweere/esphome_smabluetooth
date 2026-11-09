@@ -32,7 +32,7 @@ namespace esphome {
 namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
-static const time_t MIN_VALID_TIME = 1735689600; // 2026-01-01 UTC
+static const time_t MIN_VALID_TIME = 1767225600; // 2026-01-01 UTC
 
 namespace {
 
@@ -630,12 +630,6 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                 // flag cleared inside setInverterTime()
             }
 
-            // On-demand time fetch (triggered from main loop via requestTimeFetch())
-            if (self->fetch_time_requested_) {
-                self->fetchInverterTime();
-                self->fetch_time_requested_ = false;
-            }
-
             // Publish the completed sample with only a brief lock. The next query
             // cycle can update the task-owned working data without blocking ESPHome.
             if (xSemaphoreTake(self->data_mutex_, portMAX_DELAY) == pdTRUE) {
@@ -981,23 +975,16 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
 
                             switch (lri) {
                             case GridMsTotW: {
-                                // 2026-01-01 00:00:00 UTC
-                                static const time_t MIN_VALID_TIME = 1735689600;
-                                if (datetime < MIN_VALID_TIME) {
-                                    time_t now = time(nullptr);
-                                    if (now >= MIN_VALID_TIME) {
-                                        ESP_LOGW(TAG, "PACTOT timestamp %ld before 2026, using ESP32 time %ld",
-                                                 (long)datetime, (long)now);
-                                        datetime = now;
-                                    } else {
-                                        ESP_LOGW(TAG, "PACTOT timestamp %ld before 2026, ESP32 time not yet synced (%ld), keeping inverter value",
-                                                 (long)datetime, (long)now);
-                                    }
+                                printUnixTime(timeBuf, sizeof(timeBuf), datetime);
+                                if (datetime >= MIN_VALID_TIME) {
+                                    invData.LastTime = datetime;
+                                    invData.InverterTimestamp = std::string(timeBuf);
+                                } else {
+                                    ESP_LOGW(TAG, "PACTOT timestamp %ld before 2026, keeping previous inverter clock",
+                                             (long)datetime);
                                 }
-                                invData.LastTime = datetime;
                                 invData.TotalPac = toW(value32);
                                 dispData.TotalPac = tokW(value32);
-                                printUnixTime(timeBuf, sizeof(timeBuf), datetime);
                                 ESP_LOGI(TAG, "SPOT_PACTOT %15.3f kW  GMT:%s", tokW(value32), timeBuf);
                                 break;
                             }
@@ -1345,7 +1332,7 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 
 // ============================================================
 //  Shared helper: send time-read query, parse response fields.
-//  Used by both fetchInverterTime and setInverterTime step 1.
+//  Used by setInverterTime before and after writing.
 // ============================================================
 
 E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLastTimeSet,
@@ -1378,23 +1365,6 @@ E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLa
     tz_dst         =           get_u32(pcktBuf + 57);
     timesetCount   =           get_u32(pcktBuf + 61);
     return E_OK;
-}
-
-// ============================================================
-//  Inverter time read — query only, no write
-// ============================================================
-
-void ESP32_SMA_Inverter::fetchInverterTime() {
-    time_t invTime, invLastTimeSet;
-    uint32_t tz_dst, timesetCount;
-    E_RC rc = queryCurrentInverterTime(invTime, invLastTimeSet, tz_dst, timesetCount);
-    if (rc != E_OK) {
-        ESP_LOGW(TAG, "fetchInverterTime: query failed rc=%d", rc);
-        return;
-    }
-    printUnixTime(timeBuf, sizeof(timeBuf), invTime);
-    invData.InverterTimestamp = std::string(timeBuf);
-    ESP_LOGI(TAG, "fetchInverterTime: inverter clock = %s (UTC)", timeBuf);
 }
 
 // ============================================================

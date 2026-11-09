@@ -61,11 +61,6 @@ button:
     name: "Sync Inverter Time"
     on_press:
       - lambda: 'id(sma_inverter).trigger_time_sync();'
-  - platform: template
-    name: "Fetch Inverter Time"
-    on_press:
-      - lambda: 'id(sma_inverter).trigger_time_fetch();'
-
 sensor:
   - platform: smabluetooth_solar
     id: sma_inverter
