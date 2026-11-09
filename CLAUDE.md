@@ -32,7 +32,7 @@ esphome run esphome/sample/smabluesolar.yaml
 
 `tests/test_config_validation.py` is a pytest file for schema validation (`pytest tests/test_config_validation.py -k <name>`); it is not run in CI. CI verification is the compile + invalid-config checks plus lint.
 
-When adding a config option or validation rule: extend `tests/compile.yaml`; for rejections add `tests/invalid/<name>.yaml` plus a `check_invalid` line in `tests/check-invalid-configs.sh`. `esphome/sample/smabluesolar.yaml` is the user-facing example (not a CI fixture) — keep it updated when options change. Work goes through branches + PRs; both CI workflows (`compile.yml`, `quality.yml`) run on every PR.
+When adding a config option or validation rule: extend `tests/compile.yaml`; for rejections add `tests/invalid/<name>.yaml` plus a `check_invalid` line in `tests/check-invalid-configs.sh`. `esphome/sample/smabluesolar.yaml` is the user-facing example (not a CI fixture) — keep it updated when options change. Work goes through branches + PRs; all three CI workflows (`compile.yml`, `quality.yml`, `url-guard.yml`) run on every PR. `.repo-url` is the canonical install URL; `url-guard.yml` fails PRs that add a different `github.com`/`github://` slug for this repo in `README.md` or the sample YAML.
 
 ## Framework
 
