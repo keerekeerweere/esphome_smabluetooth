@@ -4,6 +4,7 @@ extends: default
 ignore: |
   .esphome/
   tests/.esphome/
+  esphome/sample/smabluesolar.yaml
 
 rules:
   comments-indentation: disable

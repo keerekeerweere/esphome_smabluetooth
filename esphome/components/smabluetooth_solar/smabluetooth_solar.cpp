@@ -50,46 +50,41 @@ static const char *const TAG = "smabluetooth_solar";
 // ============================================================
 
 const StatusCode SmaBluetoothSolar::status_codes[] = {
-    {50, "Status"},
-    {51, "Closed"},
-    {300, "Nat"},
-    {301, "Grid failure"},
-    {302, "-------"},
-    {303, "Off"},
-    {304, ISLAND " " MODE},
-    {305, ISLAND " " MODE},
-    {306, "SMA Island " MODE " 60 Hz"},
-    {307, "OK"},
-    {308, "On"},
-    {309, "Operation"},
-    {310, "General operating " MODE},
-    {311, "Open"},
-    {312, "Phase assignment"},
-    {313, "SMA Island mode 50 Hz"},
-    {358, SB " "
-             "4000" TL20},
-    {359, SB " "
-             "5000" TL20},
-    {558, SB " "
-             "3000" TL20},
-    {6109, SB " "
-              "1600" TL10},
-    {9109, SB " "
-              "1600" TL10},
+    {50,   "Status"},
+    {51,   "Closed"},
+    {300,  "Nat"},
+    {301,  "Grid failure"},
+    {302,  "-------"},
+    {303,  "Off"},
+    {304,  ISLAND " " MODE},
+    {305,  ISLAND " " MODE},
+    {306,  "SMA Island " MODE " 60 Hz"},
+    {307,  "OK"},
+    {308,  "On"},
+    {309,  "Operation"},
+    {310,  "General operating " MODE},
+    {311,  "Open"},
+    {312,  "Phase assignment"},
+    {313,  "SMA Island mode 50 Hz"},
+    {358,  SB " " "4000" TL20},
+    {359,  SB " " "5000" TL20},
+    {558,  SB " " "3000" TL20},
+    {6109, SB " " "1600" TL10},
+    {9109, SB " " "1600" TL10},
     {8001, "Solar Inverters"},
-    {71, "Interference device"},
-    {73, "Diffuse insolation"},
-    {74, "Direct insolation"},
-    {76, "Fault correction measure"},
-    {77, "Check AC circuit breaker"},
-    {78, "Check generator"},
-    {79, "Disconnect generator"},
-    {80, "Check parameter"},
-    {84, "Overcurrent " GRID " hw"},
-    {85, "Overcurrent " GRID " sw"},
-    {87, GRID " frequency disturbance"},
-    {88, GRID " frequency not permitted"},
-    {89, GRID " disconnection point"},
+    {71,   "Interference device"},
+    {73,   "Diffuse insolation"},
+    {74,   "Direct insolation"},
+    {76,   "Fault correction measure"},
+    {77,   "Check AC circuit breaker"},
+    {78,   "Check generator"},
+    {79,   "Disconnect generator"},
+    {80,   "Check parameter"},
+    {84,   "Overcurrent " GRID " hw"},
+    {85,   "Overcurrent " GRID " sw"},
+    {87,   GRID " frequency disturbance"},
+    {88,   GRID " frequency not permitted"},
+    {89,   GRID " disconnection point"},
 };
 
 // ============================================================
@@ -97,167 +92,157 @@ const StatusCode SmaBluetoothSolar::status_codes[] = {
 // ============================================================
 
 void SmaBluetoothSolar::setup() {
-  ESP_LOGW(TAG, "Starting setup...");
-  smaInverter = ESP32_SMA_Inverter::getInstance();
+    ESP_LOGW(TAG, "Starting setup...");
+    smaInverter = ESP32_SMA_Inverter::getInstance();
 
-  if (!latitude_configured_) {
-    api::global_api_server->subscribe_home_assistant_state(
-        "zone.home", "latitude", [this](StringRef state) { this->update_home_location_(true, state.c_str()); });
-  }
-  if (!longitude_configured_) {
-    api::global_api_server->subscribe_home_assistant_state(
-        "zone.home", "longitude", [this](StringRef state) { this->update_home_location_(false, state.c_str()); });
-  }
-  hasSetup_ = smaInverter->setup(sma_inverter_bluetooth_mac_, sma_inverter_password_, sma_inverter_delay_values_,
-                                 sma_inverter_night_margin_, latitude_, longitude_);
-  if (!hasSetup_) {
-    ESP_LOGE(TAG, "Invalid SMA Bluetooth configuration");
-    mark_failed();
-    return;
-  }
-  ESP_LOGW(TAG, "Setup done, inverter mac=%s", sma_inverter_bluetooth_mac_.c_str());
-  if (!latitude_configured_ || !longitude_configured_) {
-    ESP_LOGI(TAG, "Waiting for missing solar coordinates from Home Assistant entity zone.home");
-  }
+    if (!latitude_configured_) {
+        api::global_api_server->subscribe_home_assistant_state(
+            "zone.home", "latitude", [this](StringRef state) { this->update_home_location_(true, state.c_str()); });
+    }
+    if (!longitude_configured_) {
+        api::global_api_server->subscribe_home_assistant_state(
+            "zone.home", "longitude", [this](StringRef state) { this->update_home_location_(false, state.c_str()); });
+    }
+    hasSetup_ = smaInverter->setup(sma_inverter_bluetooth_mac_,
+                                   sma_inverter_password_,
+                                   sma_inverter_delay_values_,
+                                   sma_inverter_night_margin_,
+                                   latitude_, longitude_);
+    if (!hasSetup_) {
+        ESP_LOGE(TAG, "Invalid SMA Bluetooth configuration");
+        mark_failed();
+        return;
+    }
+    ESP_LOGW(TAG, "Setup done, inverter mac=%s", sma_inverter_bluetooth_mac_.c_str());
+    if (!latitude_configured_ || !longitude_configured_) {
+        ESP_LOGI(TAG, "Waiting for missing solar coordinates from Home Assistant entity zone.home");
+    }
 }
 
 void SmaBluetoothSolar::update_home_location_(bool latitude, const char *value) {
-  auto parsed = parse_number<float>(value);
-  float minimum = latitude ? -90.0f : -180.0f;
-  float maximum = latitude ? 90.0f : 180.0f;
-  if (!parsed.has_value() || !std::isfinite(*parsed) || *parsed < minimum || *parsed > maximum) {
-    ESP_LOGW(TAG, "Ignoring invalid zone.home %s attribute: '%s'", latitude ? "latitude" : "longitude", value);
-    return;
-  }
+    auto parsed = parse_number<float>(value);
+    float minimum = latitude ? -90.0f : -180.0f;
+    float maximum = latitude ? 90.0f : 180.0f;
+    if (!parsed.has_value() || !std::isfinite(*parsed) || *parsed < minimum || *parsed > maximum) {
+        ESP_LOGW(TAG, "Ignoring invalid zone.home %s attribute: '%s'",
+                 latitude ? "latitude" : "longitude", value);
+        return;
+    }
 
-  if (latitude)
-    latitude_ = *parsed;
-  else
-    longitude_ = *parsed;
+    if (latitude)
+        latitude_ = *parsed;
+    else
+        longitude_ = *parsed;
 
-  if (smaInverter != nullptr)
-    smaInverter->setSolarLocation(latitude_, longitude_);
-  ESP_LOGI(TAG, "Solar %s updated from Home Assistant: %.5f", latitude ? "latitude" : "longitude", *parsed);
-  if (std::isfinite(latitude_) && std::isfinite(longitude_)) {
-    ESP_LOGI(TAG, "Using Home Assistant solar location: latitude=%.5f longitude=%.5f", latitude_, longitude_);
-  }
+    if (smaInverter != nullptr) smaInverter->setSolarLocation(latitude_, longitude_);
+    ESP_LOGI(TAG, "Solar %s updated from Home Assistant: %.5f",
+             latitude ? "latitude" : "longitude", *parsed);
+    if (std::isfinite(latitude_) && std::isfinite(longitude_)) {
+        ESP_LOGI(TAG, "Using Home Assistant solar location: latitude=%.5f longitude=%.5f",
+                 latitude_, longitude_);
+    }
 }
 
 void SmaBluetoothSolar::on_shutdown() {
-  if (smaInverter != nullptr)
-    smaInverter->stopBtTask();
-  if (bluetooth_connection_status_sensor_ != nullptr)
-    bluetooth_connection_status_sensor_->publish_state("Stopped");
+    if (smaInverter != nullptr) smaInverter->stopBtTask();
+    if (bluetooth_connection_status_sensor_ != nullptr)
+        bluetooth_connection_status_sensor_->publish_state("Stopped");
 }
 
 const char *SmaBluetoothSolar::connection_state_to_string_(BluetoothConnectionState state) {
-  switch (state) {
-    case BluetoothConnectionState::Starting:
-      return "Starting";
-    case BluetoothConnectionState::WaitingForBluetooth:
-      return "Waiting for Bluetooth";
-    case BluetoothConnectionState::NightMode:
-      return "Night mode";
-    case BluetoothConnectionState::Searching:
-      return "Searching";
-    case BluetoothConnectionState::Connecting:
-      return "Connecting";
-    case BluetoothConnectionState::Pairing:
-      return "Pairing";
-    case BluetoothConnectionState::Initializing:
-      return "Initializing";
-    case BluetoothConnectionState::Authenticating:
-      return "Authenticating";
-    case BluetoothConnectionState::Connected:
-      return "Connected";
-    case BluetoothConnectionState::Retrying:
-      return "Retrying";
-    case BluetoothConnectionState::Error:
-      return "Error";
-    case BluetoothConnectionState::Stopped:
-      return "Stopped";
-  }
-  return "Unknown";
+    switch (state) {
+    case BluetoothConnectionState::Starting: return "Starting";
+    case BluetoothConnectionState::WaitingForBluetooth: return "Waiting for Bluetooth";
+    case BluetoothConnectionState::NightMode: return "Night mode";
+    case BluetoothConnectionState::Searching: return "Searching";
+    case BluetoothConnectionState::Connecting: return "Connecting";
+    case BluetoothConnectionState::Pairing: return "Pairing";
+    case BluetoothConnectionState::Initializing: return "Initializing";
+    case BluetoothConnectionState::Authenticating: return "Authenticating";
+    case BluetoothConnectionState::Connected: return "Connected";
+    case BluetoothConnectionState::Retrying: return "Retrying";
+    case BluetoothConnectionState::Error: return "Error";
+    case BluetoothConnectionState::Stopped: return "Stopped";
+    }
+    return "Unknown";
 }
 
 void SmaBluetoothSolar::publish_connection_state_() {
-  if (smaInverter == nullptr || bluetooth_connection_status_sensor_ == nullptr)
-    return;
-  BluetoothConnectionState state = smaInverter->getConnectionState();
-  if (!connectionStatePublished_ || state != lastConnectionState_) {
-    bluetooth_connection_status_sensor_->publish_state(connection_state_to_string_(state));
-    lastConnectionState_ = state;
-    connectionStatePublished_ = true;
-  }
+    if (smaInverter == nullptr || bluetooth_connection_status_sensor_ == nullptr) return;
+    BluetoothConnectionState state = smaInverter->getConnectionState();
+    if (!connectionStatePublished_ || state != lastConnectionState_) {
+        bluetooth_connection_status_sensor_->publish_state(connection_state_to_string_(state));
+        lastConnectionState_ = state;
+        connectionStatePublished_ = true;
+    }
 }
 
 void SmaBluetoothSolar::loop() {
-  App.feed_wdt();
+    App.feed_wdt();
 
-  if (!hasSetup_)
-    return;
+    if (!hasSetup_) return;
 
-  uint32_t now = millis();
+    uint32_t now = millis();
 
-  switch (inverterState) {
+    switch (inverterState) {
     case SmaInverterState::Off:
-      // Initialise BT stack and launch the protocol task
-      if (smaInverter->begin("ESP32toSMA") && smaInverter->startBtTask()) {
-        inverterState = SmaInverterState::Running;
-        ESP_LOGI(TAG, "BT task started, state -> Running");
-      } else {
-        ESP_LOGE(TAG, "BT begin failed, retrying in 10 s");
-        if (bluetooth_connection_status_sensor_ != nullptr) {
-          bluetooth_connection_status_sensor_->publish_state("Error");
-          lastConnectionState_ = BluetoothConnectionState::Error;
-          connectionStatePublished_ = true;
+        // Initialise BT stack and launch the protocol task
+        if (smaInverter->begin("ESP32toSMA") && smaInverter->startBtTask()) {
+            inverterState = SmaInverterState::Running;
+            ESP_LOGI(TAG, "BT task started, state -> Running");
+        } else {
+            ESP_LOGE(TAG, "BT begin failed, retrying in 10 s");
+            if (bluetooth_connection_status_sensor_ != nullptr) {
+                bluetooth_connection_status_sensor_->publish_state("Error");
+                lastConnectionState_ = BluetoothConnectionState::Error;
+                connectionStatePublished_ = true;
+            }
+            errorRetryTime_ = now + 10000;
+            inverterState   = SmaInverterState::Error;
         }
-        errorRetryTime_ = now + 10000;
-        inverterState = SmaInverterState::Error;
-      }
-      break;
+        break;
 
     case SmaInverterState::Running:
-      // Task runs autonomously. Just watch for errors.
-      if (smaInverter->isNightModeActive()) {
-        if (!nightModeStatusActive_ || now >= nextNightModeStatusLogTime_) {
-          ESP_LOGI(TAG, "Night mode active; inverter polling suspended until the next wake check");
-          nightModeStatusActive_ = true;
-          nextNightModeStatusLogTime_ = now + 60000;
+        // Task runs autonomously. Just watch for errors.
+        if (smaInverter->isNightModeActive()) {
+            if (!nightModeStatusActive_ || now >= nextNightModeStatusLogTime_) {
+                ESP_LOGI(TAG, "Night mode active; inverter polling suspended until the next wake check");
+                nightModeStatusActive_ = true;
+                nextNightModeStatusLogTime_ = now + 60000;
+            }
+        } else if (nightModeStatusActive_) {
+            ESP_LOGI(TAG, "Night mode inactive; inverter polling resumed");
+            nightModeStatusActive_ = false;
+            nextNightModeStatusLogTime_ = 0;
         }
-      } else if (nightModeStatusActive_) {
-        ESP_LOGI(TAG, "Night mode inactive; inverter polling resumed");
-        nightModeStatusActive_ = false;
-        nextNightModeStatusLogTime_ = 0;
-      }
 
-      if (smaInverter->hasTaskError()) {
-        ESP_LOGE(TAG, "BT task error detected, restarting in 10 s");
-        smaInverter->clearTaskError();
-        smaInverter->stopBtTask();
-        if (bluetooth_connection_status_sensor_ != nullptr) {
-          bluetooth_connection_status_sensor_->publish_state("Error");
-          lastConnectionState_ = BluetoothConnectionState::Error;
-          connectionStatePublished_ = true;
+        if (smaInverter->hasTaskError()) {
+            ESP_LOGE(TAG, "BT task error detected, restarting in 10 s");
+            smaInverter->clearTaskError();
+            smaInverter->stopBtTask();
+            if (bluetooth_connection_status_sensor_ != nullptr) {
+                bluetooth_connection_status_sensor_->publish_state("Error");
+                lastConnectionState_ = BluetoothConnectionState::Error;
+                connectionStatePublished_ = true;
+            }
+            errorRetryTime_ = now + 10000;
+            inverterState   = SmaInverterState::Error;
         }
-        errorRetryTime_ = now + 10000;
-        inverterState = SmaInverterState::Error;
-      }
-      break;
+        break;
 
     case SmaInverterState::Error:
-      if (now >= errorRetryTime_) {
-        ESP_LOGI(TAG, "Retrying Bluetooth stack and protocol task");
-        if (smaInverter->begin("ESP32toSMA") && smaInverter->startBtTask()) {
-          inverterState = SmaInverterState::Running;
-        } else {
-          errorRetryTime_ = now + 10000;
+        if (now >= errorRetryTime_) {
+            ESP_LOGI(TAG, "Retrying Bluetooth stack and protocol task");
+            if (smaInverter->begin("ESP32toSMA") && smaInverter->startBtTask()) {
+                inverterState = SmaInverterState::Running;
+            } else {
+                errorRetryTime_ = now + 10000;
+            }
         }
-      }
-      break;
-  }
+        break;
+    }
 
-  publish_connection_state_();
+    publish_connection_state_();
 }
 
 // ============================================================
@@ -266,58 +251,64 @@ void SmaBluetoothSolar::loop() {
 // ============================================================
 
 void SmaBluetoothSolar::update() {
-  if (smaInverter == nullptr)
-    return;
+    if (smaInverter == nullptr) return;
 
-  InverterData inverter_data;
-  DisplayData display_data;
-  if (!smaInverter->takeDataSnapshot(inverter_data, display_data))
-    return;
+    InverterData inverter_data;
+    DisplayData display_data;
+    if (!smaInverter->takeDataSnapshot(inverter_data, display_data)) return;
 
-  // Publish from a coherent snapshot while the BT task prepares the next sample.
-  handleMissingValues(display_data);
+    // Publish from a coherent snapshot while the BT task prepares the next sample.
+    handleMissingValues(display_data);
 
-  updateSensor(today_production_, "EToday", display_data.EToday);
-  updateSensor(total_energy_production_, "ETotal", display_data.ETotal);
-  updateSensor(total_ac_power_, "PACTot", display_data.TotalPac);
-  updateSensor(grid_frequency_sensor_, "Freq", display_data.GridFreq);
+    updateSensor(today_production_,         "EToday",  display_data.EToday);
+    updateSensor(total_energy_production_,  "ETotal",  display_data.ETotal);
+    updateSensor(total_ac_power_,            "PACTot",  display_data.TotalPac);
+    updateSensor(grid_frequency_sensor_,     "Freq",    display_data.GridFreq);
 
-  updateSensor(pvs_[0].voltage_sensor_, "UdcA", display_data.Udc1);
-  updateSensor(pvs_[0].current_sensor_, "IdcA", display_data.Idc1);
-  updateSensor(pvs_[0].active_power_sensor_, "PDC1", display_data.Pdc1);
+    updateSensor(pvs_[0].voltage_sensor_,      "UdcA",  display_data.Udc1);
+    updateSensor(pvs_[0].current_sensor_,      "IdcA",  display_data.Idc1);
+    updateSensor(pvs_[0].active_power_sensor_, "PDC1",  display_data.Pdc1);
 
-  updateSensor(pvs_[1].voltage_sensor_, "UdcB", display_data.Udc2);
-  updateSensor(pvs_[1].current_sensor_, "IdcB", display_data.Idc2);
-  updateSensor(pvs_[1].active_power_sensor_, "PDC2", display_data.Pdc2);
+    updateSensor(pvs_[1].voltage_sensor_,      "UdcB",  display_data.Udc2);
+    updateSensor(pvs_[1].current_sensor_,      "IdcB",  display_data.Idc2);
+    updateSensor(pvs_[1].active_power_sensor_, "PDC2",  display_data.Pdc2);
 
-  updateSensor(phases_[0].voltage_sensor_, "UacA", display_data.Uac1);
-  updateSensor(phases_[0].current_sensor_, "IacA", display_data.Iac1);
-  updateSensor(phases_[0].active_power_sensor_, "PacA", display_data.Pac1);
+    updateSensor(phases_[0].voltage_sensor_,      "UacA",  display_data.Uac1);
+    updateSensor(phases_[0].current_sensor_,      "IacA",  display_data.Iac1);
+    updateSensor(phases_[0].active_power_sensor_, "PacA",  display_data.Pac1);
 
-  updateSensor(phases_[1].voltage_sensor_, "UacB", display_data.Uac2);
-  updateSensor(phases_[1].current_sensor_, "IacB", display_data.Iac2);
-  updateSensor(phases_[1].active_power_sensor_, "PacB", display_data.Pac2);
+    updateSensor(phases_[1].voltage_sensor_,      "UacB",  display_data.Uac2);
+    updateSensor(phases_[1].current_sensor_,      "IacB",  display_data.Iac2);
+    updateSensor(phases_[1].active_power_sensor_, "PacB",  display_data.Pac2);
 
-  updateSensor(phases_[2].voltage_sensor_, "UacC", display_data.Uac3);
-  updateSensor(phases_[2].current_sensor_, "IacC", display_data.Iac3);
-  updateSensor(phases_[2].active_power_sensor_, "PacC", display_data.Pac3);
+    updateSensor(phases_[2].voltage_sensor_,      "UacC",  display_data.Uac3);
+    updateSensor(phases_[2].current_sensor_,      "IacC",  display_data.Iac3);
+    updateSensor(phases_[2].active_power_sensor_, "PacC",  display_data.Pac3);
 
-  updateSensor(status_text_sensor_, "InvStatus", std::string(lookup_code(inverter_data.DevStatus)));
-  updateSensor(grid_relay_binary_sensor_, "GridRelay",
-               inverter_data.GridRelay == 51);  // 51 = "Closed"
+    updateSensor(status_text_sensor_,        "InvStatus",
+                 std::string(lookup_code(inverter_data.DevStatus)));
+    updateSensor(grid_relay_binary_sensor_,  "GridRelay",
+                 inverter_data.GridRelay == 51);  // 51 = "Closed"
 
-  updateSensor(inverter_module_temp_, "InvTemp", display_data.InvTemp);
+    updateSensor(inverter_module_temp_,      "InvTemp",   display_data.InvTemp);
 
-  updateSensor(inverter_bluetooth_signal_strength_, "BTSignal", display_data.BTSigStrength);
-  updateSensor(today_generation_time_, "TToday", (float) inverter_data.OperationTime / 3600.0f);
-  updateSensor(total_generation_time_, "TTotal", (float) inverter_data.FeedInTime / 3600.0f);
-  updateSensor(wakeup_time_, "TWakeup", (uint64_t) inverter_data.WakeupTime);
-  updateSensor(serial_number_, "SerialNum", std::to_string(inverter_data.Serial));
-  updateSensor(software_version_, "SWVersion", inverter_data.SWVersion);
-  updateSensor(device_type_, "DevType", std::string(lookup_code(inverter_data.DeviceType)));
-  updateSensor(device_class_, "DevClass", std::string(lookup_code(inverter_data.DeviceClass)));
-  updateSensor(device_name_, "DevName", inverter_data.DeviceName);
-  updateSensor(inverter_time_sensor_, "InvTime", inverter_data.InverterTimestamp);
+    updateSensor(inverter_bluetooth_signal_strength_, "BTSignal",
+                 display_data.BTSigStrength);
+    updateSensor(today_generation_time_,  "TToday",
+                 (float)inverter_data.OperationTime / 3600.0f);
+    updateSensor(total_generation_time_,  "TTotal",
+                 (float)inverter_data.FeedInTime / 3600.0f);
+    updateSensor(wakeup_time_,            "TWakeup",
+                 (uint64_t)inverter_data.WakeupTime);
+    updateSensor(serial_number_,          "SerialNum",  std::to_string(inverter_data.Serial));
+    updateSensor(software_version_,       "SWVersion",  inverter_data.SWVersion);
+    updateSensor(device_type_,            "DevType",
+                 std::string(lookup_code(inverter_data.DeviceType)));
+    updateSensor(device_class_,           "DevClass",
+                 std::string(lookup_code(inverter_data.DeviceClass)));
+    updateSensor(device_name_,            "DevName",   inverter_data.DeviceName);
+    updateSensor(inverter_time_sensor_,   "InvTime",  inverter_data.InverterTimestamp);
+
 }
 
 // ============================================================
@@ -327,72 +318,69 @@ void SmaBluetoothSolar::update() {
 // ============================================================
 
 void SmaBluetoothSolar::handleMissingValues(DisplayData &d) {
-  if (d.Pdc1 == 0.0f || d.needsMissingValues) {
-    if (d.Udc1 != 0.0f && d.Idc1 != 0.0f) {
-      d.Pdc1 = d.Udc1 * d.Idc1 / 1000.0f;
-      d.needsMissingValues = true;
+
+    if (d.Pdc1 == 0.0f || d.needsMissingValues) {
+        if (d.Udc1 != 0.0f && d.Idc1 != 0.0f) {
+            d.Pdc1 = d.Udc1 * d.Idc1 / 1000.0f;
+            d.needsMissingValues = true;
+        }
     }
-  }
-  if (d.Pdc2 == 0.0f || d.needsMissingValues) {
-    if (d.Udc2 != 0.0f && d.Idc2 != 0.0f) {
-      d.Pdc2 = d.Udc2 * d.Idc2 / 1000.0f;
-      d.needsMissingValues = true;
+    if (d.Pdc2 == 0.0f || d.needsMissingValues) {
+        if (d.Udc2 != 0.0f && d.Idc2 != 0.0f) {
+            d.Pdc2 = d.Udc2 * d.Idc2 / 1000.0f;
+            d.needsMissingValues = true;
+        }
     }
-  }
-  if (d.Pac1 == 0.0f || d.needsMissingValues) {
-    if (d.Uac1 != 0.0f && d.Iac1 != 0.0f) {
-      d.Pac1 = d.Uac1 * d.Iac1 / 1000.0f;
-      d.needsMissingValues = true;
+    if (d.Pac1 == 0.0f || d.needsMissingValues) {
+        if (d.Uac1 != 0.0f && d.Iac1 != 0.0f) {
+            d.Pac1 = d.Uac1 * d.Iac1 / 1000.0f;
+            d.needsMissingValues = true;
+        }
     }
-  }
-  if (d.Pac2 == 0.0f || d.needsMissingValues) {
-    if (d.Uac2 != 0.0f && d.Iac2 != 0.0f) {
-      d.Pac2 = d.Uac2 * d.Iac2 / 1000.0f;
-      d.needsMissingValues = true;
+    if (d.Pac2 == 0.0f || d.needsMissingValues) {
+        if (d.Uac2 != 0.0f && d.Iac2 != 0.0f) {
+            d.Pac2 = d.Uac2 * d.Iac2 / 1000.0f;
+            d.needsMissingValues = true;
+        }
     }
-  }
-  if (d.Pac3 == 0.0f || d.needsMissingValues) {
-    if (d.Uac3 != 0.0f && d.Iac3 != 0.0f) {
-      d.Pac3 = d.Uac3 * d.Iac3 / 1000.0f;
-      d.needsMissingValues = true;
+    if (d.Pac3 == 0.0f || d.needsMissingValues) {
+        if (d.Uac3 != 0.0f && d.Iac3 != 0.0f) {
+            d.Pac3 = d.Uac3 * d.Iac3 / 1000.0f;
+            d.needsMissingValues = true;
+        }
     }
-  }
 }
 
 // ============================================================
 //  Generic sensor publish helpers
 // ============================================================
 
-void SmaBluetoothSolar::updateSensor(text_sensor::TextSensor *sensor, const char *name, std::string v) {
-  if (!v.empty() && sensor != nullptr)
-    sensor->publish_state(v);
+void SmaBluetoothSolar::updateSensor(text_sensor::TextSensor *sensor, const char *name,
+                                      std::string v) {
+    if (!v.empty() && sensor != nullptr) sensor->publish_state(v);
 }
 
 void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const char *name, int32_t v) {
-  if (v >= 0 && sensor != nullptr)
-    sensor->publish_state(v);
+    if (v >= 0 && sensor != nullptr) sensor->publish_state(v);
 }
 
 void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const char *name, uint64_t v) {
-  if (sensor != nullptr)
-    sensor->publish_state((float) v);
+    if (sensor != nullptr) sensor->publish_state((float)v);
 }
 
 void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const char *name, float v) {
-  if (v >= 0.0f && sensor != nullptr)
-    sensor->publish_state(v);
+    if (v >= 0.0f && sensor != nullptr) sensor->publish_state(v);
 }
 
 void SmaBluetoothSolar::updateSensor(sensor::Sensor *sensor, const char *name, double v) {
-  // ESPHome's Sensor API accepts float, so the final API state is still limited
-  // to float precision even though protocol and snapshot processing retain double.
-  if (v >= 0.0 && sensor != nullptr)
-    sensor->publish_state(static_cast<float>(v));
+    // ESPHome's Sensor API accepts float, so the final API state is still limited
+    // to float precision even though protocol and snapshot processing retain double.
+    if (v >= 0.0 && sensor != nullptr) sensor->publish_state(static_cast<float>(v));
 }
 
-void SmaBluetoothSolar::updateSensor(binary_sensor::BinarySensor *sensor, const char *name, bool v) {
-  if (sensor != nullptr)
-    sensor->publish_state(v);
+void SmaBluetoothSolar::updateSensor(binary_sensor::BinarySensor *sensor, const char *name,
+                                      bool v) {
+    if (sensor != nullptr) sensor->publish_state(v);
 }
 
 // ============================================================
@@ -400,18 +388,17 @@ void SmaBluetoothSolar::updateSensor(binary_sensor::BinarySensor *sensor, const 
 // ============================================================
 
 void SmaBluetoothSolar::dump_config() {
-  ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
-  ESP_LOGCONFIG(TAG, "  MAC: %s", sma_inverter_bluetooth_mac_.c_str());
-  ESP_LOGCONFIG(TAG, "  Delay between queries: %lu ms", static_cast<unsigned long>(sma_inverter_delay_values_));
+    ESP_LOGCONFIG(TAG, "SMABluetooth Solar:");
+    ESP_LOGCONFIG(TAG, "  MAC: %s", sma_inverter_bluetooth_mac_.c_str());
+    ESP_LOGCONFIG(TAG, "  Delay between queries: %lu ms", static_cast<unsigned long>(sma_inverter_delay_values_));
 }
 
 const char *SmaBluetoothSolar::lookup_code(uint16_t code) {
-  for (const auto &entry : status_codes) {
-    if (entry.code == code)
-      return entry.message;
-  }
-  return "Unknown";
+    for (const auto &entry : status_codes) {
+        if (entry.code == code) return entry.message;
+    }
+    return "Unknown";
 }
 
-}  // namespace smabluetooth_solar
-}  // namespace esphome
+} // namespace smabluetooth_solar
+} // namespace esphome

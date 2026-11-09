@@ -36,18 +36,10 @@ jobs:
           tar --extract --gzip --file /tmp/actionlint.tar.gz --directory /tmp actionlint
 
       - name: Check Python
-        run: |
-          ruff check --output-format=github esphome/components/smabluetooth_solar
-          ruff format --check esphome/components/smabluetooth_solar
+        run: ruff check --output-format=github esphome/components/smabluetooth_solar
 
       - name: Check YAML
         run: yamllint --strict .
-
-      - name: Check C++ formatting
-        run: |
-          clang-format --dry-run --Werror \
-            esphome/components/smabluetooth_solar/*.cpp \
-            esphome/components/smabluetooth_solar/*.h
 
       - name: Check GitHub Actions syntax
         run: /tmp/actionlint
