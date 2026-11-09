@@ -31,7 +31,6 @@ from esphome.const import (
     UNIT_CELSIUS,
     UNIT_HERTZ,
     UNIT_VOLT,
-    UNIT_WATT,
     UNIT_KILOWATT,
     UNIT_PERCENT,
     UNIT_KILOWATT_HOURS,
@@ -158,12 +157,28 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SmaBluetoothSolar),
-            cv.Required(CONF_SMA_INVERTER_BLUETOOTH_MAC): cv.mac_address,
-            cv.Required(CONF_SMA_INVERTER_PASSWORD): cv.All(cv.string_strict, cv.Length(max=12)),
-            cv.Optional(CONF_SMA_INVERTER_DELAY_VALUES, default="200ms"): cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_SMA_INVERTER_NIGHT_MARGIN, default="30min"): cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_LATITUDE): cv.All(parse_latlon, cv.float_range(min=-90, max=90)),
-            cv.Optional(CONF_LONGITUDE): cv.All(parse_latlon, cv.float_range(min=-180, max=180)),
+            cv.Required(
+                CONF_SMA_INVERTER_BLUETOOTH_MAC, visibility=cv.Visibility.UI
+            ): cv.mac_address,
+            cv.Required(
+                CONF_SMA_INVERTER_PASSWORD, visibility=cv.Visibility.UI
+            ): cv.sensitive(cv.All(cv.string_strict, cv.Length(max=12))),
+            cv.Optional(
+                CONF_SMA_INVERTER_DELAY_VALUES,
+                default="200ms",
+                visibility=cv.Visibility.ADVANCED,
+            ): cv.positive_time_period_milliseconds,
+            cv.Optional(
+                CONF_SMA_INVERTER_NIGHT_MARGIN,
+                default="30min",
+                visibility=cv.Visibility.ADVANCED,
+            ): cv.positive_time_period_milliseconds,
+            cv.Optional(
+                CONF_LATITUDE, visibility=cv.Visibility.ADVANCED
+            ): cv.All(parse_latlon, cv.float_range(min=-90, max=90)),
+            cv.Optional(
+                CONF_LONGITUDE, visibility=cv.Visibility.ADVANCED
+            ): cv.All(parse_latlon, cv.float_range(min=-180, max=180)),
 
             cv.Optional(CONF_SMA_INVERTER_BLUETOOTH_SIGNAL_STRENGTH): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PERCENT,
@@ -173,9 +188,11 @@ CONFIG_SCHEMA = cv.All(
                 state_class=STATE_CLASS_MEASUREMENT,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            cv.Optional(CONF_PROTOCOL_VERSION, default="SMANET2"): cv.enum(
-                PROTOCOL_VERSIONS, upper=True
-            ),
+            cv.Optional(
+                CONF_PROTOCOL_VERSION,
+                default="SMANET2",
+                visibility=cv.Visibility.ADVANCED,
+            ): cv.enum(PROTOCOL_VERSIONS, upper=True),
             cv.Optional(CONF_PHASE_A): PHASE_SCHEMA,
             cv.Optional(CONF_PHASE_B): PHASE_SCHEMA,
             cv.Optional(CONF_PHASE_C): PHASE_SCHEMA,
