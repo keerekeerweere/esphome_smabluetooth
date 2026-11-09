@@ -32,7 +32,7 @@ namespace esphome {
 namespace smabluetooth_solar {
 
 static const char *const TAG = "smabluetooth_solar";
-static const time_t MIN_VALID_TIME = 1735689600; // 2026-01-01 UTC
+static const time_t MIN_VALID_TIME = 1767225600; // 2026-01-01 UTC
 
 namespace {
 
@@ -551,8 +551,9 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
             continue;
         }
 
-        // --- Phase 5b: sync inverter clock from ESP32 NTP time ---
-        self->setInverterTime(false);  // auto: skip if recently set
+        // --- Phase 5b: sync after the first fresh inverter timestamp is available ---
+        self->spot_time_received_ = false;
+        self->auto_time_sync_pending_ = true;
 
         // --- Phase 5c: one-time static info per connection ---
         // TypeLabel (serial, device type/class) and SoftwareVersion rarely change;
@@ -624,10 +625,12 @@ void ESP32_SMA_Inverter::btTask(void *pvParameters) {
                 break;
             }
 
-            // On-demand time sync (triggered from main loop via requestTimeSync())
+            // Forced requests take precedence over the one-time automatic check.
             if (self->sync_time_requested_) {
-                self->setInverterTime(true);   // forced: always write regardless of last set time
-                // flag cleared inside setInverterTime()
+                self->auto_time_sync_pending_ = false;
+                self->setInverterTime(true);
+            } else if (self->auto_time_sync_pending_ && self->spot_time_received_) {
+                self->setInverterTime(false);
             }
 
             // On-demand time fetch (triggered from main loop via requestTimeFetch())
@@ -981,8 +984,9 @@ E_RC ESP32_SMA_Inverter::getInverterDataCfl(uint32_t command, uint32_t first, ui
 
                             switch (lri) {
                             case GridMsTotW: {
-                                // 2026-01-01 00:00:00 UTC
-                                static const time_t MIN_VALID_TIME = 1735689600;
+                                invData.RawLastTime = datetime;
+                                spot_time_received_ = true;
+                                verifyPendingTimeSync(datetime);
                                 if (datetime < MIN_VALID_TIME) {
                                     time_t now = time(nullptr);
                                     if (now >= MIN_VALID_TIME) {
@@ -1344,55 +1348,6 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 }
 
 // ============================================================
-//  Shared helper: send time-read query, parse response fields.
-//  Used by setInverterTime before and after writing.
-// ============================================================
-
-E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLastTimeSet,
-                                                   uint32_t &tz_dst, uint32_t &timesetCount) {
-    // espBTAddress as destination — required by SMA protocol for time commands
-    // (SBFspot changed addr_unknown to LocalBTAddress in v3.1.5)
-    pcktID++;
-    writePacketHeader(pcktBuf, 0x01, espBTAddress);
-    writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
-    write32(pcktBuf, 0xF000020A);
-    write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
-    write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0); write32(pcktBuf, 0);
-    write32(pcktBuf, 1); write32(pcktBuf, 1);
-    writePacketTrailer(pcktBuf);
-    writePacketLength(pcktBuf);
-    BTsendPacket(pcktBuf);
-
-    E_RC rc = getPacket(sixff, 1);
-    if (rc != E_OK) return rc;
-    if (pcktBufPos < 72) return E_NODATA;
-    if (pcktBuf[0] != 0x7E || get_u32(pcktBuf + 1) != BTH_L2SIGNATURE ||
-        pcktBuf[pcktBufPos - 1] != 0x7E || get_u32(pcktBuf + 29) != 0xF000020A ||
-        get_u32(pcktBuf + 41) != 0x00236D00) {
-        ESP_LOGW(TAG, "Unexpected time response layout");
-        return E_INVRESP;
-    }
-    if (!validateChecksum()) return E_CHKSUM;
-    uint16_t status = get_u16(pcktBuf + 23);
-    if (status != 0) {
-        ESP_LOGW(TAG, "Time query rejected with status 0x%04X", status);
-        return E_INVRESP;
-    }
-
-    invTime        = (time_t)  get_u32(pcktBuf + 45);
-    invLastTimeSet = (time_t)  get_u32(pcktBuf + 49);
-    time_t repeatedTime = (time_t)get_u32(pcktBuf + 53);
-    tz_dst         =           get_u32(pcktBuf + 57);
-    timesetCount   =           get_u32(pcktBuf + 61);
-    if (repeatedTime != invTime) {
-        ESP_LOGW(TAG, "Inconsistent time response: current=%lld repeated=%lld",
-                 (long long)invTime, (long long)repeatedTime);
-        return E_INVRESP;
-    }
-    return E_OK;
-}
-
-// ============================================================
 //  Inverter time read — query only, no write
 // ============================================================
 
@@ -1400,26 +1355,21 @@ void ESP32_SMA_Inverter::fetchInverterTime() {
     // The inverter timestamps every total AC power response with its current clock.
     // Use that timestamp instead of the SMA time-setting command: on some older
     // inverters, sending that command with zero timestamps resets the clock to epoch.
-    if (invData.LastTime < MIN_VALID_TIME) {
+    if (invData.RawLastTime < MIN_VALID_TIME) {
         ESP_LOGW(TAG, "fetchInverterTime: no valid inverter timestamp available");
         return;
     }
-    printUnixTime(timeBuf, sizeof(timeBuf), invData.LastTime);
+    printUnixTime(timeBuf, sizeof(timeBuf), invData.RawLastTime);
     invData.InverterTimestamp = std::string(timeBuf);
     ESP_LOGI(TAG, "fetchInverterTime: inverter clock = %s (UTC)", timeBuf);
 }
 
 // ============================================================
-//  Inverter time sync  (mirrors SBFspot SetPlantTime_V2)
+//  Inverter time sync — SBFspot V1 compatibility method.
 //
-//  Step 1 — query: send packet with zeros → inverter returns its
-//           current time, tz/dst, and timesetCount in the response.
-//  Step 2 — write: send packet with host UTC time + incremented
-//           timesetCount → inverter updates its RTC.
-//           SBFspot: "no reply expected". flushRxBuffer() drains any
-//           unexpected ack some inverter models send.
-//  Step 3 — verify: re-query inverter time. Success when
-//           |invLastTimeSet - hosttime| < 5 s (SBFspot check).
+//  Older inverters do not support the V2 zero-filled read/write flow reliably.
+//  Send the direct set packet to the inverter and verify it later from a fresh
+//  SPOT_PACTOT measurement; the time-command packet itself may only be echoed.
 // ============================================================
 
 void ESP32_SMA_Inverter::setInverterTime(bool force) {
@@ -1427,82 +1377,91 @@ void ESP32_SMA_Inverter::setInverterTime(bool force) {
     if (hosttime < 946684800L) {  // before year 2000 — NTP not yet synced
         ESP_LOGW(TAG, "setInverterTime: system clock not synced yet%s",
                  force ? ", skipping" : ", will retry next cycle");
-        if (!force) sync_time_requested_ = true;  // auto calls retry; forced calls just skip
+        if (force) sync_time_requested_ = false;
         return;
     }
 
-    // --- Step 1: query inverter's current time ---
-    time_t   invTime, invLastTimeSet;
-    uint32_t tz_dst, timesetCount;
-    E_RC rc = queryCurrentInverterTime(invTime, invLastTimeSet, tz_dst, timesetCount);
-    if (rc != E_OK) {
-        ESP_LOGW(TAG, "setInverterTime: query failed rc=%d, skipping", rc);
-        return;
+    if (!force) {
+        long long drift = (long long)invData.RawLastTime - (long long)hosttime;
+        if (drift < 0) drift = -drift;
+        if (drift < 5) {
+            ESP_LOGI(TAG, "setInverterTime: inverter clock already synchronized, drift=%llds", drift);
+            auto_time_sync_pending_ = false;
+            return;
+        }
+        if (drift >= 3600) {
+            ESP_LOGW(TAG, "setInverterTime: automatic sync skipped because drift=%llds is too large; use button to force", drift);
+            auto_time_sync_pending_ = false;
+            return;
+        }
     }
 
-    printUnixTime(timeBuf, sizeof(timeBuf), invTime);
-    invData.InverterTimestamp = std::string(timeBuf);
-    ESP_LOGI(TAG, "setInverterTime: inverter clock = %s (UTC)", timeBuf);
-    ESP_LOGI(TAG, "setInverterTime: tz_dst=0x%08lX timesetCount=%lu",
-             static_cast<unsigned long>(tz_dst), static_cast<unsigned long>(timesetCount));
-
-    hosttime = time(nullptr);
-
-    // Skip write if the time was set recently (within 12 h) and this isn't a forced sync.
-    // Mirrors SBFspot's ndays/synchTimeLow/synchTimeHigh guard to avoid hammering the RTC
-    // on every BT reconnect when the inverter clock is already accurate.
-    if (!force && invLastTimeSet > 946684800L && (hosttime - invLastTimeSet) < 43200L) {
-        ESP_LOGI(TAG, "setInverterTime: last set %llds ago, skipping (use button to force)",
-                 (long long)(hosttime - invLastTimeSet));
-        sync_time_requested_ = false;
-        return;
-    }
+    struct tm local_tm, utc_tm;
+    localtime_r(&hosttime, &local_tm);
+    gmtime_r(&hosttime, &utc_tm);
+    int day_diff;
+    if (local_tm.tm_year > utc_tm.tm_year) day_diff = 1;
+    else if (local_tm.tm_year < utc_tm.tm_year) day_diff = -1;
+    else day_diff = local_tm.tm_yday - utc_tm.tm_yday;
+    int32_t tz_dst = day_diff * 86400 +
+                     (local_tm.tm_hour - utc_tm.tm_hour) * 3600 +
+                     (local_tm.tm_min - utc_tm.tm_min) * 60 +
+                     (local_tm.tm_sec - utc_tm.tm_sec);
+    if (local_tm.tm_isdst > 0) tz_dst |= 1;
 
     printUnixTime(timeBuf, sizeof(timeBuf), hosttime);
-    ESP_LOGI(TAG, "setInverterTime: host clock     = %s (UTC), writing to inverter", timeBuf);
+    ESP_LOGI(TAG, "setInverterTime: host clock = %s (UTC), tz_dst=0x%08lX, writing to inverter",
+             timeBuf, static_cast<unsigned long>((uint32_t)tz_dst));
 
-    // --- Step 2: write host time to inverter ---
-    // Use do-while to retry if FCS bytes happen to be 0x7E/0x7D (would corrupt framing)
+    // Use do-while to retry if FCS bytes happen to be 0x7E/0x7D (would corrupt framing).
+    // Refresh hosttime each attempt exactly as SBFspot's direct-set method does.
     do {
+        hosttime = time(nullptr);
         pcktID++;
-        writePacketHeader(pcktBuf, 0x01, espBTAddress);
+        writePacketHeader(pcktBuf, 0x01, invData.btAddress);
         writePacket(pcktBuf, 0x10, 0xA0, 0, 0xFFFF, 0xFFFFFFFF);
         write32(pcktBuf, 0xF000020A);
         write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00); write32(pcktBuf, 0x00236D00);
         write32(pcktBuf, (uint32_t)hosttime);
         write32(pcktBuf, (uint32_t)hosttime);
         write32(pcktBuf, (uint32_t)hosttime);
-        write32(pcktBuf, tz_dst);            // preserve inverter's tz/dst setting
-        write32(pcktBuf, timesetCount + 1);  // increment counter
+        write32(pcktBuf, (uint32_t)tz_dst);
+        write32(pcktBuf, 1);
         write32(pcktBuf, 1);
         writePacketTrailer(pcktBuf);
         writePacketLength(pcktBuf);
     } while (!isCrcValid(pcktBuf[pcktBufPos - 3], pcktBuf[pcktBufPos - 2]));
     BTsendPacket(pcktBuf);
-    // SBFspot: "no reply expected" after write. Flush any unexpected ack some inverters send.
+    // No reply is expected. Some older inverters echo this packet more than once,
+    // including a delayed echo, so discard those before normal polling resumes.
+    vTaskDelay(pdMS_TO_TICKS(600));
     flushRxBuffer();
 
-    // --- Step 3: verify — re-query inverter time (mirrors SBFspot SetPlantTime_V2 step 3) ---
-    time_t   verifyTime, verifyLastSet;
-    uint32_t verifyTzDst, verifyCount;
-    rc = queryCurrentInverterTime(verifyTime, verifyLastSet, verifyTzDst, verifyCount);
-    if (rc == E_OK) {
-        printUnixTime(timeBuf, sizeof(timeBuf), verifyTime);
-        invData.InverterTimestamp = std::string(timeBuf);
-        // SBFspot success check: |invLastTimeSet - hosttime| < 5 s
-        long long setDiff = (long long)verifyLastSet - (long long)hosttime;
-        if (setDiff < 0) setDiff = -setDiff;
-        if (setDiff < 5) {
-            long long drift = (long long)verifyTime - (long long)hosttime;
-            ESP_LOGI(TAG, "setInverterTime: accepted, inverter clock = %s (UTC), drift=%llds", timeBuf, drift);
-        } else {
-            ESP_LOGW(TAG, "setInverterTime: inverter ignored the write, clock = %s (UTC)", timeBuf);
-        }
+    pending_time_sync_value_ = hosttime;
+    pending_time_sync_ = true;
+    ESP_LOGI(TAG, "setInverterTime: write sent; awaiting SPOT_PACTOT verification");
+    if (force) sync_time_requested_ = false;
+    else auto_time_sync_pending_ = false;
+}
+
+void ESP32_SMA_Inverter::verifyPendingTimeSync(time_t inverterTime) {
+    if (!pending_time_sync_) return;
+
+    time_t now = time(nullptr);
+    long long expected = (long long)pending_time_sync_value_;
+    if (now > pending_time_sync_value_) expected += (long long)(now - pending_time_sync_value_);
+    long long drift = (long long)inverterTime - expected;
+    if (drift < 0) drift = -drift;
+
+    printUnixTime(timeBuf, sizeof(timeBuf), inverterTime);
+    if (inverterTime >= MIN_VALID_TIME && drift < 5) {
+        ESP_LOGI(TAG, "setInverterTime: confirmed by SPOT_PACTOT, inverter clock = %s (UTC), drift=%llds",
+                 timeBuf, drift);
     } else {
-        ESP_LOGW(TAG, "setInverterTime: verify query failed rc=%d", rc);
+        ESP_LOGW(TAG, "setInverterTime: not confirmed by SPOT_PACTOT, inverter clock = %s (UTC), drift=%llds",
+                 timeBuf, drift);
     }
-    flushRxBuffer();
-    sync_time_requested_ = false;
+    pending_time_sync_ = false;
 }
 
 // ============================================================
