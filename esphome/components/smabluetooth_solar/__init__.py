@@ -1,0 +1,1 @@
+DOMAIN = "smabluetooth_solar"
