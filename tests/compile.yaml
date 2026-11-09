@@ -1,0 +1,137 @@
+esphome:
+  name: sma-bluetooth-ci
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: ../esphome/components
+    components: [smabluetooth_solar]
+
+logger:
+
+wifi:
+  ssid: "compile-test"
+  password: "compile-test-password"
+
+api:
+
+sensor:
+  - platform: smabluetooth_solar
+    id: sma_inverter
+    update_interval: 10s
+    sma_inverter_bluetooth_mac: "00:80:25:1D:81:66"
+    sma_inverter_password: "0000"
+    sma_inverter_delay_values: 800ms
+    sma_inverter_night_margin: 30min
+    latitude: 51.5074
+    longitude: -0.1278
+
+    inverter_status:
+      name: "Inverter Status"
+
+    bluetooth_connection_status:
+      name: "Bluetooth Connection Status"
+
+    grid_relay:
+      name: "Grid Relay"
+
+    phase_a:
+      voltage:
+        name: "Phase A Voltage"
+      current:
+        name: "Phase A Current"
+      active_power:
+        name: "Phase A Active Power"
+
+    phase_b:
+      voltage:
+        name: "Phase B Voltage"
+      current:
+        name: "Phase B Current"
+      active_power:
+        name: "Phase B Active Power"
+
+    phase_c:
+      voltage:
+        name: "Phase C Voltage"
+      current:
+        name: "Phase C Current"
+      active_power:
+        name: "Phase C Active Power"
+
+    pv1:
+      voltage:
+        name: "PV1 Voltage"
+      current:
+        name: "PV1 Current"
+      active_power:
+        name: "PV1 Active Power"
+
+    pv2:
+      voltage:
+        name: "PV2 Voltage"
+      current:
+        name: "PV2 Current"
+      active_power:
+        name: "PV2 Active Power"
+
+    frequency:
+      name: "Grid Frequency"
+
+    energy_production_day:
+      name: "Energy Production Today"
+
+    total_energy_production:
+      name: "Total Energy Production"
+
+    total_ac_power:
+      name: "Total AC Power"
+
+    inverter_module_temp:
+      name: "Inverter Module Temperature"
+
+    sma_inverter_bluetooth_signal_strength:
+      name: "Bluetooth Signal Strength"
+
+    today_generation_time:
+      name: "Operating Time"
+
+    total_generation_time:
+      name: "Feed-in Time"
+
+    wakeup_time:
+      name: "Wakeup Time"
+
+    serial_number:
+      name: "Serial Number"
+
+    software_version:
+      name: "Software Version"
+
+    device_type:
+      name: "Device Type"
+
+    device_class:
+      name: "Device Class"
+
+    device_name:
+      name: "Device Name"
+
+    inverter_time:
+      name: "Inverter Clock"
+
+button:
+  - platform: template
+    name: "Sync Inverter Time"
+    on_press:
+      - lambda: id(sma_inverter).trigger_time_sync();
+
+  - platform: template
+    name: "Fetch Inverter Time"
+    on_press:
+      - lambda: id(sma_inverter).trigger_time_fetch();
