@@ -22,8 +22,8 @@ external_components:
   # For production, replace the above with a pinned Git source:
   # - source:
   #     type: git
-  #     url: https://github.com/rupertbenbrook/esphome_smabluetooth
-  #     ref: feat/device-builder-metadata
+  #     url: https://github.com/keerekeerweere/esphome_smabluetooth
+  #     ref: main
   #   components: [smabluetooth_solar]
 
 # Enable logging

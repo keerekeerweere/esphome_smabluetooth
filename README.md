@@ -2,11 +2,10 @@
 
 ESPHome external component for reading SMA solar inverters over classic Bluetooth using the SMANET2/SPP protocol.
 
-> **Beta quality:** The component is significantly more stable than earlier releases but has not yet been validated over extended multi-day or multi-week runs. Use in production at your own discretion.
+> **Beta quality:** Extended multi-day and multi-week production testing is limited. Use in production at your own discretion.
 
 ## Status and requirements
 
-- Tested and working on **SB3000TL-20**; known limitations on **SB1600TL-10** with a Bluetooth module.
 - Requires the **ESP-IDF** framework. Arduino is not supported.
 - Requires an original **ESP32** with Bluetooth Classic. ESP32-S2, S3, C2, C3, C5, C6, C61 and other BLE-only variants are not supported.
 - Uses a non-blocking Bluetooth protocol task on core 0.
@@ -16,11 +15,23 @@ ESPHome external component for reading SMA solar inverters over classic Bluetoot
 
 All original ESP32 module variants, including WROOM, WROVER, U, D and S, are supported.
 
+### Tested hardware
+
+#### SMA inverters
+
+- **SB3000TL-20** — tested and working.
+- **SB4000TL-20** — tested and working.
+- **SB1600TL-10 with Bluetooth module** — tested with known limitations.
+
+#### ESP32 hardware
+
+- [LilyGO T-ETH-Lite ESP32](https://wiki.lilygo.cc/products/t-eth-series/t-eth-lite/) with the [T-ETH-Lite PoE Shield](https://wiki.lilygo.cc/datasheet/ETH-POE-DP9900M-5V.pdf) — tested and working. This is the original ESP32/RTL8201 model, not the incompatible [T-ETH-Lite ESP32-S3](https://wiki.lilygo.cc/products/t-eth-series/t-eth-lite-s3/).
+
 ## ESPHome Device Builder
 
-This is an external component and is not part of Device Builder's generated component catalog. It will therefore not appear in **Add Component**, and Device Builder cannot generate a visual form for it. Add and edit the `external_components` and `sensor` sections in the YAML editor.
+This external component is not part of Device Builder's generated component catalog. It does not appear in **Add Component**, and Device Builder does not generate a visual form for it. Add and edit the `external_components` and `sensor` sections in the YAML editor.
 
-The schema still declares field types, defaults, choices, ranges, advanced fields and the sensitive password. These declarations provide validation now and are suitable for schema-aware tooling if the component is upstreamed later.
+The schema declares field types, defaults, choices, ranges, advanced fields and the sensitive password. ESPHome uses these declarations to validate the configuration.
 
 ## Installation
 
@@ -30,8 +41,8 @@ Add the GitHub source to your ESPHome configuration:
 external_components:
   - source:
       type: git
-      url: https://github.com/rupertbenbrook/esphome_smabluetooth
-      ref: feat/device-builder-metadata
+      url: https://github.com/keerekeerweere/esphome_smabluetooth
+      ref: main
     components: [smabluetooth_solar]
 ```
 
@@ -74,7 +85,7 @@ The ESPHome `api` component must also be configured. See [`esphome/sample/smablu
 | `sma_inverter_password` | Yes | — | SMA user password. It is treated as sensitive configuration and may contain at most 12 characters. |
 | `update_interval` | No | `60s` | Interval at which ESPHome publishes a completed inverter snapshot. Standard ESPHome polling-component time syntax is accepted. |
 | `sma_inverter_delay_values` | No | `200ms` | Delay between inverter protocol queries. Increase this if the inverter or Bluetooth connection is unreliable. This is an advanced setting and must not be negative. |
-| `protocol_version` | No | `SMANET2` | SMA protocol version. The only supported value is currently `SMANET2`; matching is case-insensitive. |
+| `protocol_version` | No | `SMANET2` | SMA protocol version. The supported value is `SMANET2`; matching is case-insensitive. |
 
 ### Night mode and location
 
