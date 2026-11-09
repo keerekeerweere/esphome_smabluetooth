@@ -1,0 +1,55 @@
+name: Canonical install URL guard
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: Install URLs match .repo-url
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out pull request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check install URLs
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          canonical="$(tr -d '[:space:]' < .repo-url)"
+          canonical_slug="${canonical#https://github.com/}"
+          if [ -z "$canonical" ]; then
+            echo "::error::.repo-url is empty"
+            exit 1
+          fi
+          git fetch --no-tags --deepen=50 origin "$BASE_REF"
+          base="$(git rev-parse FETCH_HEAD)"
+          status=0
+          for file in README.md esphome/sample/smabluesolar.yaml; do
+            while IFS= read -r url; do
+              slug="${url#https://github.com/}"
+              slug="${slug#github://}"
+              if [ "$slug" != "$canonical_slug" ]; then
+                echo "::error file=$file::$file references '$url', not the canonical repo in .repo-url"
+                status=1
+              fi
+            done < <(
+              git diff "$base...HEAD" -- "$file" \
+                | grep -E '^\+' \
+                | grep -oE '(https://github\.com|github://)[A-Za-z0-9._/-]+esphome_smabluetooth' \
+                | sort -u || true
+            )
+          done
+          exit "$status"

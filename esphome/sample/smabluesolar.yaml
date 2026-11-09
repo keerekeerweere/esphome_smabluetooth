@@ -26,12 +26,9 @@ external_components:
       path: ../components
     components: [smabluetooth_solar]
     refresh: 0sec
-  # For production (after pushing to GitHub), replace the above with:
-  # - source:
-  #     type: git
-  #     url: https://github.com/keerekeerweere/esphome_smabluetooth
+  # For production, replace the above with the canonical source:
+  # - source: github://keerekeerweere/esphome_smabluetooth@main
   #   components: [smabluetooth_solar]
-  #   refresh: 0sec
 
 # Enable logging
 logger:

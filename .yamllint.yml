@@ -5,6 +5,7 @@ ignore: |
   .esphome/
   tests/.esphome/
   esphome/sample/smabluesolar.yaml
+  .repo-url
 
 rules:
   comments-indentation: disable

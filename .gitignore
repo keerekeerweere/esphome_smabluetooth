@@ -2,3 +2,5 @@
 sunny-explorer.png
 .esphome/
 esphome/components/smabluetooth_solar/__pycache__/**
+__pycache__/
+*.pyc

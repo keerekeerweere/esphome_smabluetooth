@@ -23,6 +23,18 @@ Only the original ESP32 supports classic Bluetooth (SPP). Other variants do **no
 - Not yet validated over weeks of continuous operation
 
 ## Usage
+Reference this repository as an external component source:
+
+```yaml
+external_components:
+  - source: github://keerekeerweere/esphome_smabluetooth@main
+    components: [smabluetooth_solar]
+```
+
+Pin `@main` to a release tag or commit for reproducible builds. Do not change
+this URL in forks or pull requests — it must always point at the canonical
+repository declared in `.repo-url`; CI enforces this.
+
 See `esphome/sample/smabluesolar.yaml` for a full configuration example.
 
 Optional entities include `total_ac_power`, `device_name`, and the diagnostic
