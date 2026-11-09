@@ -1,0 +1,15 @@
+---
+extends: default
+
+ignore: |
+  .esphome/
+  tests/.esphome/
+  esphome/sample/smabluesolar.yaml
+
+rules:
+  comments-indentation: disable
+  document-start: disable
+  line-length:
+    max: 120
+  truthy:
+    allowed-values: ["true", "false", "on"]
