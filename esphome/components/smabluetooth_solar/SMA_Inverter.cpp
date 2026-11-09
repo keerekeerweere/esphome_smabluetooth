@@ -1345,7 +1345,7 @@ E_RC ESP32_SMA_Inverter::logonSMAInverter(const char *password, const uint8_t us
 
 // ============================================================
 //  Shared helper: send time-read query, parse response fields.
-//  Used by both fetchInverterTime and setInverterTime step 1.
+//  Used by setInverterTime before and after writing.
 // ============================================================
 
 E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLastTimeSet,
@@ -1365,7 +1365,13 @@ E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLa
 
     E_RC rc = getPacket(sixff, 1);
     if (rc != E_OK) return rc;
-    if (pcktBufPos < 65) return E_NODATA;
+    if (pcktBufPos < 72) return E_NODATA;
+    if (pcktBuf[0] != 0x7E || get_u32(pcktBuf + 1) != BTH_L2SIGNATURE ||
+        pcktBuf[pcktBufPos - 1] != 0x7E || get_u32(pcktBuf + 29) != 0xF000020A ||
+        get_u32(pcktBuf + 41) != 0x00236D00) {
+        ESP_LOGW(TAG, "Unexpected time response layout");
+        return E_INVRESP;
+    }
     if (!validateChecksum()) return E_CHKSUM;
     uint16_t status = get_u16(pcktBuf + 23);
     if (status != 0) {
@@ -1375,8 +1381,14 @@ E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLa
 
     invTime        = (time_t)  get_u32(pcktBuf + 45);
     invLastTimeSet = (time_t)  get_u32(pcktBuf + 49);
+    time_t repeatedTime = (time_t)get_u32(pcktBuf + 53);
     tz_dst         =           get_u32(pcktBuf + 57);
     timesetCount   =           get_u32(pcktBuf + 61);
+    if (repeatedTime != invTime) {
+        ESP_LOGW(TAG, "Inconsistent time response: current=%lld repeated=%lld",
+                 (long long)invTime, (long long)repeatedTime);
+        return E_INVRESP;
+    }
     return E_OK;
 }
 
@@ -1385,14 +1397,14 @@ E_RC ESP32_SMA_Inverter::queryCurrentInverterTime(time_t &invTime, time_t &invLa
 // ============================================================
 
 void ESP32_SMA_Inverter::fetchInverterTime() {
-    time_t invTime, invLastTimeSet;
-    uint32_t tz_dst, timesetCount;
-    E_RC rc = queryCurrentInverterTime(invTime, invLastTimeSet, tz_dst, timesetCount);
-    if (rc != E_OK) {
-        ESP_LOGW(TAG, "fetchInverterTime: query failed rc=%d", rc);
+    // The inverter timestamps every total AC power response with its current clock.
+    // Use that timestamp instead of the SMA time-setting command: on some older
+    // inverters, sending that command with zero timestamps resets the clock to epoch.
+    if (invData.LastTime < MIN_VALID_TIME) {
+        ESP_LOGW(TAG, "fetchInverterTime: no valid inverter timestamp available");
         return;
     }
-    printUnixTime(timeBuf, sizeof(timeBuf), invTime);
+    printUnixTime(timeBuf, sizeof(timeBuf), invData.LastTime);
     invData.InverterTimestamp = std::string(timeBuf);
     ESP_LOGI(TAG, "fetchInverterTime: inverter clock = %s (UTC)", timeBuf);
 }
